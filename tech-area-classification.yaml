@@ -1,0 +1,567 @@
+solutions:
+  - id: climate-and-environment
+    name: Climate and Environment
+    source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/climate-and-environment/
+    aliases:
+      - environmental sustainability
+      - climate resilience
+      - environmental protection
+      - natural resource management
+      - circular economy
+      - biodiversity conservation
+    definition: >-
+      Protecting our planet and our future. The urgency to understand and address the intricate relationship between human activities and Earth's resources has never been greater. Climate change, pollution, and resource depletion threaten the quality of life for current and future generations worldwide, and especially in developing nations. Our response is to work in partnership with communities, governments, investors, and businesses to translate climate and environmental science into sound policy and locally viable, sustainable solutions that will build resilience, protect biodiversity, strengthen land rights and resource governance, and create a circular economy.
+    children:
+      - id: clean-energy
+        name: Clean Energy
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/climate-and-environment/clean-energy/
+        aliases:
+          - renewable energy
+          - energy efficiency
+          - solar power
+          - wind power
+          - clean power
+          - off-grid energy
+          - mini-grids
+          - electrification
+        definition: >-
+          Sustainable, affordable, reliable, renewable energy. Affordable energy is critical to sustainable livelihoods and economic development. DAI assists countries in designing policies that reduce greenhouse gas emissions and fossil fuel consumption by promoting investments in renewable energy and energy efficiency, without compromising economic growth.
+      - id: climate-adaptation-and-mitigation
+        name: Climate Adaptation and Mitigation
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/climate-and-environment/climate-adaptation-and-mitigation/
+        aliases:
+          - climate adaptation
+          - climate mitigation
+          - climate resilience planning
+          - greenhouse gas reduction
+          - low-emissions development
+          - climate risk management
+          - disaster risk reduction
+        definition: >-
+          Enabling societies to thrive in a changing climate. Climate change impacts are being felt globally, disproportionately affecting poorer countries and vulnerable populations. Adaptation, resilience, and continued mitigation efforts are all essential for managing escalating climate risks, protecting vulnerable populations, safeguarding economic development, and enabling societies to thrive in a changing climate.
+      - id: climate-finance
+        name: Climate Finance
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/climate-and-environment/climate-finance/
+        aliases:
+          - green finance
+          - climate investment
+          - carbon finance
+          - climate funding
+          - adaptation finance
+          - mitigation finance
+          - climate capital mobilization
+        include_when:
+          - The text discusses mobilizing, structuring, or deploying finance specifically for climate mitigation, adaptation, resilience, or low-carbon transition.
+        exclude_when:
+          - The text discusses general investment, private capital, or project finance without a clear climate objective.
+        definition: >-
+          Closing the gaps: expanding horizons for climate financing. DAI's integrated approach to climate finance combines expertise in mobilizing finance and investment for development and delivering innovative solutions that mitigate and adapt to climate change. Our approach has mobilized more than $2.5 billion for climate in the past 10 years.
+      - id: nature-oceans-and-biodiversity
+        name: Nature, Oceans, and Biodiversity
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/climate-and-environment/nature-oceans-and-biodiversity/
+        aliases:
+          - biodiversity conservation
+          - ecosystem protection
+          - marine conservation
+          - coastal resilience
+          - forest conservation
+          - natural resource governance
+          - protected areas
+        definition: >-
+          Protecting our natural resources. Across the developing world, population growth and surging demand for agricultural land have put pressure on natural resources as people strive to meet their needs for food, shelter, and energy. Many governments face increasing pressure to exploit natural resources in the quest for economic growth.
+      - id: water-security-sanitation-and-hygiene
+        name: Water Security, Sanitation and Hygiene
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/climate-and-environment/water-security-sanitation-and-hygiene/
+        aliases:
+          - WASH
+          - water security
+          - sanitation services
+          - hygiene promotion
+          - drinking water access
+          - water service delivery
+          - wastewater management
+        definition: >-
+          Improving clean water and sanitation. We help national and local governments, civil society groups, communities, and private water service providers to develop and implement innovative approaches for providing water and sanitation services to meet current and growing demand.
+  - id: digital
+    name: Digital
+    source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/digital/
+    aliases:
+      - digital development
+      - digital transformation
+      - digital inclusion
+      - digital public services
+      - digital ecosystems
+      - technology-enabled development
+    include_when:
+      - The text broadly discusses digital technology, digital inclusion, digital ecosystems, or technology-enabled development without fitting a more specific digital child term.
+    exclude_when:
+      - The text is specifically about cybersecurity, data governance, digital policy, digital strategy, or digital ecosystem assessment; use the relevant child term instead.
+    definition: >-
+      Responding to the ways technology is transforming our lives. Digital technology is integral to the way people find jobs, launch businesses, access healthcare, consume information, and interact with government. DAI is committed to expanding equitable, widespread access to these benefits, while mitigating the emerging risks associated with technology. We work with public and private sector clients to ensure that the digital revolution creates a positive transformation in the lives of the communities we serve.
+    children:
+      - id: cybersecurity
+        name: Cybersecurity
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/digital/cybersecurity-and-digital-policy/
+        aliases:
+          - cyber resilience
+          - cyber policy
+          - data governance
+          - digital safety
+          - information security
+          - technology regulation
+          - cyber capacity building
+        include_when:
+          - The text discusses cybersecurity, cyber resilience, information security, data governance, technology regulation, or digital policy.
+        exclude_when:
+          - The text discusses general digital transformation, digital tools, or digital service delivery without a security, governance, policy, or regulatory focus.
+        definition: >-
+          Improving cybersecurity, governance, and regulation of technologies. DAI provides governments, organizations, and donor clients with technical assistance on cybersecurity, data governance, and regulation of transformative technologies, including digital policy development and implementation support, capacity building, tailored training, and public awareness raising.
+      - id: digital-strategy-and-advisory
+        name: Digital Strategy and Advisory
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/digital/digital-strategy-and-advisory/
+        aliases:
+          - digital strategy
+          - digital ecosystem assessment
+          - digital transformation advisory
+          - digital government advisory
+          - digital economy assessment
+          - emerging technology advisory
+        include_when:
+          - The text discusses digital strategy, digital ecosystem assessment, digital economy assessment, digital transformation advisory, or research and training on emerging technologies.
+        exclude_when:
+          - The text is primarily about cybersecurity, data governance, technology regulation, or cyber policy; use Cybersecurity instead.
+        definition: >-
+          Designing and implementing safe, responsible digital solutions. DAI provides technical assistance on digital development activity design and implementation with a focus on digital democracy, digital transformation of governments and economies, and assessing, engaging, and strengthening country digital ecosystems.
+  - id: economic-growth
+    name: Economic Growth
+    source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/
+    aliases:
+      - inclusive growth
+      - market-led growth
+      - economic development
+      - private sector growth
+      - competitiveness
+      - productivity growth
+      - poverty reduction
+    definition: >-
+      Boosting economies around the globe. We spur trade, strengthen agriculture value chains, grow businesses, and improve financial services to create jobs, reduce poverty, and improve food security. Focusing on market access, workforce productivity, and financial inclusion, we build sustainable systems that drive inclusive growth.
+    children:
+      - id: agriculture-and-market-systems
+        name: Agriculture and Market Systems
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/agriculture-and-market-systems/
+        aliases:
+          - market systems development
+          - agricultural value chains
+          - food security
+          - agribusiness development
+          - climate-smart agriculture
+          - smallholder commercialization
+          - resilient food systems
+        definition: >-
+          Developing value chains and bolstering food security. DAI pioneers market systems development to enhance agricultural productivity and foster competitive, inclusive, and resilient growth. We empower local actors, build strong relationships across value chains, and promote sustainable practices to build resilience and food security.
+      - id: entrepreneurship-and-innovation
+        name: Entrepreneurship and Innovation
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/entrepreneurship-and-innovation/
+        aliases:
+          - enterprise innovation
+          - startup ecosystems
+          - business incubation
+          - entrepreneurial ecosystems
+          - innovation hubs
+          - small business innovation
+          - technology entrepreneurship
+        definition: >-
+          Advancing innovation, entrepreneurship, and technology. DAI works across sectors to boost productivity and develop enterprise ecosystems that foster low-carbon entrepreneurial innovation and generate employment.
+      - id: financial-services
+        name: Financial Services
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/financial-services/
+        aliases:
+          - financial inclusion
+          - access to finance
+          - rural finance
+          - digital financial services
+          - microfinance
+          - inclusive finance
+          - banking access
+        include_when:
+          - The text discusses expanding access to banking, microfinance, digital financial services, rural finance, or financial inclusion for people, communities, or businesses.
+        exclude_when:
+          - The text discusses capital advisory, project finance, asset management, private equity, private debt, or serving as a financial intermediary for investors; use Financial Advisory instead.
+        definition: >-
+          Expanding access to financial services. DAI works with the public and private sectors to improve access to financial services and thereby support economic development. We also engage financial institutions to expand their services to rural communities, effectively expanding financial inclusion.
+      - id: investment
+        name: Investment
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/investment/
+        aliases:
+          - investment facilitation
+          - foreign direct investment
+          - impact investment
+          - blended finance
+          - investment promotion
+          - transaction advisory
+          - market-based investment
+        include_when:
+          - The text discusses investment facilitation, foreign direct investment, investment promotion, transaction support, blended finance, or market-based investment strategies for development outcomes.
+        exclude_when:
+          - The text is specifically about structured partnerships between donors/development actors and businesses; use Private Sector Engagement. If it is about capital advisory or asset management for investors, use Financial Advisory.
+        definition: >-
+          Driving inclusive growth through investment innovations. DAI leverages decades of cross-sectoral expertise to develop integrated, market-based investment strategies in emerging markets, lowering transaction costs, addressing risk management, and facilitating foreign direct investment to generate positive social, economic, and environmental impact.
+      - id: jobs-skills-and-employment
+        name: Jobs, Skills and Employment
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/job-skills-and-employment/
+        aliases:
+          - workforce development
+          - skills development
+          - employment pathways
+          - vocational training
+          - apprenticeships
+          - youth employment
+          - TVET
+          - livelihoods training
+        include_when:
+          - The text discusses workforce development, employment pathways, vocational training, apprenticeships, internships, TVET, livelihoods, or matching skills to labor market needs.
+        exclude_when:
+          - The text discusses school systems, teaching, learning outcomes, or formal education reform without a workforce or employment focus; use Education instead.
+        definition: >-
+          Cultivating the right skills for bright futures. We match the needs of the private sector with skills development and people-focused programming such as on-the-job training, apprenticeships, and internships that transform prospective employees into permanent talent.
+      - id: land-tenure-and-property-rights
+        name: Land Tenure and Property Rights
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/land-tenure-and-property-rights/
+        aliases:
+          - land tenure
+          - property rights
+          - land administration
+          - land governance
+          - land rights formalization
+          - customary land rights
+          - land registration
+        definition: >-
+          Securing equitable access to land tenure and property rights. Secure property rights are key to inclusive economic growth and conflict prevention, especially in the context of climate change and growing populations. DAI strengthens land tenure systems through reforms and capacity building, with a focus on community-driven processes.
+      - id: private-sector-development
+        name: Private Sector Development
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/private-sector-development/
+        aliases:
+          - enterprise development
+          - business competitiveness
+          - SME growth
+          - firm-level support
+          - local business development
+          - market competitiveness
+          - business enabling environment
+        include_when:
+          - The text discusses strengthening firms, SMEs, sectors, competitiveness, market access, business enabling environments, or local enterprise growth.
+        exclude_when:
+          - The text focuses on donors or development actors partnering with private companies through co-funded or co-owned activities; use Private Sector Engagement instead.
+        definition: >-
+          Private sector solutions for local, sustainable growth. DAI supports private enterprises of all sizes to increase competitiveness, identify and pursue new markets, attract investment, and create jobs, even in complex and fragile environments. We engage local actors to identify sectors with growth potential and implement competitiveness strategies.
+      - id: private-sector-engagement
+        name: Private Sector Engagement
+        aliases:
+          - PSE
+          - public-private partnerships
+          - private sector partnerships
+          - co-funded development
+          - co-created development
+          - private finance mobilization
+          - shared value partnerships
+        include_when:
+          - The text discusses donors, governments, or development actors partnering with businesses or investors through co-funded, co-owned, shared-value, or impact-oriented activities.
+        exclude_when:
+          - The text discusses improving private enterprise competitiveness, SME growth, or business enabling environments without a structured development partnership; use Private Sector Development instead.
+        definition: >-
+          Donors and development actors working in structured partnership with businesses and investors to achieve development outcomes, typically through co-funded, co-owned, and impact-oriented activities that leverage private finance, innovation, and capabilities for the Sustainable Development Goals.
+      - id: supply-chain-management
+        name: Supply Chain Management
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/supply-chain-management/
+        aliases:
+          - procurement systems
+          - logistics management
+          - supply chain resilience
+          - supplier diversification
+          - responsible sourcing
+          - local supplier development
+          - procurement reform
+        include_when:
+          - The text discusses procurement, logistics, supplier diversification, responsible sourcing, resilient supply chains, or supply chain reform broadly.
+        exclude_when:
+          - The text specifically discusses local content, local supplier sourcing, localized procurement, or corporate supply chain localization; use Supply Chain Localization instead.
+        definition: >-
+          Building resilient, flexible, responsible supply chains. DAI's comprehensive approach to supply chain management works with local partners to tackle supply chain and procurement challenges. We increase resilience in supply chains by advancing opportunities to green, diversify, and deepen the local supplier base.
+      - id: trade
+        name: Trade
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/our-work-solutions-economic-growth/trade/
+        aliases:
+          - trade facilitation
+          - export promotion
+          - regional trade
+          - market access
+          - trade policy
+          - cross-border trade
+          - customs modernization
+        definition: >-
+          Expanding access to local, regional, and international markets. From small businesses to country governments, DAI supports strategies and policies to increase trade among local, regional, and global markets.
+  - id: financial-advisory
+    name: Financial Advisory
+    aliases:
+      - capital advisory
+      - project finance
+      - asset management
+      - private debt
+      - private equity
+      - investment capital
+      - development finance advisory
+    include_when:
+      - The text discusses capital advisory, project finance, asset management, private debt, private equity, real assets, or financial intermediation for investors and companies.
+    exclude_when:
+      - The text discusses expanding access to financial services for underserved people, communities, SMEs, or rural populations; use Financial Services instead.
+    definition: >-
+      We connect untapped global financial resources with projects and companies in the developing world, driving profitability and progress towards the Sustainable Development Goals. DAI's heritage in economic development and extensive partnerships with development finance institutions and development agencies make us ideal partners for private investors and institutions seeking investment opportunities that support the SDGs. Leveraging DAI's global platform, local partnerships, and deep market knowledge, we serve as a credible financial intermediary for investment capital. Our technical expertise enables us to manage risk and add value to promising businesses facing capacity and capital constraints. Our team is experienced in capital advisory, project finance, and asset management, specializing in private debt, private equity, and real assets.
+  - id: corporate-consulting
+    name: Corporate Consulting
+    source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/corporate-consulting-2/
+    aliases:
+      - sustainability consulting
+      - corporate sustainability
+      - sustainable business
+      - ESG advisory
+      - local content advisory
+      - socioeconomic impact consulting
+      - responsible business advisory
+    definition: >-
+      Helping firms create sustainable economic and social impact. We design and implement practical sustainability strategies that deliver tangible socioeconomic benefits for businesses and the communities that host them, now and in the future. Powered by DAI's extensive international reach and deep technical knowledge, our corporate consulting team delivers innovative supply chain and sustainability solutions across sectors including energy, renewables, mining, finance, and infrastructure-from program design and feasibility assessments to implementation of local content and corporate sustainability strategies.
+    children:
+      - id: social-investment-programming
+        name: Social Investment Programming
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/corporate-consulting-2/social-investment-programming/
+        aliases:
+          - corporate social responsibility
+          - CSR programming
+          - ESG programming
+          - corporate impact programs
+          - sustainability programming
+          - community investment
+          - social impact programming
+        definition: >-
+          Sustainability goals for companies-from ideas to action. DAI are experts in sustainability and impact programming. Our comprehensive suite of end-to-end solutions move organizations beyond regulatory compliance to become leaders of sustainability in business.
+      - id: socioeconomic-analytics
+        name: Socioeconomic Analytics
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/corporate-consulting-2/socioeconomic-analytics/
+        aliases:
+          - socioeconomic analysis
+          - economic impact assessment
+          - social impact assessment
+          - local content analysis
+          - workforce gap assessment
+          - fiscal impact modeling
+          - social return on investment
+        definition: >-
+          Turning strategic insights into actionable plans. DAI's range of socioeconomic and macroeconomic analysis services allow clients to estimate the economic and socioeconomic effects of their new or ongoing activities, as well as evaluate the social impacts of investments.
+      - id: supply-chain-localization
+        name: Supply Chain Localization
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/corporate-consulting-2/supply-chain-localization/
+        aliases:
+          - local content
+          - local supplier development
+          - localized procurement
+          - local supply chains
+          - supplier upskilling
+          - local content compliance
+          - domestic supplier sourcing
+        include_when:
+          - The text discusses local content, local supplier development, localized procurement, supplier upskilling, or corporate strategies to localize supply chains.
+        exclude_when:
+          - The text discusses procurement, logistics, responsible sourcing, or supply chain resilience broadly without a local content or localization focus; use Supply Chain Management instead.
+        definition: >-
+          Assisting companies to optimize and localize supply chains. DAI's comprehensive approach to local content enhances local economic development, ensures compliance with local regulations, and boosts community engagement to create long-term value for both businesses and the communities in which they operate.
+  - id: education
+    name: Education
+    source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/education/
+    aliases:
+      - education systems
+      - learning outcomes
+      - teacher training
+      - inclusive education
+      - foundational learning
+      - school systems strengthening
+      - lifelong learning
+    include_when:
+      - The text discusses education systems, schools, teachers, learning outcomes, inclusive education, foundational learning, or lifelong learning.
+    exclude_when:
+      - The text primarily discusses workforce development, TVET, apprenticeships, internships, livelihoods, or employment pathways; use Jobs, Skills and Employment instead.
+    definition: >-
+      Stronger systems for better learning. We help build resilient education systems that support lifelong learning, strengthen communities, and drive socioeconomic development. Through local partnerships, evidence, and innovation, we improve infrastructure, systems, and teaching to expand inclusion and help learners thrive in a changing world.
+  - id: global-health
+    name: Global Health
+    source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/global-health/
+    aliases:
+      - public health
+      - health outcomes
+      - healthcare access
+      - global public health
+      - community health
+      - health service delivery
+      - health equity
+    definition: >-
+      Building better health systems to improve lives. Healthy communities rely on healthy environments. We need better health security, broader healthcare access, and a deeper understanding of how our natural world and physical health interact. DAI tackles global health issues and public health challenges to improve health outcomes worldwide.
+    children:
+      - id: global-health-supply-chain
+        name: Global Health Supply Chain
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/global-health/global-health-supply-chain/
+        aliases:
+          - health commodity supply chains
+          - medical supply delivery
+          - pharmaceutical supply chain
+          - last-mile health delivery
+          - health logistics
+          - medicine distribution
+          - health procurement systems
+        definition: >-
+          Stronger systems to ensure last-mile delivery of health supplies. Supply chain resilience is crucial for ensuring life-saving medicines and supplies reach the most vulnerable. DAI's approach to global health supply chain solutions addresses the complexities of distribution, procurement, and inventory management to improve healthcare outcomes worldwide.
+      - id: health-security
+        name: Health Security
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/global-health/health-security/
+        aliases:
+          - global health security
+          - epidemic preparedness
+          - pandemic preparedness
+          - disease surveillance
+          - outbreak response
+          - One Health
+          - emergency health response
+        definition: >-
+          Equipping governments to tackle epidemics and health crises. Today, health threats can quickly transcend borders, so global health security solutions are essential to ensure resilience against emerging diseases. DAI's comprehensive One Health approach to health security focuses on preparing for, detecting, and responding to global health emergencies.
+      - id: health-systems
+        name: Health Systems
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/global-health/health-systems/
+        aliases:
+          - health systems strengthening
+          - healthcare systems
+          - primary healthcare
+          - health workforce
+          - health financing
+          - service delivery systems
+          - health governance
+        definition: >-
+          Better health systems through meaningful partnerships. Health systems face enormous challenges in providing efficient and equitable healthcare. Globally, 80 percent of people live in low-and middle-income states, but only 20 percent of health expenditure is spent there. Stronger partnerships and health systems are part of the solution.
+  - id: governance
+    name: Governance
+    source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/
+    aliases:
+      - government performance
+      - accountable governance
+      - public institutions
+      - citizen engagement
+      - political economy
+      - public sector governance
+      - institutional strengthening
+    include_when:
+      - The text broadly discusses government performance, public institutions, accountability, citizen engagement, or political economy without fitting a more specific governance child term.
+    exclude_when:
+      - The text specifically discusses anti-corruption, civil society, democratic institutions, justice, local governance, peace and stability, public administration reform, or public financial management; use the relevant child term instead.
+    definition: >-
+      Improving government performance to better serve citizens. DAI's Governance team strengthens accountability and government performance by providing technical advice, strategic guidance, and support to public institutions, elected bodies, and citizens. Grounded in the incentives, interests, and political economy inherent to policy making and implementation, we tailor solutions to policy makers, citizen leaders, and local governments.
+    children:
+      - id: anti-corruption-transparency-and-accountability
+        name: Anti-Corruption, Transparency, and Accountability
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/anti-corruption-transparency-and-accountability/
+        aliases:
+          - anti-corruption
+          - transparency
+          - accountability mechanisms
+          - citizen oversight
+          - public participation
+          - illicit finance prevention
+          - open government
+        definition: >-
+          Holding governments accountable and amplifying citizen voices. Institutionalizing mechanisms for public participation creates space for the negotiation and inclusive political settlements necessary to provide all citizens with access to government services.
+      - id: civil-society-strengthening
+        name: Civil Society Strengthening
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/civil-society-strengthening/
+        aliases:
+          - civil society
+          - civic engagement
+          - civic space
+          - community advocacy
+          - civil society organizations
+          - CSO capacity building
+          - citizen voice
+        definition: >-
+          Robust civil society is essential to an open society. While well-governed institutions and a fair legal environment are prerequisites for development, civil society is its driving force. Societies thrive when people can engage in the decisions that affect their lives.
+      - id: democratic-institutions
+        name: Democratic Institutions
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/democratic-institutions/
+        aliases:
+          - democratic governance
+          - electoral processes
+          - legislative strengthening
+          - parliamentary support
+          - political institutions
+          - democratic accountability
+          - institutional democracy
+        definition: >-
+          Electoral and democratic processes underpin good governance. Our work with legislatures seeks to find forums for civil society inclusion in the legislative process, both to provide input into policy deliberations and to hold elected bodies accountable.
+      - id: justice-security-and-rule-of-law
+        name: Justice, Security, and Rule of Law
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/justice-security-and-rule-of-law/
+        aliases:
+          - rule of law
+          - justice sector reform
+          - access to justice
+          - legal empowerment
+          - security sector reform
+          - fair justice systems
+          - justice accountability
+        definition: >-
+          Building trust between justice actors and those they serve. Effective development depends on collaboration between the justice sector and the people it serves. We strengthen the rule of law by enabling citizens to demand better governance and promoting oversight mechanisms, civic education, civil society strengthening, and fair and enforceable laws.
+      - id: local-governance-and-decentralization
+        name: Local Governance and Decentralization
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/local-governance-and-decentralization/
+        aliases:
+          - local governance
+          - decentralization
+          - municipal governance
+          - subnational governance
+          - local service delivery
+          - local government capacity
+          - citizen-responsive governance
+        definition: >-
+          Governing closer to the people. We work with national, regional, and local governments to transfer central authority to government bodies that are closer and more responsive to the needs of citizens. Our work in local governance dates to the 1990s, when we assisted newly emerging states in Eastern Europe and the Balkans.
+      - id: peace-and-stability
+        name: Peace and Stability
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/peace-and-stability/
+        aliases:
+          - conflict prevention
+          - peacebuilding
+          - social cohesion
+          - stabilization
+          - fragile states
+          - conflict sensitivity
+          - citizen-state compact
+        definition: >-
+          Laying the foundation for development in fragile states. Because constructive state-society relations are critical to building legitimate states that deliver for their citizens and promote long-term peace, we support solutions that empower the state, when appropriate, and encourage the citizen-state social compact.
+      - id: public-administration-reforms
+        name: Public Administration Reforms
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/public-administration-reforms/
+        aliases:
+          - public administration reform
+          - civil service reform
+          - public sector reform
+          - administrative systems
+          - institutional reform
+          - government service delivery
+          - bureaucratic reform
+        definition: >-
+          Well-governed institutions are the drivers of development. A country's public sector determines its policy environment and developmental trajectory. Public administration reforms are therefore at the forefront of governments' efforts to best manage domestic resources and deliver better services to citizens.
+      - id: public-financial-management
+        name: Public Financial Management
+        source_url: https://bryanschuetzdai-qpmiz.wpcomstaging.com/public-sector-services/governance/public-financial-management/
+        aliases:
+          - PFM
+          - public finance
+          - budget reform
+          - tax administration
+          - fiscal management
+          - public budgeting
+          - macro-fiscal planning
+        definition: >-
+          Public financial management is fundamental to development. We help national and local governments develop efficient and effective tax systems, results-driven budgeting, transparent and accountable public financial management systems, and robust macro-fiscal planning, thereby enhancing public sector performance and contributing to broad-based, sustainable economic growth.
