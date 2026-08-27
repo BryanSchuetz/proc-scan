@@ -12,8 +12,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "procurement-opportunities-local",
-      "database_id": "local",
+      "database_name": "procurement-opportunities",
+      "database_id": "2d9959f3-4a6f-4d23-b9d9-0334f67a715d",
       "migrations_dir": "migrations"
     }
   ],

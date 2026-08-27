@@ -46,4 +46,4 @@ npm test
 npm run build
 ```
 
-`wrangler.jsonc` intentionally uses a local D1 identifier. Create and configure preview/production resources before deployment; no remote infrastructure is created by the local setup.
+`wrangler.jsonc` binds the deployed Worker to the production `procurement-opportunities` D1 database. Local migration and seed commands still use Wrangler's isolated `--local` database; fixture data is never applied remotely.

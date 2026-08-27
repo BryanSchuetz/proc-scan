@@ -1,6 +1,6 @@
 # Procurement Opportunity Registry — Development Plan
 
-Status: Milestone 0 implemented locally; SAM.gov and Grants.gov adapters implemented locally; shared Cloudflare deployment in progress
+Status: SAM.gov and Grants.gov deployed to Cloudflare; Access configuration and first scheduled scan verification pending
 
 This is a living plan. It records the agreed product behavior, target architecture, delivery sequence, and acceptance gates. Deferred details remain explicit rather than being guessed.
 
@@ -10,7 +10,7 @@ The local foundation includes the React/Worker application, D1 migrations and FT
 
 Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, linked-notice Modification handling, and repeated-scan idempotency. Bounded live requests confirmed both production API response shapes. The Addressability configuration remains deliberately `draft`, so live records are retained as Uncertain until approved rules are supplied.
 
-No scheduled Cloudflare scan has run and no email provider has been configured. SAM.gov does not return description text inline, and Grants.gov search results require a separate public detail request for the full synopsis. Description enrichment remains deferred while API quotas and live volumes are evaluated. The remaining foundation gate is a shared deployment with remote D1, secrets, and the owner's Entra-backed Access application.
+The Worker, static assets, Workflow, production D1 database, migrations, and SAM.gov secret are deployed to Cloudflare. The Worker correctly fails closed because no Access application, team domain, audience, or allow policy is configured yet. No scheduled Cloudflare scan has run and no email provider has been configured. SAM.gov does not return description text inline, and Grants.gov search results require a separate public detail request for the full synopsis. Description enrichment remains deferred while API quotas and live volumes are evaluated.
 
 ## Goal
 
@@ -305,7 +305,7 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 - **Present**: SAM.gov API key in the `SAM_API_KEY` project secret.
 - **Present**: Cloudflare account ID and Workers deployment credentials in project secrets.
 - **Before Addressability Assessment can be accepted**: exact hard exclusions, weighted criteria, value bands, Client rules, remaining assessment inputs, and threshold.
-- **Before a shared Cloudflare deployment**: Access team domain, Access audience, and Entra-backed Access allow policy. D1 databases and bindings are created during implementation.
+- **Before the deployed UI can be used**: Access team domain, Access audience, and Entra-backed Access allow policy.
 - **Before live digest delivery**: destination distribution-list address, sender identity, and selected email provider credentials/configuration.
 - **Before Phase 2 login-based adapters**: credentials for login-based Sources, supplied through project secrets.
 - **Before Phase 3**: credentials and an approved manual session-handoff procedure for 2FA Sources.
