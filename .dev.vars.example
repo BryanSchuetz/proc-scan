@@ -1,0 +1,10 @@
+# Cloudflare Access is bypassed only for loopback requests. These values are
+# required for any shared preview or production hostname.
+TEAM_DOMAIN=https://your-team.cloudflareaccess.com
+POLICY_AUD=your-access-application-audience
+
+# Source credentials (add only when the matching adapter is enabled).
+SAM_API_KEY=
+
+# Digest delivery remains deferred.
+DIGEST_RECIPIENT=

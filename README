@@ -1,1 +1,31 @@
-## A scanner and registry for procuremnt sites.
+# Procurement Opportunity Registry
+
+A Cloudflare-hosted scanner and read-only registry for procurement Bidding Events.
+
+- [Development plan](DEVELOPMENT_PLAN.md)
+- [Domain language](CONTEXT.md)
+- [Technical-area taxonomy](tech-area-classification.yaml)
+
+## Local foundation preview
+
+Requirements: Node.js 22 or later.
+
+```bash
+npm install
+npm run db:migrate:local
+npm run db:seed:local
+npm run dev
+```
+
+The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds.
+
+## Checks
+
+```bash
+npm run validate:config
+npm run typecheck
+npm test
+npm run build
+```
+
+`wrangler.jsonc` intentionally uses a local D1 identifier. Create and configure preview/production resources before deployment; no remote infrastructure is created by the local setup.

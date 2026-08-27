@@ -1,0 +1,7 @@
+# Safe Milestone 0 default. No Bidding Event can become Addressable until the
+# owner replaces this draft with approved business rules and marks it active.
+schema_version: 1
+status: draft
+threshold: 1
+hard_exclusions: []
+scoring_rules: []

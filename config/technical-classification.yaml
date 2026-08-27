@@ -1,0 +1,40 @@
+schema_version: 1
+match_threshold: 3
+weights:
+  name_phrase: 3
+  alias_phrase: 3
+  generic_term: 1
+generic_terms:
+  - digital
+  - education
+  - governance
+  - investment
+  - jobs
+  - trade
+ambiguous_aliases:
+  - term: biodiversity conservation
+    resolutions:
+      - label_id: climate-and-environment
+        context_terms:
+          - climate resilience
+          - circular economy
+          - environmental protection
+      - label_id: nature-oceans-and-biodiversity
+        context_terms:
+          - ecosystem protection
+          - forest conservation
+          - marine conservation
+          - natural resource governance
+          - protected areas
+  - term: local supplier development
+    resolutions:
+      - label_id: supply-chain-management
+        context_terms:
+          - logistics
+          - procurement systems
+          - supply chain operations
+      - label_id: supply-chain-localization
+        context_terms:
+          - economic inclusion
+          - local content
+          - local vendor development

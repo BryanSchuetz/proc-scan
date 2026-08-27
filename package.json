@@ -1,0 +1,47 @@
+{
+  "name": "procurement-opportunity-registry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run validate:config && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate:config": "tsx scripts/validate-config.ts",
+    "cf:typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply procurement-opportunities-local --local",
+    "db:seed:local": "wrangler d1 execute procurement-opportunities-local --local --file=fixtures/seed.sql"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans": "^5.3.0",
+    "@fontsource/noto-serif": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tanstack/react-table": "^8.21.3",
+    "jose": "^6.2.10",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.54.0",
+    "@cloudflare/vitest-plugin": "^1.1.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.0",
+    "jsdom": "^30.0.1",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.126.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
