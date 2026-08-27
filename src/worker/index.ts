@@ -58,7 +58,7 @@ async function handleApi(request: Request, env: AppEnv): Promise<Response> {
     return errorResponse(405, "method_not_allowed", "The API is read-only.");
   }
 
-  if (url.pathname === "/api/events") {
+  if (url.pathname === "/api/opportunities" || url.pathname === "/api/events") {
     try {
       const response = await listBiddingEvents(env.DB, parseEventsQuery(url));
       return jsonResponse(response);

@@ -17,7 +17,7 @@ npm run db:seed:local
 npm run dev
 ```
 
-The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds.
+The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds. The deployed Worker is protected by a Worker-level Access application with the same 12-hour login policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN login methods.
 
 ## SAM.gov Source
 

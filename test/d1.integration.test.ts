@@ -37,7 +37,7 @@ describe("D1 registry integration", () => {
   });
 
   it("returns both retained statuses newest-first by default", async () => {
-    const response = await SELF.fetch("http://localhost/api/events");
+    const response = await SELF.fetch("http://localhost/api/opportunities");
     expect(response.status).toBe(200);
     const body = await response.json<EventsResponse>();
     expect(body.pagination.total).toBe(6);
@@ -50,12 +50,12 @@ describe("D1 registry integration", () => {
   });
 
   it("supports the separate Addressable and Uncertain registry views", async () => {
-    const addressableResponse = await SELF.fetch("http://localhost/api/events?status=addressable");
+    const addressableResponse = await SELF.fetch("http://localhost/api/opportunities?status=addressable");
     const addressable = await addressableResponse.json<EventsResponse>();
     expect(addressable.pagination.total).toBe(4);
     expect(addressable.items.every((item) => item.addressabilityStatus === "addressable")).toBe(true);
 
-    const uncertainResponse = await SELF.fetch("http://localhost/api/events?status=uncertain");
+    const uncertainResponse = await SELF.fetch("http://localhost/api/opportunities?status=uncertain");
     const uncertain = await uncertainResponse.json<EventsResponse>();
     expect(uncertain.pagination.total).toBe(2);
     expect(uncertain.items.every((item) => item.addressabilityStatus === "uncertain")).toBe(true);
@@ -77,9 +77,16 @@ describe("D1 registry integration", () => {
   });
 
   it("uses allowlisted query fields and rejects writes", async () => {
-    expect((await SELF.fetch("http://localhost/api/events?sort=technicalAreas")).status).toBe(200);
-    expect((await SELF.fetch("http://localhost/api/events?sort=drop_table")).status).toBe(400);
-    expect((await SELF.fetch("http://localhost/api/events?unknown=value")).status).toBe(400);
-    expect((await SELF.fetch("http://localhost/api/events", { method: "POST" })).status).toBe(405);
+    expect((await SELF.fetch("http://localhost/api/opportunities?sort=technicalAreas")).status).toBe(200);
+    expect((await SELF.fetch("http://localhost/api/opportunities?sort=drop_table")).status).toBe(400);
+    expect((await SELF.fetch("http://localhost/api/opportunities?unknown=value")).status).toBe(400);
+    expect((await SELF.fetch("http://localhost/api/opportunities", { method: "POST" })).status).toBe(405);
+  });
+
+  it("retains the previous events endpoint as a read-only compatibility alias", async () => {
+    const response = await SELF.fetch("http://localhost/api/events?status=uncertain");
+    expect(response.status).toBe(200);
+    const body = await response.json<EventsResponse>();
+    expect(body.pagination.total).toBe(2);
   });
 });

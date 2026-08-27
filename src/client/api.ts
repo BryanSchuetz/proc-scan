@@ -27,7 +27,7 @@ export async function fetchBiddingEvents(
     if (query[key]) params.set(key, query[key]);
   }
 
-  const response = await fetch(`/api/events?${params}`, {
+  const response = await fetch(`/api/opportunities?${params}`, {
     headers: { Accept: "application/json" },
     signal,
   });

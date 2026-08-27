@@ -9,6 +9,10 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": true
   },
+  "vars": {
+    "TEAM_DOMAIN": "https://divine-leaf-d5e5.cloudflareaccess.com",
+    "POLICY_AUD": "500f0d037777ed1f8fc600c1ce9947621d8476a9a437079432df26bb5d267437"
+  },
   "d1_databases": [
     {
       "binding": "DB",

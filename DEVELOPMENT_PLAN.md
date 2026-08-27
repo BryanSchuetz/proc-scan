@@ -1,6 +1,6 @@
 # Procurement Opportunity Registry — Development Plan
 
-Status: SAM.gov and Grants.gov deployed to Cloudflare; Access configuration and first scheduled scan verification pending
+Status: SAM.gov, Grants.gov, and Cloudflare Access deployed; first Cloudflare scan completed partially (Grants.gov succeeded, SAM.gov quota-limited)
 
 This is a living plan. It records the agreed product behavior, target architecture, delivery sequence, and acceptance gates. Deferred details remain explicit rather than being guessed.
 
@@ -10,7 +10,7 @@ The local foundation includes the React/Worker application, D1 migrations and FT
 
 Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, linked-notice Modification handling, and repeated-scan idempotency. Bounded live requests confirmed both production API response shapes. The Addressability configuration remains deliberately `draft`, so live records are retained as Uncertain until approved rules are supplied.
 
-The Worker, static assets, Workflow, production D1 database, migrations, and SAM.gov secret are deployed to Cloudflare. The Worker correctly fails closed because no Access application, team domain, audience, or allow policy is configured yet. No scheduled Cloudflare scan has run and no email provider has been configured. SAM.gov does not return description text inline, and Grants.gov search results require a separate public detail request for the full synopsis. Description enrichment remains deferred while API quotas and live volumes are evaluated.
+The Worker, static assets, Workflow, production D1 database, migrations, SAM.gov secret, and Worker-level Cloudflare Access application are deployed. Access uses the same 12-hour policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN identity providers. The Worker independently validates the Access issuer and application audience. The first API-triggered Cloudflare cycle completed in 21 seconds with the expected partial status: Grants.gov discovered and retained 128 records, while SAM.gov returned its quota-exhausted response and was recorded as a Source failure without blocking Grants.gov. The first scheduled cycle remains to be confirmed, and no email provider has been configured. SAM.gov does not return description text inline, and Grants.gov search results require a separate public detail request for the full synopsis. Description enrichment remains deferred while API quotas and live volumes are evaluated.
 
 ## Goal
 
@@ -74,7 +74,8 @@ Build a Cloudflare-hosted application that:
 ### Hosting and access
 
 - The application will be hosted on Cloudflare.
-- The web UI and API will be protected by Cloudflare Access using Microsoft Entra ID as the identity provider.
+- The web UI and API are protected by a Worker-level Cloudflare Access application using the account's Cloudflare and email one-time PIN identity providers. Microsoft Entra ID is deferred.
+- The Access allow policy matches DAI CV Formatter: users with a `dai.com` email address and the configured owner email account are allowed, with a 12-hour session.
 - Cloudflare Access owns user authentication and authorization; the application does not maintain user accounts, roles, or separate permissions.
 - Every authenticated visitor has the same read-only access.
 - Cloudflare credentials will be supplied through project secrets.
@@ -170,9 +171,9 @@ Build a Cloudflare-hosted application that:
 ┌──────────────────────── Cloudflare deployment ────────────────────────┐
 │                                                                       │
 │  ┌────────────────┐       ┌───────────────────────────────────────┐  │
-│  │ Access + Entra │──────▶│ Worker: static UI + read-only API    │  │
-│  └────────────────┘       └──────────────────┬────────────────────┘  │
-│                                              │                       │
+│  │ Access         │──────▶│ Worker: static UI + read-only API    │  │
+│  │ CF + email OTP │       └──────────────────┬────────────────────┘  │
+│  └────────────────┘                          │                       │
 │  ┌────────────────┐       ┌──────────────────▼────────────────────┐  │
 │  │ Scheduled      │──────▶│ Workflow: scan → normalize → classify│  │
 │  │ Workflow       │       │          → persist → digest          │  │
@@ -194,7 +195,7 @@ Build a Cloudflare-hosted application that:
 ### Cloudflare components
 
 - **Worker with static assets**: serves the web application and the same-origin JSON API from one deployment.
-- **Cloudflare Access**: authenticates with Entra ID. The Worker also validates the Access JWT issuer and audience before serving UI or API data.
+- **Cloudflare Access**: authenticates through the account's Cloudflare and email one-time PIN identity providers. The Worker also validates the Access JWT issuer and audience before serving UI or API data.
 - **D1**: stores retained Bidding Events, classifications, scan state, source-run outcomes, and digest delivery state.
 - **D1 FTS5**: provides server-side full-text search over Opportunity name, description, Client, place, and denormalized Technical Area labels.
 - **Cloudflare Workflows**: runs the durable scheduled pipeline with step-level retries and records each cycle independently.
@@ -304,8 +305,8 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 - **Present**: `tech-area-classification.yaml`.
 - **Present**: SAM.gov API key in the `SAM_API_KEY` project secret.
 - **Present**: Cloudflare account ID and Workers deployment credentials in project secrets.
+- **Present**: Worker-level Access application, allow policy, team domain, and application audience.
 - **Before Addressability Assessment can be accepted**: exact hard exclusions, weighted criteria, value bands, Client rules, remaining assessment inputs, and threshold.
-- **Before the deployed UI can be used**: Access team domain, Access audience, and Entra-backed Access allow policy.
 - **Before live digest delivery**: destination distribution-list address, sender identity, and selected email provider credentials/configuration.
 - **Before Phase 2 login-based adapters**: credentials for login-based Sources, supplied through project secrets.
 - **Before Phase 3**: credentials and an approved manual session-handoff procedure for 2FA Sources.
@@ -416,7 +417,6 @@ These do not need more interview time now, but they must be resolved before the 
 - Exact Addressability configuration and remaining criteria beyond value and Client — before Milestone 1 acceptance.
 - Exact machine-readable taxonomy weights, threshold, and tie-break rules — during Milestone 0.
 - Email provider, sender domain/address, failure alert when no digest is sent, and delivery tracking details — before Milestone 2.
-- Exact Cloudflare Access allow policy (Entra group/domain) — before deploying a shared preview.
 - UI record-age cutoff and whether visitors can expand to all history — revisit after observing volume and user behavior.
 - Export, event detail view, and saved filters — omitted until requested.
 - SAM.gov full-description strategy—daily Active Opportunities extract versus selective API enrichment—before Milestone 1 acceptance.
