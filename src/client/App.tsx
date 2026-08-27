@@ -57,8 +57,7 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 
 function SortIndicator({ direction }: { direction: false | "asc" | "desc" }) {
   if (direction === "asc") return <CaretUpIcon aria-hidden="true" size={14} weight="bold" />;
-  if (direction === "desc") return <CaretDownIcon aria-hidden="true" size={14} weight="bold" />;
-  return <CaretUpDownIcon aria-hidden="true" size={14} />;
+  return <CaretDownIcon aria-hidden="true" size={14} weight="bold" />;
 }
 
 interface ColumnMenuOption {
@@ -121,7 +120,7 @@ function ColumnMenu({
         onClick={() => setOpen((value) => !value)}
       >
         {label}
-        <SortIndicator direction={sortDirection} />
+        <CaretUpDownIcon aria-hidden="true" size={14} />
       </button>
       {open && (
         <div
@@ -146,20 +145,25 @@ function ColumnMenu({
             </button>
           ))}
           <span className="column-menu__section-label">Filter</span>
-          {filterOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={filterValue === option.value}
-              onClick={() => {
-                onFilter(option.value);
-                setOpen(false);
-              }}
-            >
-              <span>{option.label}</span>
-              {filterValue === option.value && <CheckIcon aria-hidden="true" size={15} weight="bold" />}
-            </button>
-          ))}
+          {filterOptions.map((option) => {
+            const resetsActiveFilter = option.value === "" && filterValue !== "";
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={filterValue === option.value}
+                onClick={() => {
+                  onFilter(option.value);
+                  setOpen(false);
+                }}
+              >
+                <span>{resetsActiveFilter ? `Reset ${accessibleLabel} filter` : option.label}</span>
+                {resetsActiveFilter
+                  ? <XIcon aria-hidden="true" size={15} />
+                  : filterValue === option.value && <CheckIcon aria-hidden="true" size={15} weight="bold" />}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -499,6 +503,20 @@ export default function App() {
                       ))}
                     </tr>
                   ))}
+                  {!loading && !error && data?.items.length === 0 && (
+                    <tr className="empty-table-row">
+                      <td colSpan={columns.length}>
+                        <div className="state-message">
+                          <strong>{hasFilters ? "No records match these filters" : "No Bidding Events yet"}</strong>
+                          <span>
+                            {hasFilters
+                              ? "Adjust or reset the active filter or search above to broaden the results."
+                              : "Retained events will appear after a Source scan."}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               )}
             </table>
@@ -509,14 +527,6 @@ export default function App() {
               <strong>Unable to load Bidding Events</strong>
               <span>{error}</span>
               <button type="button" onClick={() => setReload((value) => value + 1)}>Try again</button>
-            </div>
-          )}
-
-          {!loading && !error && data?.items.length === 0 && (
-            <div className="state-message">
-              <strong>{hasFilters ? "No records match these filters" : "No Bidding Events yet"}</strong>
-              <span>{hasFilters ? "Clear or adjust a filter to broaden the results." : "Retained events will appear after a Source scan."}</span>
-              {hasFilters && <button type="button" onClick={clearFilters}>Clear filters</button>}
             </div>
           )}
 
