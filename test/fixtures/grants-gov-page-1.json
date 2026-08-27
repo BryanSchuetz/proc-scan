@@ -1,0 +1,23 @@
+{
+  "errorcode": 0,
+  "msg": "Webservice Succeeds",
+  "data": {
+    "hitCount": 3,
+    "startRecord": 2,
+    "oppHits": [
+      {
+        "id": "361650",
+        "number": "DOS-INL-FY26-02",
+        "title": "Justice sector data modernization",
+        "agencyCode": "DOS-INL",
+        "agency": "Bureau of International Narcotics-Law Enforcement",
+        "openDate": "08/25/2026",
+        "closeDate": "10/15/2026",
+        "oppStatus": "posted",
+        "docType": "synopsis",
+        "cfdaList": ["19.703", 19.704]
+      }
+    ],
+    "agencies": []
+  }
+}

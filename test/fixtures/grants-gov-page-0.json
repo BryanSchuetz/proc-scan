@@ -1,0 +1,35 @@
+{
+  "errorcode": 0,
+  "msg": "Webservice Succeeds",
+  "data": {
+    "hitCount": 3,
+    "startRecord": 0,
+    "oppHits": [
+      {
+        "id": "361701",
+        "number": "DOS-DRL-FY26-01",
+        "title": "Digital rights and civic technology program",
+        "agencyCode": "DOS-DRL",
+        "agencyName": "Bureau of Democracy Human Rights and Labor",
+        "openDate": "08/26/2026",
+        "closeDate": "09/30/2026",
+        "oppStatus": "posted",
+        "docType": "synopsis",
+        "alnist": ["19.345"]
+      },
+      {
+        "id": 331415,
+        "number": "95332421K0004",
+        "title": "Solomon Islands Threshold Program Industry Day",
+        "agencyCode": "MCC",
+        "agencyName": "Millennium Challenge Corporation",
+        "openDate": "02/10/2021",
+        "closeDate": "",
+        "oppStatus": "forecasted",
+        "docType": "forecast",
+        "alnist": []
+      }
+    ],
+    "agencies": []
+  }
+}

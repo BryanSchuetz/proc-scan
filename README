@@ -19,6 +19,24 @@ npm run dev
 
 The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds.
 
+## SAM.gov Source
+
+The first Source adapter uses the official SAM.gov Get Opportunities Public API v2. Migration `0002_sam_gov_source.sql` enables it, and the Workflow reads its API key from the `SAM_API_KEY` secret. For local Workflow runs, copy `.dev.vars.example` to `.dev.vars` and supply the key there; never commit that file.
+
+The adapter requests up to 1,000 records per page, follows SAM.gov's zero-based page-index pagination, and scans from the saved cursor with at most two preceding UTC dates of catch-up. Every request is restricted by `organizationCode` to the organizations in `config/sam-gov.yaml`: Millennium Challenge Corporation (`524`), U.S. International Development Finance Corporation (`077`), U.S. Trade and Development Agency (`011`), and Department of State (`019`). Because SAM.gov documents this filter as a single string, the adapter runs one paginated request sequence per organization and deduplicates the combined result. This costs at least four API requests per scan; additional pages consume additional requests.
+
+The adapter collects pre-solicitations, Sources Sought, Special Notices, solicitations, combined synopsis/solicitations, and intent-to-bundle notices. Award, justification, and surplus-sale notices are not pursuit candidates and are omitted.
+
+SAM.gov returns each description as a separate authenticated URL rather than inline search data. The initial adapter preserves a credential-free description URL in structured Source data but does not spend one API request per notice to download descriptions. Opportunity titles and the other search metadata are therefore available for the initial deterministic classification pass; bulk description ingestion or selective enrichment remains a follow-up decision after measuring the account's request quota.
+
+## Grants.gov Source
+
+The Grants.gov adapter uses the official unauthenticated `search2` JSON API. Grants.gov does not use SAM.gov's three-digit Federal Hierarchy identifiers, so `config/grants-gov.yaml` keeps those four approved identifiers as the shared scope and crosswalks them to Grants.gov's own agency hierarchy. The build fails if the Grants.gov federal codes drift from `config/sam-gov.yaml`.
+
+At the start of each scan, the adapter reads Grants.gov's current agency facet and expands approved parent agencies to their advertised subagencies. It then retrieves only forecasted and posted opportunities for those exact agency codes, up to 1,000 records per page, and rejects any out-of-scope record returned by the API. The current Grants.gov facet advertises Millennium Challenge Corporation as `MCC` and Department of State as `DOS` with its subagencies. It does not currently advertise Development Finance Corporation or Trade and Development Agency, so their approved federal codes remain configured without inventing unsupported Grants.gov codes.
+
+The adapter scans the complete active/forecasted snapshot because `search2` does not document an update-time cursor that would safely detect changes to older opportunities. Repeated snapshots are deduplicated by the shared pipeline, while a material change to a stable opportunity ID becomes a Modification. Search results provide title, agency, status, dates, and Assistance Listing numbers but not the full synopsis; selective use of the public `fetchOpportunity` detail endpoint remains a follow-up after measuring live volume.
+
 ## Checks
 
 ```bash

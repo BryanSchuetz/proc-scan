@@ -35,6 +35,17 @@ export interface SourceAdapter {
   scan(context: SourceScanContext): Promise<SourceScanResult>;
 }
 
+export class SourceScanError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+    readonly retryable: boolean,
+  ) {
+    super(message);
+    this.name = "SourceScanError";
+  }
+}
+
 export function assertValidSourceAdapter(adapter: SourceAdapter): void {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(adapter.definition.id)) {
     throw new Error(`Invalid Source ID: ${adapter.definition.id}`);

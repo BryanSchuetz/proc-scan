@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import taxonomyRaw from "../tech-area-classification.yaml?raw";
 import classificationRaw from "../config/technical-classification.yaml?raw";
+import grantsGovRaw from "../config/grants-gov.yaml?raw";
+import samGovRaw from "../config/sam-gov.yaml?raw";
 import {
   classifyTechnicalAreas,
   flattenTaxonomy,
@@ -8,6 +10,8 @@ import {
   parseTechnicalClassificationYaml,
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
+import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
+import { parseSamGovConfig } from "../src/sources/sam-gov";
 
 const taxonomy = parseTaxonomyYaml(taxonomyRaw);
 const config = parseTechnicalClassificationYaml(classificationRaw);
@@ -40,5 +44,52 @@ describe("Technical Area configuration", () => {
     );
     expect(result.map((area) => area.id)).toContain("nature-oceans-and-biodiversity");
     expect(result.map((area) => area.id)).not.toContain("climate-and-environment");
+  });
+});
+
+describe("SAM.gov configuration", () => {
+  it("loads the four approved federal organizations", () => {
+    expect(parseSamGovConfig(samGovRaw).organizations).toEqual([
+      { code: "524", name: "Millennium Challenge Corporation" },
+      { code: "077", name: "United States International Development Finance Corporation" },
+      { code: "011", name: "United States Trade and Development Agency" },
+      { code: "019", name: "State, Department of" },
+    ]);
+  });
+
+  it("rejects duplicate organization codes", () => {
+    expect(() => parseSamGovConfig(`
+schema_version: 1
+organizations:
+  - code: "524"
+    name: First
+  - code: "524"
+    name: Duplicate
+`)).toThrow("Duplicate SAM.gov organization code: 524");
+  });
+});
+
+describe("Grants.gov configuration", () => {
+  it("uses the same four approved federal organizations as SAM.gov", () => {
+    const grantsGov = parseGrantsGovConfig(grantsGovRaw);
+    const samGov = parseSamGovConfig(samGovRaw);
+
+    expect(() => validateGrantsGovScope(grantsGov, samGov.organizations)).not.toThrow();
+    expect(grantsGov.organizations.map(({ code, agency_code: agencyCode }) => ({
+      code,
+      agencyCode,
+    }))).toEqual([
+      { code: "524", agencyCode: "MCC" },
+      { code: "077", agencyCode: null },
+      { code: "011", agencyCode: null },
+      { code: "019", agencyCode: "DOS" },
+    ]);
+  });
+
+  it("rejects a federal scope that drifts from SAM.gov", () => {
+    const grantsGov = parseGrantsGovConfig(grantsGovRaw);
+    expect(() => validateGrantsGovScope(grantsGov, [{ code: "524" }])).toThrow(
+      "Grants.gov federal organization codes must match the approved SAM.gov scope",
+    );
   });
 });

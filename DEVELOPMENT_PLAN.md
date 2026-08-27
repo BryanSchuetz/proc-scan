@@ -1,16 +1,16 @@
 # Procurement Opportunity Registry — Development Plan
 
-Status: Milestone 0 implemented locally; shared Cloudflare preview and Access verification pending owner configuration
+Status: Milestone 0 implemented locally; SAM.gov and Grants.gov adapters implemented locally; shared Cloudflare deployment in progress
 
 This is a living plan. It records the agreed product behavior, target architecture, delivery sequence, and acceptance gates. Deferred details remain explicit rather than being guessed.
 
-## Implementation Status — August 26, 2026
+## Implementation Status — August 27, 2026
 
-The local Milestone 0 foundation now includes the React/Worker application, D1 migration and FTS5 index, fixture seed, read-only paginated API and table, deterministic classifier/config schemas, event identity and inheritance logic, OCDS-shaped release mapping, Cloudflare Access JWT guard, and New York-time Workflow schedule gate.
+The local foundation includes the React/Worker application, D1 migrations and FTS5 index, fixture seed, read-only paginated API and table, deterministic classifier/config schemas, event identity and inheritance logic, OCDS-shaped release mapping, Cloudflare Access JWT guard, and New York-time Workflow schedule gate. SAM.gov and Grants.gov are registered Sources. SAM.gov's official v2 API adapter implements bounded cursor overlap, organization-scoped page-index pagination, credential-safe failures, and notice normalization. Grants.gov's official unauthenticated adapter discovers its current agency hierarchy, crosswalks it to the same approved federal organizations, scans only forecasted and posted opportunities, and paginates a complete active snapshot. Both use shared classification, persistence, deduplication, and per-Source run accounting.
 
-Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, and EST/EDT scheduling. The Addressability configuration remains deliberately `draft`, so a live pipeline cannot mark any event Addressable until approved rules are supplied.
+Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, linked-notice Modification handling, and repeated-scan idempotency. Bounded live requests confirmed both production API response shapes. The Addressability configuration remains deliberately `draft`, so live records are retained as Uncertain until approved rules are supplied.
 
-No Cloudflare resources have been created or deployed, no live Source adapter has been enabled, and no email provider has been configured. The remaining Milestone 0 gate is a shared preview behind the owner's Entra-backed Access application.
+No scheduled Cloudflare scan has run and no email provider has been configured. SAM.gov does not return description text inline, and Grants.gov search results require a separate public detail request for the full synopsis. Description enrichment remains deferred while API quotas and live volumes are evaluated. The remaining foundation gate is a shared deployment with remote D1, secrets, and the owner's Entra-backed Access application.
 
 ## Goal
 
@@ -312,13 +312,13 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 
 ## Source Rollout
 
-Implement and validate each phase before starting the next. After Grants.gov and TED, order adapters by API/feed availability, expected value, and legal/technical feasibility rather than preserving the table order blindly.
+The phase numbers below continue to describe authentication complexity, not current delivery priority. The owner reprioritized SAM.gov as the first vertical slice on August 27, 2026. After SAM.gov, order adapters by API/feed availability, expected value, and legal/technical feasibility rather than preserving the table order blindly.
 
 ### Phase 1 — Unauthenticated or public API
 
 | Order | Source | Starting URL | Plan |
 |---:|---|---|---|
-| 1 | Grants.gov | [API resources](https://www.grants.gov/api) | Use the unauthenticated official JSON search and detail APIs to prove the end-to-end vertical slice. |
+| 1 | Grants.gov | [API resources](https://www.grants.gov/api) | Search adapter implemented locally with approved-organization hierarchy discovery and full active-snapshot deduplication; validate scheduled live scans and decide selective detail enrichment. |
 | 2 | TED | [Current search](https://ted.europa.eu/en/search/result?query=%28funding+IN+%28external-aid-program%29%29+SORT+BY+publication-number+DESC&scope=ACTIVE&onlyLatestVersions=false&sortColumn=publication-number&sortOrder=DESC&page=1) | Use the unauthenticated official Search API; add XML/eForms mapping after the core pipeline works. |
 | TBD | EU Funding & Tenders Portal | [Portal](https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/home) | Discover and prefer official published-data APIs before browser extraction. |
 | TBD | dgMarket | [Buyer list](https://www.dgmarket.com/tenders/buyerList.do) | Confirm permitted access, search scope, pagination, and whether a feed/API is available. |
@@ -329,7 +329,7 @@ Implement and validate each phase before starting the next. After Grants.gov and
 
 | Source | Starting URL | Access | Plan |
 |---|---|---|---|
-| SAM.gov | [SAM.gov](https://sam.gov/) | API key | First Phase 2 adapter because authentication is non-interactive and the API is structured. |
+| SAM.gov | [SAM.gov](https://sam.gov/) | API key | Implemented locally as the first Source; validate scheduled live scans and decide bulk versus selective description enrichment. |
 | Atamis Supplier Portal | [Login](https://atamis-9529.my.site.com/ProSpend__CustomCommunitiesLogin?startURL=%2Fhome%2Fhome.jsp) | Login | Determine session lifetime and direct HTTP/API feasibility before Browser Rendering. |
 | BEIS/Jaggaer | [Portal](https://beisgroup.ukp.app.jaggaer.com/esop/ogc-host/public/beisgroup/web/error.jst?_ncp=1785141439137.292039-1) | Login | Find a stable entry URL, then determine session and extraction approach. |
 | ECEPP | [Activity Centre](https://ecepp.ebrd.com/delta/mainMenu.html?login=true) | Login | Determine session lifetime and direct HTTP/API feasibility before Browser Rendering. |
@@ -353,22 +353,24 @@ Implement and validate each phase before starting the next. After Grants.gov and
 
 **Gate:** migrations run locally; invalid configuration fails fast; unauthenticated API requests are rejected in a deployed preview; unit and integration tests pass; rerunning a fixture scan creates no duplicates.
 
-### Milestone 1 — Grants.gov vertical slice
+### Milestone 1 — SAM.gov vertical slice
 
-- Implement Grants.gov search/detail collection with saved cursor or bounded lookback.
-- Map Grants data into Bidding Events and OCDS-shaped releases.
+- Implement SAM.gov search collection for the four approved federal organizations with an API key, saved cursor, bounded lookback, page-index pagination, and quota-aware failures.
+- Map SAM.gov notices into Bidding Events and OCDS-shaped releases, linking exact organization-and-solicitation identifiers where available.
 - Run Technical Area and Addressability Assessment, persist retained events, index search text, and display them in the table.
+- Decide whether full descriptions should come from the daily Active Opportunities extract or selective authenticated description requests.
 - Render HTML and plain-text digest previews, including Source coverage, while the sending provider remains deferred.
 - Exercise scheduled and manual non-production runs.
 
-**Gate:** a repeated live scan is idempotent; sampled fields match Grants.gov; filters/search/sorting work server-side; Excluded events leave no registry rows; a digest preview contains only newly retained Addressable events.
+**Gate:** a repeated live scan is idempotent; sampled fields match SAM.gov; filters/search/sorting work server-side; Excluded events leave no registry rows; a digest preview contains only newly retained Addressable events.
 
-### Milestone 2 — Production digest and TED
+### Milestone 2 — Public Sources and production digest
 
 - Select and configure the email provider and sender identity; make delivery idempotent and record provider results.
+- Validate Grants.gov live-scan volume and add selective `fetchOpportunity` synopsis enrichment if it is operationally justified.
 - Implement TED search, pagination, XML/eForms parsing, notice-type mapping, and OCDS identifiers.
 - Validate generated OCDS releases with the OCDS Data Review Tool.
-- Run Grants.gov and TED on the production schedule behind Cloudflare Access.
+- Run SAM.gov, Grants.gov, and TED on the production schedule behind Cloudflare Access.
 
 **Gate:** seven consecutive days of scheduled runs complete without duplicate rows or duplicate emails; a forced single-Source failure still produces a correctly marked partial digest; an empty successful cycle sends no digest.
 
@@ -378,11 +380,11 @@ Implement and validate each phase before starting the next. After Grants.gov and
 - Implement adapters one at a time using the shared contract and fixture tests.
 - Record unsupported fields as missing rather than adding Source-specific UI behavior.
 
-**Gate:** every enabled public adapter passes its contract tests and the combined production workflow is stable before Phase 2 starts.
+**Gate:** every enabled public adapter passes its contract tests and the combined production workflow remains stable as each Source is added.
 
 ### Milestone 4 — Unattended authentication
 
-- Start with SAM.gov, then add credential-based Sources in feasibility/value order.
+- Add the remaining credential-based Sources in feasibility/value order.
 - Introduce Browser Rendering only for Sources proven not to work through API or direct HTTP access.
 - Add session-expiry detection and operator alerts without exposing credential material.
 
@@ -417,8 +419,9 @@ These do not need more interview time now, but they must be resolved before the 
 - Exact Cloudflare Access allow policy (Entra group/domain) — before deploying a shared preview.
 - UI record-age cutoff and whether visitors can expand to all history — revisit after observing volume and user behavior.
 - Export, event detail view, and saved filters — omitted until requested.
+- SAM.gov full-description strategy—daily Active Opportunities extract versus selective API enrichment—before Milestone 1 acceptance.
 - Secure session handoff and operator alert channel for authenticated/2FA Sources — before Milestones 4 and 5.
-- Source-by-Source legal, terms, robots, rate-limit, API, and field-coverage findings — before implementing each adapter.
+- Source-by-Source legal, terms, robots, rate-limit, API, and field-coverage findings — before enabling each additional adapter.
 - GSA eBuy authentication phase — after discovery.
 - Retention/archival policy — revisit when D1 growth is measured.
 
@@ -430,5 +433,6 @@ These do not need more interview time now, but they must be resolved before the 
 - [Cloudflare Browser Rendering](https://developers.cloudflare.com/browser-rendering/)
 - [OCDS releases and records](https://standard.open-contracting.org/latest/en/primer/releases_and_records/)
 - [OCDS release tags](https://standard.open-contracting.org/latest/en/schema/codelists/)
+- [SAM.gov Get Opportunities Public API](https://open.gsa.gov/api/get-opportunities-public-api/)
 - [Grants.gov API guide](https://grants.gov/api/api-guide)
 - [TED Search API](https://docs.ted.europa.eu/api/latest/search.html)

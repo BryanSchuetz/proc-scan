@@ -1,0 +1,10 @@
+schema_version: 1
+organizations:
+  - code: "524"
+    name: Millennium Challenge Corporation
+  - code: "077"
+    name: United States International Development Finance Corporation
+  - code: "011"
+    name: United States Trade and Development Agency
+  - code: "019"
+    name: State, Department of

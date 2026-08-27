@@ -1,0 +1,53 @@
+{
+  "errorcode": 0,
+  "msg": "Webservice Succeeds",
+  "data": {
+    "hitCount": 128,
+    "startRecord": 0,
+    "oppHits": [
+      {
+        "id": "999999",
+        "number": "DISCOVERY-ONLY",
+        "title": "Discovery result is not processed",
+        "agencyCode": "HHS",
+        "agencyName": "Health and Human Services",
+        "openDate": "08/27/2026",
+        "closeDate": "09/30/2026",
+        "oppStatus": "posted",
+        "docType": "synopsis",
+        "alnist": []
+      }
+    ],
+    "agencies": [
+      {
+        "label": "Department of State",
+        "value": "DOS",
+        "count": 126,
+        "subAgencyOptions": [
+          {
+            "label": "Bureau of Democracy Human Rights and Labor",
+            "value": "DOS-DRL",
+            "count": 17
+          },
+          {
+            "label": "Bureau of International Narcotics-Law Enforcement",
+            "value": "DOS-INL",
+            "count": 5
+          }
+        ]
+      },
+      {
+        "label": "Health and Human Services",
+        "value": "HHS",
+        "count": 500,
+        "subAgencyOptions": []
+      },
+      {
+        "label": "Millennium Challenge Corporation",
+        "value": "MCC",
+        "count": 2,
+        "subAgencyOptions": []
+      }
+    ]
+  }
+}

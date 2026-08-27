@@ -1,0 +1,54 @@
+{
+  "totalRecords": 4,
+  "limit": 2,
+  "offset": 0,
+  "opportunitiesData": [
+    {
+      "noticeId": "notice-a",
+      "title": "Digital strategy advisory support",
+      "solicitationNumber": " SOL-100 ",
+      "fullParentPathName": "DEPARTMENT OF EXAMPLE.DIGITAL SERVICES AGENCY.BUYING OFFICE",
+      "fullParentPathCode": "524.010.0101",
+      "postedDate": "2026-08-26",
+      "type": "Solicitation",
+      "baseType": "Pre Solicitation",
+      "archiveType": null,
+      "archiveDate": null,
+      "typeOfSetAside": "SBA",
+      "typeOfSetAsideDescription": "Total Small Business Set-Aside (FAR 19.5)",
+      "responseDeadLine": "2026-09-20T17:00:00-04:00",
+      "naicsCode": "541611",
+      "naicsCodes": ["541611"],
+      "classificationCode": "R",
+      "active": "Yes",
+      "description": "https://api.sam.gov/prod/opportunities/v1/noticedesc?noticeid=notice-a&api%5Fkey=fixture-value",
+      "organizationType": "OFFICE",
+      "placeOfPerformance": {
+        "city": { "code": "51000", "name": "Nairobi" },
+        "country": { "code": "KEN", "name": "KENYA" }
+      },
+      "additionalInfoLink": "https://example.gov/opportunities/notice-a/info",
+      "resourceLinks": [
+        "https://example.gov/opportunities/notice-a/z-attachment.pdf",
+        "https://example.gov/opportunities/notice-a/a-attachment.pdf"
+      ]
+    },
+    {
+      "noticeId": "notice-climate",
+      "title": "Climate resilience market research",
+      "solicitationNumber": null,
+      "fullParentPathName": "DEPARTMENT OF EXAMPLE.CLIMATE AGENCY.RESEARCH OFFICE",
+      "fullParentPathCode": "524.020.0201",
+      "postedDate": "2026-08-27",
+      "type": "Special Notice",
+      "baseType": "Special Notice",
+      "responseDeadLine": null,
+      "active": "Yes",
+      "description": "null",
+      "organizationType": "OFFICE",
+      "placeOfPerformance": null,
+      "additionalInfoLink": null,
+      "resourceLinks": null
+    }
+  ]
+}

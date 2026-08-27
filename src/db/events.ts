@@ -1,6 +1,7 @@
 import type { EventsFacets, EventsResponse } from "../api/types";
 import { addressabilityStatuses, biddingEventTypes } from "../domain/types";
 import type { RetainedBiddingEvent } from "../domain/types";
+import type { PriorBiddingEvent } from "../domain/inheritance";
 
 const sortableColumns = {
   discoveredAt: "e.discovered_at",
@@ -80,6 +81,42 @@ interface EventRow {
   discovered_at: string;
   addressability_status: "addressable" | "uncertain";
   technical_areas_json: string;
+}
+
+interface PriorEventRow {
+  id: string;
+  source_id: string;
+  source_event_id: string | null;
+  source_opportunity_id: string | null;
+  source_url: string;
+  source_event_type: string | null;
+  event_type: "tender" | "modification" | "cancellation";
+  published_at: string | null;
+  discovered_at: string;
+  opportunity_name: string;
+  description: string | null;
+  client_name: string | null;
+  funder_names_json: string;
+  procuring_entity_name: string | null;
+  implementing_entity_names_json: string;
+  value_amount: number | null;
+  value_currency: string | null;
+  due_date: string | null;
+  place_of_performance: string | null;
+  country_code: string | null;
+  eligibility: string | null;
+  source_status: string | null;
+  source_data_json: string;
+  ocds_release_json: string;
+  event_identity: string;
+  content_fingerprint: string;
+  technical_classification_version: number;
+  technical_areas_json: string;
+}
+
+export interface StoredPriorBiddingEvent extends PriorBiddingEvent {
+  eventIdentity: string;
+  contentFingerprint: string;
 }
 
 export class EventsQueryError extends Error {}
@@ -320,6 +357,96 @@ export async function listBiddingEvents(db: D1Database, query: EventsQuery): Pro
   };
 }
 
+function priorEventFromRow(row: PriorEventRow): StoredPriorBiddingEvent {
+  const ocds = JSON.parse(row.ocds_release_json) as RetainedBiddingEvent["ocdsRelease"];
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    sourceEventId: row.source_event_id ?? undefined,
+    sourceOpportunityId: row.source_opportunity_id ?? undefined,
+    canonicalUrl: row.source_url,
+    originalEventType: row.source_event_type ?? undefined,
+    eventType: row.event_type,
+    publishedAt: row.published_at ?? undefined,
+    discoveredAt: row.discovered_at,
+    opportunityName: row.opportunity_name,
+    description: row.description ?? undefined,
+    clientName: row.client_name ?? undefined,
+    funderNames: JSON.parse(row.funder_names_json),
+    procuringEntityName: row.procuring_entity_name ?? undefined,
+    implementingEntityNames: JSON.parse(row.implementing_entity_names_json),
+    value: row.value_amount === null && row.value_currency === null
+      ? undefined
+      : {
+          amount: row.value_amount ?? undefined,
+          currency: row.value_currency ?? undefined,
+        },
+    dueDate: row.due_date ?? undefined,
+    placeOfPerformance: row.place_of_performance === null && row.country_code === null
+      ? undefined
+      : {
+          description: row.place_of_performance ?? undefined,
+          countryCode: row.country_code ?? undefined,
+        },
+    eligibility: row.eligibility ?? undefined,
+    sourceStatus: row.source_status ?? undefined,
+    documents: ocds.tender.documents,
+    sourceData: JSON.parse(row.source_data_json),
+    eventIdentity: row.event_identity,
+    contentFingerprint: row.content_fingerprint,
+    technicalClassificationVersion: row.technical_classification_version,
+    technicalAreas: JSON.parse(row.technical_areas_json),
+  };
+}
+
+async function findPrior(
+  db: D1Database,
+  sourceId: string,
+  field: "event_identity" | "source_opportunity_id",
+  value: string,
+): Promise<StoredPriorBiddingEvent | undefined> {
+  const row = await db.prepare(`SELECT
+      e.id, e.source_id, e.source_event_id, e.source_opportunity_id, e.source_url,
+      e.source_event_type, e.event_type, e.published_at, e.discovered_at,
+      e.opportunity_name, e.description, e.client_name, e.funder_names_json,
+      e.procuring_entity_name, e.implementing_entity_names_json, e.value_amount,
+      e.value_currency, e.due_date, e.place_of_performance, e.country_code,
+      e.eligibility, e.source_status, e.source_data_json, e.ocds_release_json,
+      e.event_identity, e.content_fingerprint, e.technical_classification_version,
+      (SELECT COALESCE(json_group_array(json_object(
+        'id', area.id,
+        'name', area.name,
+        'parentId', area.parent_id,
+        'score', assignment.score,
+        'evidence', json(assignment.evidence_json)
+      )), '[]')
+        FROM bidding_event_technical_areas assignment
+        JOIN technical_areas area ON area.id = assignment.technical_area_id
+        WHERE assignment.bidding_event_id = e.id) AS technical_areas_json
+    FROM bidding_events e
+    WHERE e.source_id = ? AND e.${field} = ?
+    ORDER BY COALESCE(e.published_at, e.discovered_at) DESC, e.discovered_at DESC, e.rowid DESC
+    LIMIT 1`)
+    .bind(sourceId, value)
+    .first<PriorEventRow>();
+  return row ? priorEventFromRow(row) : undefined;
+}
+
+export async function findPriorBiddingEvent(
+  db: D1Database,
+  sourceId: string,
+  eventIdentity: string,
+  sourceOpportunityId?: string,
+): Promise<{ event?: StoredPriorBiddingEvent; exactIdentity: boolean }> {
+  const exact = await findPrior(db, sourceId, "event_identity", eventIdentity);
+  if (exact) return { event: exact, exactIdentity: true };
+  if (!sourceOpportunityId) return { exactIdentity: false };
+  return {
+    event: await findPrior(db, sourceId, "source_opportunity_id", sourceOpportunityId),
+    exactIdentity: false,
+  };
+}
+
 export async function persistRetainedBiddingEvent(
   db: D1Database,
   event: RetainedBiddingEvent,
@@ -378,5 +505,5 @@ export async function persistRetainedBiddingEvent(
     ) VALUES (?, ?, ?, ?)`).bind(event.id, area.id, area.score, JSON.stringify(area.evidence)),
   );
   const results = await db.batch([insert, ...assignments]);
-  return (results[0].meta.changes ?? 0) === 1;
+  return (results[0].meta.changes ?? 0) > 0;
 }

@@ -3,17 +3,38 @@ import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
 import taxonomyRaw from "../../tech-area-classification.yaml?raw";
 import classificationRaw from "../../config/technical-classification.yaml?raw";
+import addressabilityRaw from "../../config/addressability.yaml?raw";
+import grantsGovRaw from "../../config/grants-gov.yaml?raw";
+import samGovRaw from "../../config/sam-gov.yaml?raw";
+import { parseAddressabilityYaml } from "../classification/addressability";
 import {
   parseTaxonomyYaml,
   parseTechnicalClassificationYaml,
 } from "../classification/taxonomy";
-import { claimScanRun, completeEmptyScanRun, countEnabledSources, failScanRun } from "../db/scan-runs";
+import {
+  claimScanRun,
+  completeEmptyScanRun,
+  completeScanRun,
+  failSourceRun,
+  listEnabledSources,
+  startSourceRun,
+} from "../db/scan-runs";
 import { syncTechnicalAreas } from "../db/taxonomy";
+import { runSourceAdapter } from "../pipeline/run-source";
+import { SourceScanError } from "../sources/adapter";
+import { createRegisteredSourceAdapter } from "../sources";
+import { parseGrantsGovConfig, validateGrantsGovScope } from "../sources/grants-gov";
+import { parseSamGovConfig } from "../sources/sam-gov";
 import type { AppEnv } from "./index";
 
 const TIME_ZONE = "America/New_York";
 const taxonomy = parseTaxonomyYaml(taxonomyRaw);
-const taxonomyVersion = parseTechnicalClassificationYaml(classificationRaw).schema_version;
+const technicalClassification = parseTechnicalClassificationYaml(classificationRaw);
+const taxonomyVersion = technicalClassification.schema_version;
+const addressability = parseAddressabilityYaml(addressabilityRaw);
+const samGov = parseSamGovConfig(samGovRaw);
+const grantsGov = parseGrantsGovConfig(grantsGovRaw);
+validateGrantsGovScope(grantsGov, samGov.organizations);
 
 export interface ScanWorkflowParams {
   requestedAt?: string;
@@ -51,6 +72,21 @@ function scanRunId(cycleKey: string): string {
   return `scan_${cycleKey.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
 }
 
+interface SourceFailure {
+  code: string;
+  message: string;
+}
+
+function safeSourceFailure(error: unknown): SourceFailure {
+  if (error instanceof SourceScanError) {
+    return { code: error.code, message: error.message };
+  }
+  return {
+    code: "unexpected_source_failure",
+    message: "The Source scan failed unexpectedly.",
+  };
+}
+
 export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams> {
   async run(event: WorkflowEvent<ScanWorkflowParams>, step: WorkflowStep) {
     const instant = event.payload?.requestedAt
@@ -73,19 +109,65 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       syncTechnicalAreas(this.env.DB, taxonomy, taxonomyVersion),
     );
 
-    const enabledSources = await step.do("inspect enabled sources", async () =>
-      countEnabledSources(this.env.DB),
+    const enabledSources = await step.do("load enabled Sources", async () =>
+      listEnabledSources(this.env.DB),
     );
-    if (enabledSources > 0) {
-      await step.do("mark unsupported foundation scan", async () =>
-        failScanRun(this.env.DB, id, "source_adapters_not_registered"),
-      );
-      throw new NonRetryableError("Enabled Sources require registered adapters");
+    if (enabledSources.length === 0) {
+      await step.do("complete empty scan", async () => completeEmptyScanRun(this.env.DB, id));
+      return { status: "completed", scanRunId: id, sourceCount: 0 };
     }
 
-    await step.do("complete empty foundation scan", async () =>
-      completeEmptyScanRun(this.env.DB, id),
+    for (const source of enabledSources) {
+      const sourceRunId = await step.do(`start ${source.id} Source run`, async () =>
+        startSourceRun(this.env.DB, id, source.id, source.cursor),
+      );
+      let failure: SourceFailure | undefined;
+
+      try {
+        const adapter = createRegisteredSourceAdapter(source.id, this.env, { grantsGov, samGov });
+        const outcome = await step.do(`scan and process ${source.id}`, async () => {
+          try {
+            return {
+              ok: true as const,
+              result: await runSourceAdapter({
+                db: this.env.DB,
+                adapter,
+                sourceRunId,
+                scanRunId: id,
+                cursor: source.cursor,
+                signal: AbortSignal.timeout(4 * 60 * 1000),
+                now: instant,
+                taxonomy,
+                technicalClassification,
+                addressability,
+              }),
+            };
+          } catch (error) {
+            if (error instanceof SourceScanError && !error.retryable) {
+              return { ok: false as const, failure: safeSourceFailure(error) };
+            }
+            throw error;
+          }
+        });
+        if (!outcome.ok) failure = outcome.failure;
+      } catch (error) {
+        failure = safeSourceFailure(error);
+      }
+
+      if (failure) {
+        await step.do(`record ${source.id} failure`, async () =>
+          failSourceRun(this.env.DB, sourceRunId, failure.code, failure.message),
+        );
+      }
+    }
+
+    const completion = await step.do("complete scan run", async () =>
+      completeScanRun(this.env.DB, id),
     );
-    return { status: "completed", scanRunId: id, sourceCount: 0 };
+    return {
+      ...completion,
+      scanRunId: id,
+      sourceCount: enabledSources.length,
+    };
   }
 }

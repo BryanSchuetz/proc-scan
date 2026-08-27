@@ -1,0 +1,24 @@
+schema_version: 1
+organizations:
+  - code: "524"
+    name: Millennium Challenge Corporation
+    agency_code: MCC
+    agency_names:
+      - Millennium Challenge Corporation
+  - code: "077"
+    name: United States International Development Finance Corporation
+    agency_code: null
+    agency_names:
+      - United States International Development Finance Corporation
+      - U.S. International Development Finance Corporation
+  - code: "011"
+    name: United States Trade and Development Agency
+    agency_code: null
+    agency_names:
+      - United States Trade and Development Agency
+      - U.S. Trade and Development Agency
+  - code: "019"
+    name: State, Department of
+    agency_code: DOS
+    agency_names:
+      - Department of State

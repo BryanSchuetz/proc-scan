@@ -14,6 +14,7 @@ export interface AppEnv {
   SCAN_WORKFLOW: Workflow;
   TEAM_DOMAIN?: string;
   POLICY_AUD?: string;
+  SAM_API_KEY?: string;
 }
 
 export { ScanWorkflow };

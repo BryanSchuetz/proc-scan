@@ -1,0 +1,48 @@
+{
+  "totalRecords": 4,
+  "limit": 2,
+  "offset": 1,
+  "opportunitiesData": [
+    {
+      "noticeId": "notice-b",
+      "title": "Digital strategy advisory support — revised deadline",
+      "solicitationNumber": "SOL-100",
+      "fullParentPathName": "DEPARTMENT OF EXAMPLE.DIGITAL SERVICES AGENCY.BUYING OFFICE",
+      "fullParentPathCode": "524.010.0101",
+      "postedDate": "2026-08-27",
+      "type": "Solicitation",
+      "baseType": "Solicitation",
+      "typeOfSetAside": "SBA",
+      "typeOfSetAsideDescription": "Total Small Business Set-Aside (FAR 19.5)",
+      "responseDeadLine": "2026-09-27T17:00:00-04:00",
+      "naicsCode": "541611",
+      "classificationCode": "R",
+      "active": "Yes",
+      "description": "https://api.sam.gov/prod/opportunities/v1/noticedesc?noticeid=notice-b",
+      "organizationType": "OFFICE",
+      "placeOfPerformance": {
+        "city": { "name": "Nairobi" },
+        "country": { "code": "KEN", "name": "KENYA" }
+      },
+      "additionalInfoLink": null,
+      "resourceLinks": []
+    },
+    {
+      "noticeId": "notice-award",
+      "title": "Digital strategy advisory support award",
+      "solicitationNumber": "SOL-100",
+      "fullParentPathName": "DEPARTMENT OF EXAMPLE.DIGITAL SERVICES AGENCY.BUYING OFFICE",
+      "fullParentPathCode": "524.010.0101",
+      "postedDate": "2026-08-27",
+      "type": "Award Notice",
+      "baseType": "Solicitation",
+      "responseDeadLine": null,
+      "active": "Yes",
+      "description": null,
+      "organizationType": "OFFICE",
+      "placeOfPerformance": null,
+      "additionalInfoLink": null,
+      "resourceLinks": null
+    }
+  ]
+}
