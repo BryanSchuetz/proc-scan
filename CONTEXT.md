@@ -21,7 +21,7 @@ The initial Bidding Event that publishes an Opportunity, including a grant oppor
 _Avoid_: Initial Opportunity
 
 **Modification**:
-A Bidding Event that changes a previously published Opportunity.
+A Bidding Event that changes a previously known Opportunity deadline or amount.
 _Avoid_: Mod, update
 
 **Cancellation**:

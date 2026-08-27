@@ -122,6 +122,91 @@ hard_exclusions:
         - field: sourceData.fullParentPathName
           operator: contains
           value: Millennium Challenge Account
+  - id: grants-dos-below-minimum-value
+    description: DOS Grants.gov opportunities must have a known value of at least $2,000,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "019"
+        - field: value.amount
+          operator: lt
+          value: 2000000
+  - id: grants-dfc-below-minimum-value
+    description: DFC Grants.gov opportunities must have a known value of at least $500,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "077"
+        - field: value.amount
+          operator: lt
+          value: 500000
+  - id: grants-ustda-below-minimum-value
+    description: USTDA Grants.gov opportunities must have a known value of at least $250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "011"
+        - field: value.amount
+          operator: lt
+          value: 250000
+  - id: grants-mca-below-minimum-value
+    description: Millennium Challenge Account Grants.gov opportunities must have a known value of at least $250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: lt
+          value: 250000
+      any:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
+  - id: grants-mcc-below-minimum-value
+    description: MCC Grants.gov opportunities other than Millennium Challenge Accounts must have a known value of at least $500,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: lt
+          value: 500000
+      none:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
 scoring_rules:
   - id: sam-dos-dfc-minimum-value
     description: DOS or DFC SAM.gov opportunity meets the $500,000 minimum value.
@@ -199,6 +284,127 @@ scoring_rules:
         - field: sourceData.fullParentPathName
           operator: contains
           value: Millennium Challenge Account
+  - id: grants-dos-minimum-value
+    description: DOS Grants.gov opportunity meets the $2,000,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "019"
+        - field: value.amount
+          operator: gte
+          value: 2000000
+  - id: grants-dfc-minimum-value
+    description: DFC Grants.gov opportunity meets the $500,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "077"
+        - field: value.amount
+          operator: gte
+          value: 500000
+  - id: grants-ustda-minimum-value
+    description: USTDA Grants.gov opportunity meets the $250,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "011"
+        - field: value.amount
+          operator: gte
+          value: 250000
+  - id: grants-mca-minimum-value
+    description: Millennium Challenge Account Grants.gov opportunity meets the $250,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: gte
+          value: 250000
+      any:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
+  - id: grants-mcc-minimum-value
+    description: MCC Grants.gov opportunity meets the $500,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: gte
+          value: 500000
+      none:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
+  - id: grants-technical-assistance
+    description: Grants.gov opportunity contains positive evidence of technical assistance services.
+    points: 2
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: grants-gov
+      any:
+        - field: opportunityName
+          operator: contains
+          value:
+            - technical assistance
+            - advisory services
+            - consulting services
+            - consultancy services
+            - capacity building
+            - institutional strengthening
+            - feasibility study
+            - training services
+        - field: description
+          operator: contains
+          value:
+            - technical assistance
+            - advisory services
+            - consulting services
+            - consultancy services
+            - capacity building
+            - institutional strengthening
+            - feasibility study
+            - training services
   - id: sam-technical-assistance
     description: SAM.gov opportunity contains positive evidence of technical assistance services.
     points: 2

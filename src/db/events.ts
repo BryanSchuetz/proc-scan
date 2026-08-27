@@ -119,6 +119,11 @@ export interface StoredPriorBiddingEvent extends PriorBiddingEvent {
   contentFingerprint: string;
 }
 
+export interface PriorBiddingEventMatch {
+  exactEvent?: StoredPriorBiddingEvent;
+  opportunityEvent?: StoredPriorBiddingEvent;
+}
+
 export class EventsQueryError extends Error {}
 
 function positiveInteger(value: string | null, fallback: number, maximum?: number): number {
@@ -437,33 +442,18 @@ export async function findPriorBiddingEvent(
   sourceId: string,
   eventIdentity: string,
   sourceOpportunityId?: string,
-): Promise<{ event?: StoredPriorBiddingEvent; exactIdentity: boolean }> {
-  const exact = await findPrior(db, sourceId, "event_identity", eventIdentity);
-  if (exact) return { event: exact, exactIdentity: true };
-  if (!sourceOpportunityId) return { exactIdentity: false };
-  return {
-    event: await findPrior(db, sourceId, "source_opportunity_id", sourceOpportunityId),
-    exactIdentity: false,
-  };
+): Promise<PriorBiddingEventMatch> {
+  const [exactEvent, opportunityEvent] = await Promise.all([
+    findPrior(db, sourceId, "event_identity", eventIdentity),
+    sourceOpportunityId
+      ? findPrior(db, sourceId, "source_opportunity_id", sourceOpportunityId)
+      : Promise.resolve(undefined),
+  ]);
+  return { exactEvent, opportunityEvent };
 }
 
-export async function persistRetainedBiddingEvent(
-  db: D1Database,
-  event: RetainedBiddingEvent,
-): Promise<boolean> {
-  const labels = event.technicalAreas.length > 0
-    ? event.technicalAreas.map((area) => area.name).join(" | ")
-    : "Unclassified";
-  const insert = db.prepare(`INSERT OR IGNORE INTO bidding_events (
-    id, source_id, scan_run_id, event_identity, content_fingerprint,
-    source_event_id, source_opportunity_id, source_url, source_event_type, event_type,
-    opportunity_name, description, client_name, funder_names_json, procuring_entity_name,
-    implementing_entity_names_json, place_of_performance, country_code, value_amount,
-    value_currency, due_date, eligibility, source_status, published_at, discovered_at,
-    ocds_release_json, source_data_json, inherited_fields_json, addressability_status,
-    addressability_score, addressability_config_version, addressability_evidence_json,
-    technical_classification_version, technical_area_labels
-  ) VALUES (${Array.from({ length: 34 }, () => "?").join(", ")})`).bind(
+function retainedEventValues(event: RetainedBiddingEvent, labels: string): BindValue[] {
+  return [
     event.id,
     event.sourceId,
     event.scanRunId,
@@ -498,12 +488,66 @@ export async function persistRetainedBiddingEvent(
     JSON.stringify(event.addressability.matchedRules),
     event.technicalClassificationVersion,
     labels,
-  );
-  const assignments = event.technicalAreas.map((area) =>
+  ];
+}
+
+function technicalAreaStatements(db: D1Database, event: RetainedBiddingEvent, eventId: string) {
+  return event.technicalAreas.map((area) =>
     db.prepare(`INSERT OR IGNORE INTO bidding_event_technical_areas (
       bidding_event_id, technical_area_id, score, evidence_json
-    ) VALUES (?, ?, ?, ?)`).bind(event.id, area.id, area.score, JSON.stringify(area.evidence)),
+    ) VALUES (?, ?, ?, ?)`).bind(eventId, area.id, area.score, JSON.stringify(area.evidence)),
   );
+}
+
+export async function persistRetainedBiddingEvent(
+  db: D1Database,
+  event: RetainedBiddingEvent,
+): Promise<boolean> {
+  const labels = event.technicalAreas.length > 0
+    ? event.technicalAreas.map((area) => area.name).join(" | ")
+    : "Unclassified";
+  const insert = db.prepare(`INSERT OR IGNORE INTO bidding_events (
+    id, source_id, scan_run_id, event_identity, content_fingerprint,
+    source_event_id, source_opportunity_id, source_url, source_event_type, event_type,
+    opportunity_name, description, client_name, funder_names_json, procuring_entity_name,
+    implementing_entity_names_json, place_of_performance, country_code, value_amount,
+    value_currency, due_date, eligibility, source_status, published_at, discovered_at,
+    ocds_release_json, source_data_json, inherited_fields_json, addressability_status,
+    addressability_score, addressability_config_version, addressability_evidence_json,
+    technical_classification_version, technical_area_labels
+  ) VALUES (${Array.from({ length: 34 }, () => "?").join(", ")})`).bind(
+    ...retainedEventValues(event, labels),
+  );
+  const assignments = technicalAreaStatements(db, event, event.id);
   const results = await db.batch([insert, ...assignments]);
   return (results[0].meta.changes ?? 0) > 0;
+}
+
+export async function updateRetainedBiddingEvent(
+  db: D1Database,
+  existingEventId: string,
+  event: RetainedBiddingEvent,
+): Promise<void> {
+  const labels = event.technicalAreas.length > 0
+    ? event.technicalAreas.map((area) => area.name).join(" | ")
+    : "Unclassified";
+  const columns = [
+    "source_id", "scan_run_id", "event_identity", "content_fingerprint",
+    "source_event_id", "source_opportunity_id", "source_url", "source_event_type", "event_type",
+    "opportunity_name", "description", "client_name", "funder_names_json", "procuring_entity_name",
+    "implementing_entity_names_json", "place_of_performance", "country_code", "value_amount",
+    "value_currency", "due_date", "eligibility", "source_status", "published_at", "discovered_at",
+    "ocds_release_json", "source_data_json", "inherited_fields_json", "addressability_status",
+    "addressability_score", "addressability_config_version", "addressability_evidence_json",
+    "technical_classification_version", "technical_area_labels",
+  ];
+  const update = db.prepare(`UPDATE bidding_events SET
+    ${columns.map((column) => `${column} = ?`).join(",\n    ")}
+    WHERE id = ?`).bind(...retainedEventValues(event, labels).slice(1), existingEventId);
+  const assignments = technicalAreaStatements(db, event, existingEventId);
+  await db.batch([
+    update,
+    db.prepare("DELETE FROM bidding_event_technical_areas WHERE bidding_event_id = ?").bind(existingEventId),
+    ...assignments,
+  ]);
 }

@@ -8,7 +8,7 @@ This is a living plan. It records the agreed product behavior, target architectu
 
 The local foundation includes the React/Worker application, D1 migrations and FTS5 index, fixture seed, read-only paginated API and table, deterministic classifier/config schemas, event identity and inheritance logic, OCDS-shaped release mapping, Cloudflare Access JWT guard, and New York-time Workflow schedule gate. SAM.gov and Grants.gov are registered Sources. SAM.gov's official v2 API adapter implements bounded cursor overlap, organization-scoped page-index pagination, credential-safe failures, and notice normalization. Grants.gov's official unauthenticated adapter discovers its current agency hierarchy, crosswalks it to the same approved federal organizations, scans only forecasted and posted opportunities, paginates a complete active snapshot, and enriches approved results through `fetchOpportunity` for synopsis/forecast text, eligibility, and funding values. Both use shared classification, persistence, deduplication, and per-Source run accounting.
 
-Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, linked-notice Modification handling, and repeated-scan idempotency. Bounded live requests confirmed the SAM.gov search, Grants.gov search, and unauthenticated Grants.gov detail response shapes. Addressability configuration version 2 activates the supplied SAM.gov agency value bands and technical-assistance requirement, with deterministic goods/supplies/manufacturing exclusions. Missing evidence remains Uncertain.
+Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, deadline/value Modification handling, in-place enrichment, and repeated-scan idempotency. Bounded live requests confirmed the SAM.gov search, Grants.gov search, and unauthenticated Grants.gov detail response shapes. Addressability configuration version 2 activates the supplied source-specific SAM.gov and Grants.gov agency value bands and shared technical-assistance requirement, with deterministic SAM.gov goods/supplies/manufacturing exclusions. Missing evidence remains Uncertain.
 
 The Worker, static assets, Workflow, production D1 database, migrations, SAM.gov secret, and Worker-level Cloudflare Access application are deployed. Access uses the same 12-hour policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN identity providers. The Worker independently validates the Access issuer and application audience. The first API-triggered Cloudflare cycle completed in 21 seconds with the expected partial status: Grants.gov discovered and retained 128 records, while SAM.gov returned its quota-exhausted response and was recorded as a Source failure without blocking Grants.gov. The first scheduled cycle remains to be confirmed, and no email provider has been configured. SAM.gov description and pre-award value enrichment remain unresolved because descriptions consume additional keyed requests and the public search schema has no estimated solicitation value.
 
@@ -43,7 +43,7 @@ Build a Cloudflare-hosted application that:
   - **Addressable**: meets or exceeds the addressability threshold and is retained.
   - **Uncertain**: scores below the addressability threshold and is retained with that status.
 - A low score alone never permanently drops a Bidding Event.
-- The initial SAM.gov addressability rules are defined. Rules for other Sources and any additional cross-Source criteria remain to be supplied.
+- The initial SAM.gov and Grants.gov addressability rules are defined. Rules for other Sources and any additional cross-Source criteria remain to be supplied.
 - Because Excluded events are not retained, later rule changes cannot recover them unless a Source publishes or returns them again. This is an accepted consequence of the retention decision.
 
 ### Classification boundaries
@@ -143,7 +143,7 @@ Build a Cloudflare-hosted application that:
 
 - Use **Bidding Event** for a registry record and **Bidding Event Type** for its Tender, Modification, or Cancellation category.
 - An initial solicitation, including a grant opportunity, maps to **Tender**.
-- A change to an existing Opportunity maps to **Modification**.
+- A change between previously known and newly published Opportunity deadline or amount values maps to **Modification**.
 - A withdrawal maps to **Cancellation**.
 - Preserve the Source's original event or notice type separately for traceability.
 - Store every Bidding Event as a separate database record and display it as a separate table row. Do not maintain a single current-state Opportunity row.
@@ -160,10 +160,11 @@ Build a Cloudflare-hosted application that:
   1. Source plus the Source's Bidding Event identifier.
   2. Source plus the canonical event URL.
   3. A deterministic fingerprint of stable normalized fields when neither identifier exists.
-- If a Source reuses an identity but materially changes normalized business fields, create a new event row:
+- If a Source reuses an identity, create a new event row only for these Opportunity state changes:
   - A withdrawal creates a Cancellation.
-  - A change to due date, value, scope, place of performance, or eligibility creates a Modification.
-  - Formatting and other irrelevant page changes create no record.
+  - A change between two known due-date values or two known amount values creates a Modification.
+  - Newly populated fields and changes to description, scope, place of performance, eligibility, or other metadata enrich the existing event in place.
+  - Formatting and other irrelevant page changes create no change.
 
 ## Target Architecture
 
@@ -207,8 +208,8 @@ Build a Cloudflare-hosted application that:
 1. Create an idempotent scan run for the local 6:00 AM or 6:00 PM cycle.
 2. Run each enabled Source adapter with its saved cursor and bounded retries. One Source failure does not stop the others.
 3. Normalize each candidate into an OCDS-shaped release plus product metadata.
-4. Resolve event identity and ignore an already stored identity/content-fingerprint pair.
-5. When an exact Source Opportunity Identifier links to an earlier event, fill missing fields from the latest applicable event.
+4. Resolve event identity; ignore an already stored identity/content-fingerprint pair and update an existing event for non-event enrichment.
+5. When an exact Source Opportunity Identifier links to an earlier event, fill missing fields from the latest applicable event and create a Modification only for a changed known deadline or amount.
 6. Assign deterministic Technical Areas from the taxonomy.
 7. Apply hard exclusions, then calculate the deterministic addressability score.
 8. Drop Excluded candidates and atomically persist Addressable and Uncertain Bidding Events with their classifications.
@@ -306,7 +307,7 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 - **Present**: SAM.gov API key in the `SAM_API_KEY` project secret.
 - **Present**: Cloudflare account ID and Workers deployment credentials in project secrets.
 - **Present**: Worker-level Access application, allow policy, team domain, and application audience.
-- **Before Addressability Assessment can be accepted across all Sources**: rules for Sources other than SAM.gov and any remaining cross-Source criteria.
+- **Before Addressability Assessment can be accepted across all Sources**: rules for Sources other than SAM.gov and Grants.gov, plus any remaining cross-Source criteria.
 - **Before SAM.gov value bands can classify live pre-award notices**: an authoritative estimated-value extraction strategy; the public search response does not provide this field.
 - **Before live digest delivery**: destination distribution-list address, sender identity, and selected email provider credentials/configuration.
 - **Before Phase 2 login-based adapters**: credentials for login-based Sources, supplied through project secrets.
@@ -320,7 +321,7 @@ The phase numbers below continue to describe authentication complexity, not curr
 
 | Order | Source | Starting URL | Plan |
 |---:|---|---|---|
-| 1 | Grants.gov | [API resources](https://www.grants.gov/api) | Search adapter implemented locally with approved-organization hierarchy discovery and full active-snapshot deduplication; validate scheduled live scans and decide selective detail enrichment. |
+| 1 | Grants.gov | [API resources](https://www.grants.gov/api) | Search and public detail enrichment are implemented with approved-organization hierarchy discovery and full active-snapshot deduplication; continue validating scheduled live scans. |
 | 2 | TED | [Current search](https://ted.europa.eu/en/search/result?query=%28funding+IN+%28external-aid-program%29%29+SORT+BY+publication-number+DESC&scope=ACTIVE&onlyLatestVersions=false&sortColumn=publication-number&sortOrder=DESC&page=1) | Use the unauthenticated official Search API; add XML/eForms mapping after the core pipeline works. |
 | TBD | EU Funding & Tenders Portal | [Portal](https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/home) | Discover and prefer official published-data APIs before browser extraction. |
 | TBD | dgMarket | [Buyer list](https://www.dgmarket.com/tenders/buyerList.do) | Confirm permitted access, search scope, pagination, and whether a feed/API is available. |
@@ -415,7 +416,7 @@ The phase numbers below continue to describe authentication complexity, not curr
 
 These do not need more interview time now, but they must be resolved before the milestone that depends on them:
 
-- Addressability rules for Sources other than SAM.gov and any remaining cross-Source criteria — before Milestone 1 acceptance.
+- Addressability rules for Sources other than SAM.gov and Grants.gov, plus any remaining cross-Source criteria — before Milestone 1 acceptance.
 - Exact machine-readable taxonomy weights, threshold, and tie-break rules — during Milestone 0.
 - Email provider, sender domain/address, failure alert when no digest is sent, and delivery tracking details — before Milestone 2.
 - UI record-age cutoff and whether visitors can expand to all history — revisit after observing volume and user behavior.

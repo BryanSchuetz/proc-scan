@@ -35,7 +35,7 @@ scoring_rules:
 `);
 const configuredRules = parseAddressabilityYaml(addressabilityRaw);
 
-function samEvent({
+function federalEvent({
   amount,
   clientName = "Department of State",
   description = "Technical assistance and advisory services",
@@ -43,6 +43,7 @@ function samEvent({
   classificationCode = "R408",
   naicsCode = "541611",
   opportunityName = "Technical assistance opportunity",
+  sourceId = "sam-gov",
 }: {
   amount?: number;
   clientName?: string;
@@ -51,9 +52,10 @@ function samEvent({
   classificationCode?: string;
   naicsCode?: string;
   opportunityName?: string;
+  sourceId?: "sam-gov" | "grants-gov";
 }) {
   return biddingEvent({
-    sourceId: "sam-gov",
+    sourceId,
     clientName,
     description,
     opportunityName,
@@ -65,6 +67,10 @@ function samEvent({
       fullParentPathName: clientName,
     },
   });
+}
+
+function grantsEvent(overrides: Parameters<typeof federalEvent>[0]) {
+  return federalEvent({ ...overrides, sourceId: "grants-gov" });
 }
 
 describe("Addressability Assessment", () => {
@@ -91,24 +97,24 @@ describe("Addressability Assessment", () => {
   });
 
   it("applies the configured SAM.gov agency value bands", () => {
-    expect(assessAddressability(samEvent({ amount: 500_000 }), configuredRules).status).toBe("addressable");
-    expect(assessAddressability(samEvent({ amount: 499_999 }), configuredRules)).toMatchObject({
+    expect(assessAddressability(federalEvent({ amount: 500_000 }), configuredRules).status).toBe("addressable");
+    expect(assessAddressability(federalEvent({ amount: 499_999 }), configuredRules)).toMatchObject({
       status: "excluded",
       exclusionRuleId: "sam-dos-dfc-below-minimum-value",
     });
-    expect(assessAddressability(samEvent({
+    expect(assessAddressability(federalEvent({
       amount: 250_000,
       federalOrganizationCode: "011",
     }), configuredRules).status).toBe("addressable");
   });
 
   it("uses the lower MCA value band without lowering MCC's value band", () => {
-    expect(assessAddressability(samEvent({
+    expect(assessAddressability(federalEvent({
       amount: 250_000,
       clientName: "Millennium Challenge Account Nepal",
       federalOrganizationCode: "524",
     }), configuredRules).status).toBe("addressable");
-    expect(assessAddressability(samEvent({
+    expect(assessAddressability(federalEvent({
       amount: 250_000,
       clientName: "Millennium Challenge Corporation",
       federalOrganizationCode: "524",
@@ -118,9 +124,60 @@ describe("Addressability Assessment", () => {
     });
   });
 
+  it("applies the configured Grants.gov agency value bands and technical-assistance requirement", () => {
+    expect(assessAddressability(grantsEvent({ amount: 2_000_000 }), configuredRules).status)
+      .toBe("addressable");
+    expect(assessAddressability(grantsEvent({ amount: 1_999_999 }), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "grants-dos-below-minimum-value",
+    });
+    expect(assessAddressability(grantsEvent({
+      amount: 500_000,
+      federalOrganizationCode: "077",
+    }), configuredRules).status).toBe("addressable");
+    expect(assessAddressability(grantsEvent({
+      amount: 250_000,
+      federalOrganizationCode: "011",
+    }), configuredRules).status).toBe("addressable");
+    expect(assessAddressability(grantsEvent({
+      amount: 500_000,
+      clientName: "Millennium Challenge Corporation",
+      federalOrganizationCode: "524",
+    }), configuredRules).status).toBe("addressable");
+    expect(assessAddressability(grantsEvent({
+      amount: 250_000,
+      clientName: "Millennium Challenge Account Nepal",
+      federalOrganizationCode: "524",
+    }), configuredRules).status).toBe("addressable");
+    for (const [event, exclusionRuleId] of [
+      [grantsEvent({ amount: 499_999, federalOrganizationCode: "077" }), "grants-dfc-below-minimum-value"],
+      [grantsEvent({ amount: 249_999, federalOrganizationCode: "011" }), "grants-ustda-below-minimum-value"],
+      [grantsEvent({
+        amount: 499_999,
+        clientName: "Millennium Challenge Corporation",
+        federalOrganizationCode: "524",
+      }), "grants-mcc-below-minimum-value"],
+      [grantsEvent({
+        amount: 249_999,
+        clientName: "Millennium Challenge Account Nepal",
+        federalOrganizationCode: "524",
+      }), "grants-mca-below-minimum-value"],
+    ] as const) {
+      expect(assessAddressability(event, configuredRules)).toMatchObject({
+        status: "excluded",
+        exclusionRuleId,
+      });
+    }
+    expect(assessAddressability(grantsEvent({
+      amount: 2_000_000,
+      description: "General grant program",
+      opportunityName: "General grant program",
+    }), configuredRules).status).toBe("uncertain");
+  });
+
   it("keeps missing value or technical-assistance evidence Uncertain", () => {
-    expect(assessAddressability(samEvent({ amount: undefined }), configuredRules).status).toBe("uncertain");
-    expect(assessAddressability(samEvent({
+    expect(assessAddressability(federalEvent({ amount: undefined }), configuredRules).status).toBe("uncertain");
+    expect(assessAddressability(federalEvent({
       amount: 1_000_000,
       description: "General services",
       opportunityName: "General services requirement",
@@ -128,14 +185,14 @@ describe("Addressability Assessment", () => {
   });
 
   it("hard-excludes clear goods, supplies, and manufacturing opportunities", () => {
-    expect(assessAddressability(samEvent({
+    expect(assessAddressability(federalEvent({
       amount: 1_000_000,
       classificationCode: "7010",
     }), configuredRules)).toMatchObject({
       status: "excluded",
       exclusionRuleId: "sam-goods-product-code",
     });
-    expect(assessAddressability(samEvent({
+    expect(assessAddressability(federalEvent({
       amount: 1_000_000,
       naicsCode: "332999",
     }), configuredRules)).toMatchObject({

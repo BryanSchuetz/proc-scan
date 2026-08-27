@@ -1,6 +1,10 @@
 import type { AddressabilityConfig } from "../classification/addressability";
 import type { TaxonomyFile, TechnicalClassificationConfig } from "../classification/taxonomy";
-import { findPriorBiddingEvent, persistRetainedBiddingEvent } from "../db/events";
+import {
+  findPriorBiddingEvent,
+  persistRetainedBiddingEvent,
+  updateRetainedBiddingEvent,
+} from "../db/events";
 import { completeSourceRun } from "../db/scan-runs";
 import { buildEventIdentity } from "../domain/identity";
 import type { NormalizedBiddingEvent } from "../domain/types";
@@ -27,6 +31,25 @@ export interface SourceProcessingResult {
   excludedCount: number;
   duplicateCount: number;
   nextCursor?: SourceCursor;
+}
+
+function changedBetweenKnownValues(previous: unknown, current: unknown): boolean {
+  return previous !== undefined && previous !== null && current !== undefined && current !== null &&
+    previous !== current;
+}
+
+function trackedOpportunityChange(
+  previous: NormalizedBiddingEvent,
+  current: NormalizedBiddingEvent,
+): boolean {
+  return changedBetweenKnownValues(previous.dueDate, current.dueDate) ||
+    changedBetweenKnownValues(previous.value?.amount, current.value?.amount);
+}
+
+function isNewerSourceEvent(current: NormalizedBiddingEvent, previous: NormalizedBiddingEvent): boolean {
+  if (!current.publishedAt) return false;
+  if (!previous.publishedAt) return true;
+  return current.publishedAt > previous.publishedAt;
 }
 
 export async function runSourceAdapter(
@@ -56,18 +79,33 @@ export async function runSourceAdapter(
       discoveredAt: candidate.discoveredAt ?? context.now.toISOString(),
     };
     const eventIdentity = await buildEventIdentity(event);
-    const prior = await findPriorBiddingEvent(
+    const priorMatch = await findPriorBiddingEvent(
       context.db,
       event.sourceId,
       eventIdentity,
       event.sourceOpportunityId,
     );
+    const prior = priorMatch.exactEvent ?? priorMatch.opportunityEvent;
+    let eventToUpdate: typeof prior;
 
-    if (prior.event) {
-      if (prior.exactIdentity && event.eventType === "tender") {
-        event = { ...event, eventType: prior.event.eventType };
-      } else if (!prior.exactIdentity && event.eventType === "tender") {
+    if (prior) {
+      if (event.eventType === "cancellation") {
+        if (prior.eventType === "cancellation") eventToUpdate = prior;
+      } else if (prior.eventType === "cancellation") {
+        event = { ...event, eventType: "cancellation" };
+        eventToUpdate = prior;
+      } else if (trackedOpportunityChange(prior, event)) {
         event = { ...event, eventType: "modification" };
+      } else {
+        event = { ...event, eventType: prior.eventType };
+        if (priorMatch.exactEvent) {
+          eventToUpdate = priorMatch.exactEvent;
+        } else if (isNewerSourceEvent(event, prior)) {
+          eventToUpdate = prior;
+        } else {
+          duplicateCount += 1;
+          continue;
+        }
       }
     }
 
@@ -76,24 +114,21 @@ export async function runSourceAdapter(
       taxonomy: context.taxonomy,
       technicalClassification: context.technicalClassification,
       addressability: context.addressability,
-      priorEvent: prior.event,
+      priorEvent: prior,
     };
-    let processed = await processCandidate(event, processingContext);
-
-    if (
-      prior.exactIdentity &&
-      prior.event?.eventType === "tender" &&
-      event.eventType === "tender" &&
-      (processed.status === "retained"
-        ? processed.event.contentFingerprint
-        : processed.contentFingerprint) !== prior.event.contentFingerprint
-    ) {
-      event = { ...event, eventType: "modification" };
-      processed = await processCandidate(event, processingContext);
-    }
+    const processed = await processCandidate(event, processingContext);
 
     if (processed.status === "excluded") {
       excludedCount += 1;
+      continue;
+    }
+    if (eventToUpdate) {
+      if (processed.event.contentFingerprint === eventToUpdate.contentFingerprint) {
+        duplicateCount += 1;
+        continue;
+      }
+      await updateRetainedBiddingEvent(context.db, eventToUpdate.id, processed.event);
+      retainedCount += 1;
       continue;
     }
     if (await persistRetainedBiddingEvent(context.db, processed.event)) {
