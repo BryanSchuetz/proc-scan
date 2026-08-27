@@ -6,11 +6,11 @@ This is a living plan. It records the agreed product behavior, target architectu
 
 ## Implementation Status — August 27, 2026
 
-The local foundation includes the React/Worker application, D1 migrations and FTS5 index, fixture seed, read-only paginated API and table, deterministic classifier/config schemas, event identity and inheritance logic, OCDS-shaped release mapping, Cloudflare Access JWT guard, and New York-time Workflow schedule gate. SAM.gov and Grants.gov are registered Sources. SAM.gov's official v2 API adapter implements bounded cursor overlap, organization-scoped page-index pagination, credential-safe failures, and notice normalization. Grants.gov's official unauthenticated adapter discovers its current agency hierarchy, crosswalks it to the same approved federal organizations, scans only forecasted and posted opportunities, and paginates a complete active snapshot. Both use shared classification, persistence, deduplication, and per-Source run accounting.
+The local foundation includes the React/Worker application, D1 migrations and FTS5 index, fixture seed, read-only paginated API and table, deterministic classifier/config schemas, event identity and inheritance logic, OCDS-shaped release mapping, Cloudflare Access JWT guard, and New York-time Workflow schedule gate. SAM.gov and Grants.gov are registered Sources. SAM.gov's official v2 API adapter implements bounded cursor overlap, organization-scoped page-index pagination, credential-safe failures, and notice normalization. Grants.gov's official unauthenticated adapter discovers its current agency hierarchy, crosswalks it to the same approved federal organizations, scans only forecasted and posted opportunities, paginates a complete active snapshot, and enriches approved results through `fetchOpportunity` for synopsis/forecast text, eligibility, and funding values. Both use shared classification, persistence, deduplication, and per-Source run accounting.
 
-Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, linked-notice Modification handling, and repeated-scan idempotency. Bounded live requests confirmed both production API response shapes. The Addressability configuration remains deliberately `draft`, so live records are retained as Uncertain until approved rules are supplied.
+Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, linked-notice Modification handling, and repeated-scan idempotency. Bounded live requests confirmed the SAM.gov search, Grants.gov search, and unauthenticated Grants.gov detail response shapes. Addressability configuration version 2 activates the supplied SAM.gov agency value bands and technical-assistance requirement, with deterministic goods/supplies/manufacturing exclusions. Missing evidence remains Uncertain.
 
-The Worker, static assets, Workflow, production D1 database, migrations, SAM.gov secret, and Worker-level Cloudflare Access application are deployed. Access uses the same 12-hour policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN identity providers. The Worker independently validates the Access issuer and application audience. The first API-triggered Cloudflare cycle completed in 21 seconds with the expected partial status: Grants.gov discovered and retained 128 records, while SAM.gov returned its quota-exhausted response and was recorded as a Source failure without blocking Grants.gov. The first scheduled cycle remains to be confirmed, and no email provider has been configured. SAM.gov does not return description text inline, and Grants.gov search results require a separate public detail request for the full synopsis. Description enrichment remains deferred while API quotas and live volumes are evaluated.
+The Worker, static assets, Workflow, production D1 database, migrations, SAM.gov secret, and Worker-level Cloudflare Access application are deployed. Access uses the same 12-hour policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN identity providers. The Worker independently validates the Access issuer and application audience. The first API-triggered Cloudflare cycle completed in 21 seconds with the expected partial status: Grants.gov discovered and retained 128 records, while SAM.gov returned its quota-exhausted response and was recorded as a Source failure without blocking Grants.gov. The first scheduled cycle remains to be confirmed, and no email provider has been configured. SAM.gov description and pre-award value enrichment remain unresolved because descriptions consume additional keyed requests and the public search schema has no estimated solicitation value.
 
 ## Goal
 
@@ -43,7 +43,7 @@ Build a Cloudflare-hosted application that:
   - **Addressable**: meets or exceeds the addressability threshold and is retained.
   - **Uncertain**: scores below the addressability threshold and is retained with that status.
 - A low score alone never permanently drops a Bidding Event.
-- The addressability criteria, threshold, and exclusion rules are still to be defined.
+- The initial SAM.gov addressability rules are defined. Rules for other Sources and any additional cross-Source criteria remain to be supplied.
 - Because Excluded events are not retained, later rule changes cannot recover them unless a Source publishes or returns them again. This is an accepted consequence of the retention decision.
 
 ### Classification boundaries
@@ -306,7 +306,8 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 - **Present**: SAM.gov API key in the `SAM_API_KEY` project secret.
 - **Present**: Cloudflare account ID and Workers deployment credentials in project secrets.
 - **Present**: Worker-level Access application, allow policy, team domain, and application audience.
-- **Before Addressability Assessment can be accepted**: exact hard exclusions, weighted criteria, value bands, Client rules, remaining assessment inputs, and threshold.
+- **Before Addressability Assessment can be accepted across all Sources**: rules for Sources other than SAM.gov and any remaining cross-Source criteria.
+- **Before SAM.gov value bands can classify live pre-award notices**: an authoritative estimated-value extraction strategy; the public search response does not provide this field.
 - **Before live digest delivery**: destination distribution-list address, sender identity, and selected email provider credentials/configuration.
 - **Before Phase 2 login-based adapters**: credentials for login-based Sources, supplied through project secrets.
 - **Before Phase 3**: credentials and an approved manual session-handoff procedure for 2FA Sources.
@@ -414,7 +415,7 @@ The phase numbers below continue to describe authentication complexity, not curr
 
 These do not need more interview time now, but they must be resolved before the milestone that depends on them:
 
-- Exact Addressability configuration and remaining criteria beyond value and Client — before Milestone 1 acceptance.
+- Addressability rules for Sources other than SAM.gov and any remaining cross-Source criteria — before Milestone 1 acceptance.
 - Exact machine-readable taxonomy weights, threshold, and tie-break rules — during Milestone 0.
 - Email provider, sender domain/address, failure alert when no digest is sent, and delivery tracking details — before Milestone 2.
 - UI record-age cutoff and whether visitors can expand to all history — revisit after observing volume and user behavior.

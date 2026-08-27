@@ -10,7 +10,9 @@ import type {
 import { SourceScanError } from "./adapter";
 
 const SEARCH_ENDPOINT = "https://api.grants.gov/v1/api/search2";
+const DETAIL_ENDPOINT = "https://api.grants.gov/v1/api/fetchOpportunity";
 const DEFAULT_PAGE_SIZE = 1000;
+const DETAIL_CONCURRENCY = 8;
 const PURSUABLE_STATUSES = "forecasted|posted";
 
 function integerSchema(minimum: number) {
@@ -70,6 +72,25 @@ const responseEnvelopeSchema = z.object({
   msg: optionalText,
   data: z.unknown().optional(),
 });
+const optionalAmount = z.union([z.string(), z.number()]).nullish().transform((value) => {
+  if (value === null || value === undefined || String(value).trim() === "") return undefined;
+  const amount = Number(String(value).replaceAll(",", ""));
+  return Number.isFinite(amount) && amount >= 0 ? amount : undefined;
+});
+const detailSectionSchema = z.object({
+  synopsisDesc: optionalText,
+  forecastDesc: optionalText,
+  applicantEligibilityDesc: optionalText,
+  estimatedFunding: optionalAmount,
+  awardCeiling: optionalAmount,
+  awardFloor: optionalAmount,
+}).passthrough();
+const detailDataSchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(String),
+  docType: optionalText,
+  synopsis: detailSectionSchema.nullish(),
+  forecast: detailSectionSchema.nullish(),
+}).passthrough();
 const searchDataSchema = z.object({
   hitCount: integerSchema(0),
   startRecord: integerSchema(0),
@@ -87,6 +108,7 @@ const grantsGovConfigSchema = z.object({
 });
 
 type GrantsGovOpportunity = z.infer<typeof opportunitySchema>;
+type GrantsGovOpportunityDetail = z.infer<typeof detailDataSchema>;
 type GrantsGovOrganization = z.infer<typeof grantsGovConfigSchema>["organizations"][number];
 export type GrantsGovConfig = z.infer<typeof grantsGovConfigSchema>;
 
@@ -178,6 +200,43 @@ function sourceErrorForStatus(status: number): SourceScanError {
   );
 }
 
+function plainTextFromHtml(value: string | null | undefined): string | undefined {
+  const text = value?.trim();
+  if (!text) return undefined;
+  const entities: Record<string, string> = {
+    amp: "&",
+    apos: "'",
+    gt: ">",
+    ldquo: "“",
+    lt: "<",
+    mdash: "—",
+    ndash: "–",
+    nbsp: " ",
+    quot: '"',
+    rdquo: "”",
+    rsquo: "’",
+  };
+  const decoded = text
+    .replace(/<(?:br|\/p|\/div|\/li|\/h[1-6])\s*\/?>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, code: string) => {
+      if (code.startsWith("#")) {
+        const hexadecimal = code.startsWith("#x") || code.startsWith("#X");
+        const point = Number.parseInt(code.slice(hexadecimal ? 2 : 1), hexadecimal ? 16 : 10);
+        return Number.isInteger(point) && point <= 0x10ffff && !(point >= 0xd800 && point <= 0xdfff)
+          ? String.fromCodePoint(point)
+          : entity;
+      }
+      return entities[code.toLocaleLowerCase()] ?? entity;
+    });
+  const normalized = decoded
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n");
+  return normalized || undefined;
+}
+
 async function search(
   fetcher: typeof fetch,
   body: Record<string, unknown>,
@@ -240,6 +299,61 @@ async function search(
   return data.data;
 }
 
+async function fetchOpportunityDetail(
+  fetcher: typeof fetch,
+  opportunityId: string,
+  signal: AbortSignal,
+): Promise<GrantsGovOpportunityDetail> {
+  let response: Response;
+  try {
+    response = await fetcher(DETAIL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ opportunityId: Number(opportunityId) }),
+      signal,
+    });
+  } catch (error) {
+    if (error instanceof SourceScanError) throw error;
+    throw new SourceScanError(
+      "source_unavailable",
+      "Grants.gov opportunity detail request failed before a response was received.",
+      true,
+    );
+  }
+  if (!response.ok) throw sourceErrorForStatus(response.status);
+
+  let raw: unknown;
+  try {
+    raw = await response.json();
+  } catch {
+    throw new SourceScanError(
+      "invalid_response",
+      "Grants.gov returned invalid JSON for an opportunity detail.",
+      true,
+    );
+  }
+  const envelope = responseEnvelopeSchema.safeParse(raw);
+  if (!envelope.success || envelope.data.errorcode !== 0) {
+    throw new SourceScanError(
+      "invalid_response",
+      "Grants.gov returned an unexpected opportunity detail response.",
+      true,
+    );
+  }
+  const detail = detailDataSchema.safeParse(envelope.data.data);
+  if (!detail.success || detail.data.id !== opportunityId) {
+    throw new SourceScanError(
+      "invalid_response",
+      "Grants.gov returned an opportunity detail with an unexpected identifier.",
+      true,
+    );
+  }
+  return detail.data;
+}
+
 function approvedAgencyCodes(
   organizations: GrantsGovConfig["organizations"],
   agencyOptions: z.infer<typeof agencyOptionSchema>[],
@@ -267,11 +381,21 @@ function candidateFromOpportunity(
   opportunity: GrantsGovOpportunity,
   organization: GrantsGovOrganization,
   discoveredAt: string,
+  detail: GrantsGovOpportunityDetail,
 ): SourceCandidate {
   const canonicalUrl = `https://www.grants.gov/search-results-detail/${encodeURIComponent(opportunity.id)}`;
   const alnList = [...new Set((opportunity.alnist ?? []).map(String).map((value) => value.trim()).filter(Boolean))]
     .sort();
   const docType = opportunity.docType?.trim() || undefined;
+  const detailSection = detail.synopsis ?? detail.forecast;
+  const description = plainTextFromHtml(detailSection?.synopsisDesc ?? detailSection?.forecastDesc);
+  const eligibility = plainTextFromHtml(detailSection?.applicantEligibilityDesc);
+  const valueAmount = detailSection?.estimatedFunding ?? detailSection?.awardCeiling;
+  const valueBasis = detailSection?.estimatedFunding !== undefined
+    ? "estimated-total-funding"
+    : detailSection?.awardCeiling !== undefined
+      ? "award-ceiling"
+      : undefined;
 
   return {
     sourceId: grantsGovSourceDefinition.id,
@@ -282,9 +406,12 @@ function candidateFromOpportunity(
     eventType: "tender",
     publishedAt: normalizedSourceDate(opportunity.openDate),
     discoveredAt,
-    opportunityName: opportunity.title,
+    opportunityName: plainTextFromHtml(opportunity.title) ?? opportunity.title,
+    description,
     clientName: opportunity.agencyName,
+    value: valueAmount === undefined ? undefined : { amount: valueAmount, currency: "USD" },
     dueDate: normalizedSourceDate(opportunity.closeDate),
+    eligibility,
     sourceStatus: opportunity.oppStatus,
     documents: [{
       id: "grants-gov-opportunity",
@@ -302,6 +429,10 @@ function candidateFromOpportunity(
       opportunityStatus: opportunity.oppStatus,
       documentType: docType,
       assistanceListingNumbers: alnList,
+      estimatedFunding: detailSection?.estimatedFunding,
+      awardCeiling: detailSection?.awardCeiling,
+      awardFloor: detailSection?.awardFloor,
+      valueBasis,
     },
   };
 }
@@ -383,9 +514,23 @@ export function createGrantsGovAdapter(options: GrantsGovAdapterOptions): Source
       }
 
       const discoveredAt = context.now.toISOString();
-      const candidates = [...opportunities.values()]
-        .map(({ opportunity, organization }) =>
-          candidateFromOpportunity(opportunity, organization, discoveredAt))
+      const detailedOpportunities: Array<{
+        opportunity: GrantsGovOpportunity;
+        organization: GrantsGovOrganization;
+        detail: GrantsGovOpportunityDetail;
+      }> = [];
+      const records = [...opportunities.values()];
+      for (let index = 0; index < records.length; index += DETAIL_CONCURRENCY) {
+        const batch = records.slice(index, index + DETAIL_CONCURRENCY);
+        detailedOpportunities.push(...await Promise.all(batch.map(async ({ opportunity, organization }) => ({
+          opportunity,
+          organization,
+          detail: await fetchOpportunityDetail(fetcher, opportunity.id, context.signal),
+        }))));
+      }
+      const candidates = detailedOpportunities
+        .map(({ opportunity, organization, detail }) =>
+          candidateFromOpportunity(opportunity, organization, discoveredAt, detail))
         .sort((a, b) =>
           (a.publishedAt ?? a.discoveredAt ?? discoveredAt).localeCompare(
             b.publishedAt ?? b.discoveredAt ?? discoveredAt,

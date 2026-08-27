@@ -8,17 +8,31 @@ const fieldSchema = z.enum([
   "opportunityName",
   "description",
   "clientName",
+  "procuringEntityName",
   "value.amount",
   "value.currency",
   "dueDate",
   "placeOfPerformance.description",
   "placeOfPerformance.countryCode",
   "eligibility",
+  "sourceData.federalOrganizationCode",
+  "sourceData.classificationCode",
+  "sourceData.naicsCode",
+  "sourceData.fullParentPathName",
 ]);
 
 const conditionSchema = z.discriminatedUnion("operator", [
   z.object({ field: fieldSchema, operator: z.literal("equals"), value: z.union([z.string(), z.number()]) }),
-  z.object({ field: fieldSchema, operator: z.literal("contains"), value: z.string().min(1) }),
+  z.object({
+    field: fieldSchema,
+    operator: z.literal("contains"),
+    value: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
+  }),
+  z.object({
+    field: fieldSchema,
+    operator: z.literal("startsWith"),
+    value: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
+  }),
   z.object({ field: fieldSchema, operator: z.literal("in"), value: z.array(z.union([z.string(), z.number()])).min(1) }),
   z.object({ field: fieldSchema, operator: z.enum(["lt", "lte", "gt", "gte"]), value: z.number() }),
 ]);
@@ -27,8 +41,9 @@ const conditionsSchema = z
   .object({
     all: z.array(conditionSchema).min(1).optional(),
     any: z.array(conditionSchema).min(1).optional(),
+    none: z.array(conditionSchema).min(1).optional(),
   })
-  .refine((value) => value.all || value.any, "A rule must define all or any conditions");
+  .refine((value) => value.all || value.any || value.none, "A rule must define conditions");
 
 const hardExclusionSchema = z.object({
   id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
@@ -75,6 +90,14 @@ function fieldValue(event: NormalizedBiddingEvent, field: z.infer<typeof fieldSc
       return event.placeOfPerformance?.description;
     case "placeOfPerformance.countryCode":
       return event.placeOfPerformance?.countryCode;
+    case "sourceData.federalOrganizationCode":
+      return event.sourceData.federalOrganizationCode;
+    case "sourceData.classificationCode":
+      return event.sourceData.classificationCode;
+    case "sourceData.naicsCode":
+      return event.sourceData.naicsCode;
+    case "sourceData.fullParentPathName":
+      return event.sourceData.fullParentPathName;
     default:
       return event[field];
   }
@@ -92,7 +115,13 @@ function matchesCondition(event: NormalizedBiddingEvent, condition: Condition): 
     case "equals":
       return normalizedComparable(actual) === normalizedComparable(condition.value);
     case "contains":
-      return typeof actual === "string" && actual.toLocaleLowerCase().includes(condition.value.toLocaleLowerCase());
+      return typeof actual === "string" &&
+        (Array.isArray(condition.value) ? condition.value : [condition.value])
+          .some((value) => actual.toLocaleLowerCase().includes(value.toLocaleLowerCase()));
+    case "startsWith":
+      return typeof actual === "string" &&
+        (Array.isArray(condition.value) ? condition.value : [condition.value])
+          .some((value) => actual.toLocaleLowerCase().startsWith(value.toLocaleLowerCase()));
     case "in":
       return condition.value.map(normalizedComparable).includes(normalizedComparable(actual) as string | number);
     case "lt":
@@ -109,7 +138,8 @@ function matchesCondition(event: NormalizedBiddingEvent, condition: Condition): 
 function matchesConditions(event: NormalizedBiddingEvent, conditions: Conditions): boolean {
   const matchesAll = conditions.all?.every((condition) => matchesCondition(event, condition)) ?? true;
   const matchesAny = conditions.any?.some((condition) => matchesCondition(event, condition)) ?? true;
-  return matchesAll && matchesAny;
+  const matchesNone = conditions.none?.every((condition) => !matchesCondition(event, condition)) ?? true;
+  return matchesAll && matchesAny && matchesNone;
 }
 
 export function assessAddressability(

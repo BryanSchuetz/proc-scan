@@ -82,6 +82,9 @@ describe("SAM.gov Source adapter", () => {
       },
       eligibility: "Total Small Business Set-Aside (FAR 19.5)",
       sourceStatus: "active",
+      sourceData: {
+        federalOrganizationCode: "524",
+      },
     });
     expect(solicitation.description).toBeUndefined();
     expect(solicitation.documents?.map((document) => document.id)).toEqual([

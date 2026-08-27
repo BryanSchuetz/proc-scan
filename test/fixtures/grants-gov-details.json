@@ -1,0 +1,45 @@
+{
+  "331415": {
+    "errorcode": 0,
+    "msg": "Webservice Succeeds",
+    "data": {
+      "id": 331415,
+      "docType": "forecast",
+      "forecast": {
+        "forecastDesc": "<p>Technical assistance for community engagement and workforce development.</p>",
+        "applicantEligibilityDesc": "Qualified consulting organizations.",
+        "awardCeiling": "750000"
+      }
+    }
+  },
+  "361650": {
+    "errorcode": 0,
+    "msg": "Webservice Succeeds",
+    "data": {
+      "id": 361650,
+      "docType": "synopsis",
+      "synopsis": {
+        "synopsisDesc": "<p>Advisory services for justice-sector data governance and digital policy.</p>",
+        "applicantEligibilityDesc": "Organizations with relevant technical experience.",
+        "estimatedFunding": "2,500,000",
+        "awardCeiling": "1250000",
+        "awardFloor": "500000"
+      }
+    }
+  },
+  "361701": {
+    "errorcode": 0,
+    "msg": "Webservice Succeeds",
+    "data": {
+      "id": 361701,
+      "docType": "synopsis",
+      "synopsis": {
+        "synopsisDesc": "<p>The activity includes a digital ecosystem assessment &amp; digital transformation advisory.</p>",
+        "applicantEligibilityDesc": "Nonprofit and for-profit organizations are eligible.",
+        "estimatedFunding": "2000000",
+        "awardCeiling": "1000000",
+        "awardFloor": "250000"
+      }
+    }
+  }
+}

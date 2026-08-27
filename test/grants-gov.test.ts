@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import agencyDiscovery from "./fixtures/grants-gov-agencies.json";
+import opportunityDetails from "./fixtures/grants-gov-details.json";
 import page0 from "./fixtures/grants-gov-page-0.json";
 import page1 from "./fixtures/grants-gov-page-1.json";
 import { assertValidSourceAdapter } from "../src/sources/adapter";
@@ -24,8 +25,13 @@ function requestBody(init?: RequestInit): Record<string, unknown> {
 describe("Grants.gov Source adapter", () => {
   it("discovers approved agency codes, paginates, and maps open opportunities", async () => {
     const requests: Record<string, unknown>[] = [];
+    const detailRequests: number[] = [];
     const fetcher = (async (_input: RequestInfo | URL, init?: RequestInit) => {
       const body = requestBody(init);
+      if (typeof body.opportunityId === "number") {
+        detailRequests.push(body.opportunityId);
+        return Response.json(opportunityDetails[String(body.opportunityId) as keyof typeof opportunityDetails]);
+      }
       requests.push(body);
       if (!body.agencies) return Response.json(agencyDiscovery);
       return Response.json(body.startRecordNum === 0 ? page0 : page1);
@@ -60,6 +66,7 @@ describe("Grants.gov Source adapter", () => {
         sortBy: "openDate|desc",
       },
     ]);
+    expect(detailRequests.sort((a, b) => a - b)).toEqual([331415, 361650, 361701]);
     expect(result.candidates.map((candidate) => candidate.sourceEventId)).toEqual([
       "331415",
       "361650",
@@ -81,16 +88,22 @@ describe("Grants.gov Source adapter", () => {
       eventType: "tender",
       publishedAt: "2026-08-26T00:00:00.000Z",
       opportunityName: "Digital rights and civic technology program",
+      description: "The activity includes a digital ecosystem assessment & digital transformation advisory.",
       clientName: "Bureau of Democracy Human Rights and Labor",
+      value: { amount: 2_000_000, currency: "USD" },
       dueDate: "2026-09-30T00:00:00.000Z",
+      eligibility: "Nonprofit and for-profit organizations are eligible.",
       sourceStatus: "posted",
       sourceData: {
         federalOrganizationCode: "019",
         agencyCode: "DOS-DRL",
         assistanceListingNumbers: ["19.345"],
+        estimatedFunding: 2_000_000,
+        awardCeiling: 1_000_000,
+        awardFloor: 250_000,
+        valueBasis: "estimated-total-funding",
       },
     });
-    expect(opportunity.description).toBeUndefined();
     expect(opportunity.documents).toEqual([{
       id: "grants-gov-opportunity",
       title: "Grants.gov opportunity",

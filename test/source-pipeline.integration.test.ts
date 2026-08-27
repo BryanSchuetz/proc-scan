@@ -6,6 +6,7 @@ import addressabilityRaw from "../config/addressability.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
 import grantsAgencyDiscovery from "./fixtures/grants-gov-agencies.json";
+import grantsOpportunityDetails from "./fixtures/grants-gov-details.json";
 import grantsPage0 from "./fixtures/grants-gov-page-0.json";
 import grantsPage1 from "./fixtures/grants-gov-page-1.json";
 import page0 from "./fixtures/sam-gov-page-0.json";
@@ -48,7 +49,16 @@ function grantsFixtureAdapter() {
     pageSize: 2,
     fetch: (async (_input: RequestInfo | URL, init?: RequestInit) => {
       if (typeof init?.body !== "string") throw new Error("Expected Grants.gov request body");
-      const body = JSON.parse(init.body) as { agencies?: string; startRecordNum?: number };
+      const body = JSON.parse(init.body) as {
+        agencies?: string;
+        opportunityId?: number;
+        startRecordNum?: number;
+      };
+      if (body.opportunityId !== undefined) {
+        return Response.json(
+          grantsOpportunityDetails[String(body.opportunityId) as keyof typeof grantsOpportunityDetails],
+        );
+      }
       if (!body.agencies) return Response.json(grantsAgencyDiscovery);
       return Response.json(body.startRecordNum === 0 ? grantsPage0 : grantsPage1);
     }) as typeof fetch,
@@ -187,6 +197,13 @@ describe("Source processing integration", () => {
       { source_event_id: "361650", event_type: "tender", addressability_status: "uncertain" },
       { source_event_id: "361701", event_type: "tender", addressability_status: "uncertain" },
     ]);
+    const technicalAreas = await env.DB.prepare(`SELECT ta.id
+      FROM bidding_event_technical_areas assignment
+      JOIN bidding_events event ON event.id = assignment.bidding_event_id
+      JOIN technical_areas ta ON ta.id = assignment.technical_area_id
+      WHERE event.source_id = 'grants-gov' AND event.source_event_id = '361701'`)
+      .all<{ id: string }>();
+    expect(technicalAreas.results.map(({ id }) => id)).toContain("digital-strategy-and-advisory");
 
     const second = await processGrantsScan(
       "scan_grants_fixture_second",

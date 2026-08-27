@@ -233,7 +233,11 @@ function documents(opportunity: SamOpportunity, canonicalUrl: string): SourceDoc
   return result;
 }
 
-function candidateFromOpportunity(opportunity: SamOpportunity, discoveredAt: string): SourceCandidate | undefined {
+function candidateFromOpportunity(
+  opportunity: SamOpportunity,
+  federalOrganizationCode: string,
+  discoveredAt: string,
+): SourceCandidate | undefined {
   if (!PURSUABLE_NOTICE_TYPES.has(opportunity.type.trim().toLocaleLowerCase())) return undefined;
 
   const names = hierarchyParts(opportunity.fullParentPathName);
@@ -268,6 +272,7 @@ function candidateFromOpportunity(opportunity: SamOpportunity, discoveredAt: str
     sourceData: {
       noticeId: opportunity.noticeId,
       solicitationNumber: presentText(opportunity.solicitationNumber),
+      federalOrganizationCode,
       fullParentPathName: presentText(opportunity.fullParentPathName),
       fullParentPathCode: presentText(opportunity.fullParentPathCode),
       noticeType: opportunity.type,
@@ -339,7 +344,10 @@ export function createSamGovAdapter(options: SamGovAdapterOptions): SourceAdapte
     async scan(context: SourceScanContext): Promise<SourceScanResult> {
       const postedFrom = apiDate(scanStart(context));
       const postedTo = apiDate(context.now);
-      const opportunities = new Map<string, SamOpportunity>();
+      const opportunities = new Map<string, {
+        opportunity: SamOpportunity;
+        federalOrganizationCode: string;
+      }>();
 
       for (const organization of options.organizations) {
         let offset = 0;
@@ -403,7 +411,10 @@ export function createSamGovAdapter(options: SamGovAdapterOptions): SourceAdapte
                 true,
               );
             }
-            opportunities.set(opportunity.data.noticeId, opportunity.data);
+            opportunities.set(opportunity.data.noticeId, {
+              opportunity: opportunity.data,
+              federalOrganizationCode: organization.code,
+            });
           }
 
           const loadedThrough = (offset + 1) * parsed.data.limit;
@@ -421,8 +432,8 @@ export function createSamGovAdapter(options: SamGovAdapterOptions): SourceAdapte
 
       const discoveredAt = context.now.toISOString();
       const candidates = [...opportunities.values()]
-        .flatMap((opportunity) => {
-          const candidate = candidateFromOpportunity(opportunity, discoveredAt);
+        .flatMap(({ opportunity, federalOrganizationCode }) => {
+          const candidate = candidateFromOpportunity(opportunity, federalOrganizationCode, discoveredAt);
           return candidate ? [candidate] : [];
         })
         .sort((a, b) =>

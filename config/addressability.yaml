@@ -1,7 +1,232 @@
-# Safe Milestone 0 default. No Bidding Event can become Addressable until the
-# owner replaces this draft with approved business rules and marks it active.
-schema_version: 1
-status: draft
-threshold: 1
-hard_exclusions: []
-scoring_rules: []
+schema_version: 2
+status: active
+threshold: 3
+hard_exclusions:
+  - id: sam-goods-product-code
+    description: SAM.gov opportunity has a numeric Product and Service Code for goods or supplies.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+      any:
+        - field: sourceData.classificationCode
+          operator: startsWith
+          value: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+  - id: sam-manufacturing-naics
+    description: SAM.gov opportunity is assigned to a manufacturing NAICS sector.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+      any:
+        - field: sourceData.naicsCode
+          operator: startsWith
+          value: ["31", "32", "33"]
+  - id: sam-explicit-goods-language
+    description: SAM.gov opportunity explicitly procures goods, supplies, equipment, or manufacturing.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+      any:
+        - field: opportunityName
+          operator: contains
+          value:
+            - procurement of goods
+            - procurement of supplies
+            - supply and delivery
+            - purchase of equipment
+            - supply of equipment
+            - manufacture and delivery
+        - field: description
+          operator: contains
+          value:
+            - procurement of goods
+            - procurement of supplies
+            - supply and delivery
+            - purchase of equipment
+            - supply of equipment
+            - manufacture and delivery
+  - id: sam-dos-dfc-below-minimum-value
+    description: DOS and DFC SAM.gov opportunities must have a known value of at least $500,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: in
+          value: ["019", "077"]
+        - field: value.amount
+          operator: lt
+          value: 500000
+  - id: sam-ustda-below-minimum-value
+    description: USTDA SAM.gov opportunities must have a known value of at least $250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "011"
+        - field: value.amount
+          operator: lt
+          value: 250000
+  - id: sam-mca-below-minimum-value
+    description: Millennium Challenge Account SAM.gov opportunities must have a known value of at least $250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: lt
+          value: 250000
+      any:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
+  - id: sam-mcc-below-minimum-value
+    description: MCC SAM.gov opportunities other than Millennium Challenge Accounts must have a known value of at least $500,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: lt
+          value: 500000
+      none:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
+scoring_rules:
+  - id: sam-dos-dfc-minimum-value
+    description: DOS or DFC SAM.gov opportunity meets the $500,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: in
+          value: ["019", "077"]
+        - field: value.amount
+          operator: gte
+          value: 500000
+  - id: sam-ustda-minimum-value
+    description: USTDA SAM.gov opportunity meets the $250,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "011"
+        - field: value.amount
+          operator: gte
+          value: 250000
+  - id: sam-mca-minimum-value
+    description: Millennium Challenge Account SAM.gov opportunity meets the $250,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: gte
+          value: 250000
+      any:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
+  - id: sam-mcc-minimum-value
+    description: MCC SAM.gov opportunity meets the $500,000 minimum value.
+    points: 1
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+        - field: sourceData.federalOrganizationCode
+          operator: equals
+          value: "524"
+        - field: value.amount
+          operator: gte
+          value: 500000
+      none:
+        - field: clientName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: procuringEntityName
+          operator: contains
+          value: Millennium Challenge Account
+        - field: sourceData.fullParentPathName
+          operator: contains
+          value: Millennium Challenge Account
+  - id: sam-technical-assistance
+    description: SAM.gov opportunity contains positive evidence of technical assistance services.
+    points: 2
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: sam-gov
+      any:
+        - field: opportunityName
+          operator: contains
+          value:
+            - technical assistance
+            - advisory services
+            - consulting services
+            - consultancy services
+            - capacity building
+            - institutional strengthening
+            - feasibility study
+            - training services
+        - field: description
+          operator: contains
+          value:
+            - technical assistance
+            - advisory services
+            - consulting services
+            - consultancy services
+            - capacity building
+            - institutional strengthening
+            - feasibility study
+            - training services
