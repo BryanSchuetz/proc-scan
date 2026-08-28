@@ -236,7 +236,6 @@ describe("Addressability Assessment", () => {
 
     const missFitTerms = [
       "goods",
-      "supply",
       "supplies",
       "equipment",
       "vehicles",
@@ -348,6 +347,18 @@ describe("Addressability Assessment", () => {
         ],
       });
     }
+  });
+
+  it("does not treat supply-chain language as Miss-Fit evidence", () => {
+    expect(assessAddressability(grantsEvent({
+      amount: 2_000_000,
+      description: "A program supporting resilient, rights-respecting supply chains.",
+      opportunityName: "General program",
+    }), configuredRules)).toMatchObject({
+      status: "addressable",
+      score: 2,
+      matchedRules: [{ ruleId: "inclusive-baseline", points: 2 }],
+    });
   });
 
   it("treats zero and missing values as unknown rather than below the value floor", () => {

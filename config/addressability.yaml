@@ -1,4 +1,4 @@
-schema_version: 5
+schema_version: 6
 status: active
 threshold: 2
 hard_exclusions:
@@ -299,7 +299,6 @@ scoring_rules:
           operator: contains
           value:
             - goods
-            - supply
             - supplies
             - equipment
             - vehicles
@@ -356,7 +355,6 @@ scoring_rules:
           operator: contains
           value:
             - goods
-            - supply
             - supplies
             - equipment
             - vehicles
