@@ -16,13 +16,18 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import type { SortingState } from "@tanstack/react-table";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ApiBiddingEvent, EventsResponse } from "../api/types";
 import daiLogoUrl from "./assets/dai-logo.svg";
 import { fetchBiddingEvents } from "./api";
 
 const columnHelper = createColumnHelper<ApiBiddingEvent>();
 const initialSorting: SortingState = [{ id: "discoveredAt", desc: true }];
+type RegistryPath = "/" | "/unmarked";
+
+function getRegistryPath(): RegistryPath {
+  return window.location.pathname.replace(/\/+$/, "") === "/unmarked" ? "/unmarked" : "/";
+}
 
 function formatDate(value: string | undefined): string {
   if (!value) return "Not provided";
@@ -189,7 +194,8 @@ function LoadingRows() {
 }
 
 export default function App() {
-  const isUnmarkedPage = window.location.pathname.replace(/\/+$/, "") === "/unmarked";
+  const [pathname, setPathname] = useState<RegistryPath>(getRegistryPath);
+  const isUnmarkedPage = pathname === "/unmarked";
   const status = isUnmarkedPage ? "uncertain" : "addressable";
   const [data, setData] = useState<EventsResponse>();
   const [loading, setLoading] = useState(true);
@@ -203,6 +209,37 @@ export default function App() {
   const [source, setSource] = useState("");
   const [technicalArea, setTechnicalArea] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
+
+  const applyRoute = useCallback((nextPath: RegistryPath) => {
+    setPathname(nextPath);
+    setData(undefined);
+    setLoading(true);
+    setError(undefined);
+    setPage(1);
+    setSorting(initialSorting);
+    setSearch("");
+    setEventType("");
+    setClient("");
+    setSource("");
+    setTechnicalArea("");
+  }, []);
+
+  const navigate = (event: React.MouseEvent<HTMLAnchorElement>, nextPath: RegistryPath) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (pathname === nextPath) return;
+    window.history.pushState(null, "", nextPath);
+    applyRoute(nextPath);
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextPath = getRegistryPath();
+      applyRoute(nextPath);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [applyRoute]);
 
   useEffect(() => {
     document.title = `${isUnmarkedPage ? "Unmarked" : "Marked"} Opportunities | Procurement Opportunity Registry`;
@@ -412,8 +449,8 @@ export default function App() {
                 : "A table of all bidding events identified as meeting established thresholds."}
             </p>
             <nav className="view-tabs" aria-label="Opportunity views">
-              <a href="/" aria-current={isUnmarkedPage ? undefined : "page"}>Marked</a>
-              <a href="/unmarked" aria-current={isUnmarkedPage ? "page" : undefined}>Unmarked</a>
+              <a href="/" aria-current={isUnmarkedPage ? undefined : "page"} onClick={(event) => navigate(event, "/")}>Marked</a>
+              <a href="/unmarked" aria-current={isUnmarkedPage ? "page" : undefined} onClick={(event) => navigate(event, "/unmarked")}>Unmarked</a>
             </nav>
           </div>
           <div className="record-count" aria-live="polite">
