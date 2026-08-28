@@ -79,13 +79,21 @@ Assessment proceeds in this order:
 
 | Evidence | Score |
 | --- | ---: |
-| Title or description contains one or more service terms | +2 |
-| Title or description contains one or more goods terms | −2 |
+| Inclusive baseline for every non-excluded event | +2 |
+| Title or description contains one or more DAI-Fit terms | +2 |
+| Title or description contains one or more Miss-Fit terms | −2 |
 
-The service terms are: `advisory`, `capacity building`, `consultancy`, `consultant`, `consulting`, `implementation support`, `professional services`, `services`, and `technical assistance`.
+The DAI-Fit terms are: `advisory`, `analytics`, `capacity building`, `climate`, `consultancy`, `consultant`, `consulting`, `digital`, `economic growth`, `education`, `environment`, `financial advisory`, `fragile states`, `global health`, `governance`, `implementation support`, `institutional strengthening`, `management consulting`, `market systems`, `monitoring evaluation and learning`, `partnerships`, `policy`, `private sector`, `professional services`, `project design`, `public financial management`, `public sector`, `resilience`, `sustainable business`, `technical assistance`, `training`, and `WASH`.
 
-The goods terms are: `goods`, `supply`, `supplies`, `equipment`, `vehicles`, `hardware`, `furniture`, `materials`, and `computers`.
+The Miss-Fit terms are: `goods`, `supply`, `supplies`, `equipment`, `vehicles`, `hardware`, `furniture`, `materials`, `computers`, `manned guarding`, `security guarding`, `guarding services`, `security services`, `close protection`, `medical insurance`, `health insurance for`, `group insurance`, `accidental insurance`, `life insurance`, `travel insurance`, `cleaning services`, `janitorial`, `catering services`, `canteen`, `landscaping`, `gardening services`, `pest control`, `waste collection`, `vehicle hire`, `vehicle rental`, `car rental`, `fleet management`, `chauffeur`, `travel management`, `removal services`, `relocation services`, `furniture supply`, `office supplies`, `stationery`, `residential lease`, `building maintenance`, `facilities management`, `air conditioning maintenance`, `supervision`, `construction`, `architecture`, `architectural`, `engineering`, `engineer`, `visa`, `embassy`, `maintenance`, `irrigation`, and `drainage`.
 
-Term matching is case-insensitive against the normalized Opportunity title and description. Multiple terms in one category do not compound its score; service and goods evidence are independent and can both match.
+Term matching is case-insensitive against the normalized Opportunity title and description. Multiple terms in one category do not compound its score; DAI-Fit and Miss-Fit evidence are independent and can both match.
 
-After hard exclusions, a fit score of 2 or more is **Addressable** and appears on the Marked page. A lower score is **Uncertain** and appears on the Unmarked page. Service evidence without goods evidence is therefore Addressable whether the value is above the floor or unknown. If goods evidence is also present, it offsets the service score to 0 and the event remains Uncertain.
+After hard exclusions, a fit score of 2 or more is **Addressable** and appears on the Marked page. A lower score is **Uncertain** and appears on the Unmarked page. The inclusive baseline defaults every non-excluded event to Addressable; only Miss-Fit evidence without DAI-Fit evidence moves it below the threshold.
+
+| DAI-Fit evidence | Miss-Fit evidence | Final score | Outcome |
+| --- | --- | ---: | --- |
+| No | No | 2 | Addressable (Marked) |
+| Yes | No | 4 | Addressable (Marked) |
+| No | Yes | 0 | Uncertain (Unmarked) |
+| Yes | Yes | 2 | Addressable (Marked) |

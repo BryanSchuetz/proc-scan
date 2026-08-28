@@ -102,7 +102,7 @@ describe("Addressability Assessment", () => {
 
   it("applies the configured SAM.gov value floors as hard exclusions only", () => {
     expect(assessAddressability(federalEvent({ amount: 500_000 }), configuredRules))
-      .toMatchObject({ status: "addressable", score: 2 });
+      .toMatchObject({ status: "addressable", score: 4 });
     expect(assessAddressability(federalEvent({ amount: 499_999 }), configuredRules)).toMatchObject({
       status: "excluded",
       exclusionRuleId: "sam-dos-dfc-below-minimum-value",
@@ -131,7 +131,7 @@ describe("Addressability Assessment", () => {
 
   it("applies the configured Grants.gov value floors as hard exclusions only", () => {
     expect(assessAddressability(grantsEvent({ amount: 2_000_000 }), configuredRules))
-      .toMatchObject({ status: "addressable", score: 2 });
+      .toMatchObject({ status: "addressable", score: 4 });
     expect(assessAddressability(grantsEvent({ amount: 1_999_999 }), configuredRules)).toMatchObject({
       status: "excluded",
       exclusionRuleId: "grants-dos-below-minimum-value",
@@ -177,32 +177,64 @@ describe("Addressability Assessment", () => {
       amount: 2_000_000,
       description: "General grant program",
       opportunityName: "General grant program",
-    }), configuredRules).status).toBe("uncertain");
+    }), configuredRules).status).toBe("addressable");
   });
 
-  it("scores every configured service term positively and every goods term negatively", () => {
-    const serviceTerms = [
+  it("scores every configured DAI-fit term positively and every miss-fit term negatively", () => {
+    const daiFitTerms = [
       "advisory",
+      "analytics",
       "capacity building",
+      "climate",
       "consultancy",
       "consultant",
       "consulting",
+      "digital",
+      "economic growth",
+      "education",
+      "environment",
+      "financial advisory",
+      "fragile states",
+      "global health",
+      "governance",
       "implementation support",
+      "institutional strengthening",
+      "management consulting",
+      "market systems",
+      "monitoring evaluation and learning",
+      "partnerships",
+      "policy",
+      "private sector",
       "professional services",
-      "services",
+      "project design",
+      "public financial management",
+      "public sector",
+      "resilience",
+      "sustainable business",
       "technical assistance",
+      "training",
+      "WASH",
     ];
-    for (const term of serviceTerms) {
+    expect(configuredRules.scoring_rules.find(({ id }) => id === "dai-fit-terms"))
+      .toMatchObject({
+        conditions: {
+          any: [
+            { field: "opportunityName", operator: "contains", value: daiFitTerms },
+            { field: "description", operator: "contains", value: daiFitTerms },
+          ],
+        },
+      });
+    for (const term of daiFitTerms) {
       const result = assessAddressability(grantsEvent({
         amount: 2_000_000,
         description: `Program provides ${term}.`,
         opportunityName: "General program",
       }), configuredRules);
-      expect(result).toMatchObject({ status: "addressable", score: 2 });
-      expect(result.matchedRules).toContainEqual({ ruleId: "service-terms", points: 2 });
+      expect(result).toMatchObject({ status: "addressable", score: 4 });
+      expect(result.matchedRules).toContainEqual({ ruleId: "dai-fit-terms", points: 2 });
     }
 
-    const goodsTerms = [
+    const missFitTerms = [
       "goods",
       "supply",
       "supplies",
@@ -212,46 +244,130 @@ describe("Addressability Assessment", () => {
       "furniture",
       "materials",
       "computers",
+      "manned guarding",
+      "security guarding",
+      "guarding services",
+      "security services",
+      "close protection",
+      "medical insurance",
+      "health insurance for",
+      "group insurance",
+      "accidental insurance",
+      "life insurance",
+      "travel insurance",
+      "cleaning services",
+      "janitorial",
+      "catering services",
+      "canteen",
+      "landscaping",
+      "gardening services",
+      "pest control",
+      "waste collection",
+      "vehicle hire",
+      "vehicle rental",
+      "car rental",
+      "fleet management",
+      "chauffeur",
+      "travel management",
+      "removal services",
+      "relocation services",
+      "furniture supply",
+      "office supplies",
+      "stationery",
+      "residential lease",
+      "building maintenance",
+      "facilities management",
+      "air conditioning maintenance",
+      "supervision",
+      "construction",
+      "architecture",
+      "architectural",
+      "engineering",
+      "engineer",
+      "visa",
+      "embassy",
+      "maintenance",
+      "irrigation",
+      "drainage",
     ];
-    for (const term of goodsTerms) {
+    expect(configuredRules.scoring_rules.find(({ id }) => id === "miss-fit-terms"))
+      .toMatchObject({
+        conditions: {
+          any: [
+            { field: "opportunityName", operator: "contains", value: missFitTerms },
+            { field: "description", operator: "contains", value: missFitTerms },
+          ],
+        },
+      });
+    for (const term of missFitTerms) {
       const result = assessAddressability(grantsEvent({
         amount: 2_000_000,
         description: `Advisory services involving ${term}.`,
         opportunityName: "General program",
       }), configuredRules);
-      expect(result).toMatchObject({ status: "uncertain", score: 0 });
-      expect(result.matchedRules).toContainEqual({ ruleId: "goods-terms", points: -2 });
+      expect(result).toMatchObject({ status: "addressable", score: 2 });
+      expect(result.matchedRules).toContainEqual({ ruleId: "miss-fit-terms", points: -2 });
     }
   });
 
-  it("applies service and goods evidence consistently to every Source", () => {
+  it("applies DAI-Fit and Miss-Fit evidence consistently to every Source", () => {
     const result = assessAddressability(biddingEvent({
       sourceId: "future-source",
       opportunityName: "Professional services and equipment",
       description: "General opportunity",
       value: undefined,
     }), configuredRules);
-    expect(result).toMatchObject({ status: "uncertain", score: 0 });
+    expect(result).toMatchObject({ status: "addressable", score: 2 });
     expect(result.matchedRules).toEqual([
-      { ruleId: "service-terms", points: 2 },
-      { ruleId: "goods-terms", points: -2 },
+      { ruleId: "inclusive-baseline", points: 2 },
+      { ruleId: "dai-fit-terms", points: 2 },
+      { ruleId: "miss-fit-terms", points: -2 },
     ]);
+  });
+
+  it("does not treat generic miss-fit services language as DAI-Fit evidence", () => {
+    for (const phrase of [
+      "security services",
+      "guarding services",
+      "cleaning services",
+      "catering services",
+      "gardening services",
+      "removal services",
+      "relocation services",
+    ]) {
+      expect(assessAddressability(grantsEvent({
+        amount: 2_000_000,
+        description: `Requirement for ${phrase}.`,
+        opportunityName: "General requirement",
+      }), configuredRules)).toMatchObject({
+        status: "uncertain",
+        score: 0,
+        matchedRules: [
+          { ruleId: "inclusive-baseline", points: 2 },
+          { ruleId: "miss-fit-terms", points: -2 },
+        ],
+      });
+    }
   });
 
   it("treats zero and missing values as unknown rather than below the value floor", () => {
     for (const amount of [0, undefined]) {
       expect(assessAddressability(federalEvent({ amount }), configuredRules))
-        .toMatchObject({ status: "addressable", score: 2 });
+        .toMatchObject({ status: "addressable", score: 4 });
     }
   });
 
-  it("keeps opportunities without service evidence Uncertain regardless of value evidence", () => {
+  it("marks opportunities with neither fit signal from the inclusive baseline", () => {
     for (const amount of [1_000_000, 0, undefined]) {
       expect(assessAddressability(federalEvent({
         amount,
         description: "General program",
         opportunityName: "General requirement",
-      }), configuredRules)).toMatchObject({ status: "uncertain", score: 0 });
+      }), configuredRules)).toMatchObject({
+        status: "addressable",
+        score: 2,
+        matchedRules: [{ ruleId: "inclusive-baseline", points: 2 }],
+      });
     }
   });
 

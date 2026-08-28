@@ -1,4 +1,4 @@
-schema_version: 4
+schema_version: 5
 status: active
 threshold: 2
 hard_exclusions:
@@ -209,8 +209,14 @@ hard_exclusions:
           operator: contains
           value: Millennium Challenge Account
 scoring_rules:
-  - id: service-terms
-    description: Opportunity contains positive evidence of services.
+  - id: inclusive-baseline
+    description: Every non-excluded opportunity starts from an inclusive baseline.
+    points: 2
+    conditions:
+      all:
+        - operator: always
+  - id: dai-fit-terms
+    description: Opportunity contains positive evidence of DAI fit.
     points: 2
     conditions:
       any:
@@ -218,28 +224,74 @@ scoring_rules:
           operator: contains
           value:
             - advisory
+            - analytics
             - capacity building
+            - climate
             - consultancy
             - consultant
             - consulting
+            - digital
+            - economic growth
+            - education
+            - environment
+            - financial advisory
+            - fragile states
+            - global health
+            - governance
             - implementation support
+            - institutional strengthening
+            - management consulting
+            - market systems
+            - monitoring evaluation and learning
+            - partnerships
+            - policy
+            - private sector
             - professional services
-            - services
+            - project design
+            - public financial management
+            - public sector
+            - resilience
+            - sustainable business
             - technical assistance
+            - training
+            - WASH
         - field: description
           operator: contains
           value:
             - advisory
+            - analytics
             - capacity building
+            - climate
             - consultancy
             - consultant
             - consulting
+            - digital
+            - economic growth
+            - education
+            - environment
+            - financial advisory
+            - fragile states
+            - global health
+            - governance
             - implementation support
+            - institutional strengthening
+            - management consulting
+            - market systems
+            - monitoring evaluation and learning
+            - partnerships
+            - policy
+            - private sector
             - professional services
-            - services
+            - project design
+            - public financial management
+            - public sector
+            - resilience
+            - sustainable business
             - technical assistance
-  - id: goods-terms
-    description: Opportunity contains negative evidence of goods or supplies.
+            - training
+            - WASH
+  - id: miss-fit-terms
+    description: Opportunity contains negative evidence of a DAI miss-fit.
     points: -2
     conditions:
       any:
@@ -255,6 +307,51 @@ scoring_rules:
             - furniture
             - materials
             - computers
+            - manned guarding
+            - security guarding
+            - guarding services
+            - security services
+            - close protection
+            - medical insurance
+            - health insurance for
+            - group insurance
+            - accidental insurance
+            - life insurance
+            - travel insurance
+            - cleaning services
+            - janitorial
+            - catering services
+            - canteen
+            - landscaping
+            - gardening services
+            - pest control
+            - waste collection
+            - vehicle hire
+            - vehicle rental
+            - car rental
+            - fleet management
+            - chauffeur
+            - travel management
+            - removal services
+            - relocation services
+            - furniture supply
+            - office supplies
+            - stationery
+            - residential lease
+            - building maintenance
+            - facilities management
+            - air conditioning maintenance
+            - supervision
+            - construction
+            - architecture
+            - architectural
+            - engineering
+            - engineer
+            - visa
+            - embassy
+            - maintenance
+            - irrigation
+            - drainage
         - field: description
           operator: contains
           value:
@@ -267,3 +364,48 @@ scoring_rules:
             - furniture
             - materials
             - computers
+            - manned guarding
+            - security guarding
+            - guarding services
+            - security services
+            - close protection
+            - medical insurance
+            - health insurance for
+            - group insurance
+            - accidental insurance
+            - life insurance
+            - travel insurance
+            - cleaning services
+            - janitorial
+            - catering services
+            - canteen
+            - landscaping
+            - gardening services
+            - pest control
+            - waste collection
+            - vehicle hire
+            - vehicle rental
+            - car rental
+            - fleet management
+            - chauffeur
+            - travel management
+            - removal services
+            - relocation services
+            - furniture supply
+            - office supplies
+            - stationery
+            - residential lease
+            - building maintenance
+            - facilities management
+            - air conditioning maintenance
+            - supervision
+            - construction
+            - architecture
+            - architectural
+            - engineering
+            - engineer
+            - visa
+            - embassy
+            - maintenance
+            - irrigation
+            - drainage

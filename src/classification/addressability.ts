@@ -22,6 +22,7 @@ const fieldSchema = z.enum([
 ]);
 
 const conditionSchema = z.discriminatedUnion("operator", [
+  z.object({ operator: z.literal("always") }),
   z.object({ field: fieldSchema, operator: z.literal("equals"), value: z.union([z.string(), z.number()]) }),
   z.object({
     field: fieldSchema,
@@ -108,6 +109,8 @@ function normalizedComparable(value: unknown): unknown {
 }
 
 function matchesCondition(event: NormalizedBiddingEvent, condition: Condition): boolean {
+  if (condition.operator === "always") return true;
+
   const actual = fieldValue(event, condition.field);
   if (actual === undefined || actual === null || actual === "") return false;
 
