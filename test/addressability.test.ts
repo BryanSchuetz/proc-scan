@@ -24,14 +24,14 @@ scoring_rules:
         - field: clientName
           operator: equals
           value: Development Agency
-  - id: minimum-value
-    description: Sufficient contract value
+  - id: service-fit
+    description: Opportunity contains service-fit evidence
     points: 4
     conditions:
       all:
-        - field: value.amount
-          operator: gte
-          value: 3000000
+        - field: description
+          operator: contains
+          value: service design
 `);
 const configuredRules = parseAddressabilityYaml(addressabilityRaw);
 
@@ -86,7 +86,11 @@ describe("Addressability Assessment", () => {
   });
 
   it("gives missing fields no points without excluding the event", () => {
-    const result = assessAddressability(biddingEvent({ clientName: undefined, value: undefined }), activeConfig);
+    const result = assessAddressability(biddingEvent({
+      clientName: undefined,
+      description: undefined,
+      value: undefined,
+    }), activeConfig);
     expect(result).toMatchObject({ status: "uncertain", score: 0 });
   });
 
@@ -96,8 +100,9 @@ describe("Addressability Assessment", () => {
     expect(assessAddressability(biddingEvent({ clientName: "Blocked Agency" }), draft).status).toBe("uncertain");
   });
 
-  it("applies the configured SAM.gov agency value bands", () => {
-    expect(assessAddressability(federalEvent({ amount: 500_000 }), configuredRules).status).toBe("addressable");
+  it("applies the configured SAM.gov value floors as hard exclusions only", () => {
+    expect(assessAddressability(federalEvent({ amount: 500_000 }), configuredRules))
+      .toMatchObject({ status: "addressable", score: 2 });
     expect(assessAddressability(federalEvent({ amount: 499_999 }), configuredRules)).toMatchObject({
       status: "excluded",
       exclusionRuleId: "sam-dos-dfc-below-minimum-value",
@@ -124,9 +129,9 @@ describe("Addressability Assessment", () => {
     });
   });
 
-  it("applies the configured Grants.gov agency value bands and service-evidence requirement", () => {
-    expect(assessAddressability(grantsEvent({ amount: 2_000_000 }), configuredRules).status)
-      .toBe("addressable");
+  it("applies the configured Grants.gov value floors as hard exclusions only", () => {
+    expect(assessAddressability(grantsEvent({ amount: 2_000_000 }), configuredRules))
+      .toMatchObject({ status: "addressable", score: 2 });
     expect(assessAddressability(grantsEvent({ amount: 1_999_999 }), configuredRules)).toMatchObject({
       status: "excluded",
       exclusionRuleId: "grants-dos-below-minimum-value",
@@ -193,7 +198,7 @@ describe("Addressability Assessment", () => {
         description: `Program provides ${term}.`,
         opportunityName: "General program",
       }), configuredRules);
-      expect(result).toMatchObject({ status: "addressable", score: 3 });
+      expect(result).toMatchObject({ status: "addressable", score: 2 });
       expect(result.matchedRules).toContainEqual({ ruleId: "service-terms", points: 2 });
     }
 
@@ -214,7 +219,7 @@ describe("Addressability Assessment", () => {
         description: `Advisory services involving ${term}.`,
         opportunityName: "General program",
       }), configuredRules);
-      expect(result).toMatchObject({ status: "uncertain", score: 1 });
+      expect(result).toMatchObject({ status: "uncertain", score: 0 });
       expect(result.matchedRules).toContainEqual({ ruleId: "goods-terms", points: -2 });
     }
   });
@@ -233,13 +238,21 @@ describe("Addressability Assessment", () => {
     ]);
   });
 
-  it("keeps missing value or service evidence Uncertain", () => {
-    expect(assessAddressability(federalEvent({ amount: undefined }), configuredRules).status).toBe("uncertain");
-    expect(assessAddressability(federalEvent({
-      amount: 1_000_000,
-      description: "General program",
-      opportunityName: "General requirement",
-    }), configuredRules).status).toBe("uncertain");
+  it("treats zero and missing values as unknown rather than below the value floor", () => {
+    for (const amount of [0, undefined]) {
+      expect(assessAddressability(federalEvent({ amount }), configuredRules))
+        .toMatchObject({ status: "addressable", score: 2 });
+    }
+  });
+
+  it("keeps opportunities without service evidence Uncertain regardless of value evidence", () => {
+    for (const amount of [1_000_000, 0, undefined]) {
+      expect(assessAddressability(federalEvent({
+        amount,
+        description: "General program",
+        opportunityName: "General requirement",
+      }), configuredRules)).toMatchObject({ status: "uncertain", score: 0 });
+    }
   });
 
   it("hard-excludes clear goods, supplies, and manufacturing opportunities", () => {

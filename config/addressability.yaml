@@ -1,6 +1,6 @@
-schema_version: 3
+schema_version: 4
 status: active
-threshold: 3
+threshold: 2
 hard_exclusions:
   - id: sam-goods-product-code
     description: SAM.gov opportunity has a numeric Product and Service Code for goods or supplies.
@@ -35,6 +35,9 @@ hard_exclusions:
           operator: in
           value: ["019", "077"]
         - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
           operator: lt
           value: 500000
   - id: sam-ustda-below-minimum-value
@@ -48,6 +51,9 @@ hard_exclusions:
           operator: equals
           value: "011"
         - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
           operator: lt
           value: 250000
   - id: sam-mca-below-minimum-value
@@ -60,6 +66,9 @@ hard_exclusions:
         - field: sourceData.federalOrganizationCode
           operator: equals
           value: "524"
+        - field: value.amount
+          operator: gt
+          value: 0
         - field: value.amount
           operator: lt
           value: 250000
@@ -84,6 +93,9 @@ hard_exclusions:
           operator: equals
           value: "524"
         - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
           operator: lt
           value: 500000
       none:
@@ -107,6 +119,9 @@ hard_exclusions:
           operator: equals
           value: "019"
         - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
           operator: lt
           value: 2000000
   - id: grants-dfc-below-minimum-value
@@ -119,6 +134,9 @@ hard_exclusions:
         - field: sourceData.federalOrganizationCode
           operator: equals
           value: "077"
+        - field: value.amount
+          operator: gt
+          value: 0
         - field: value.amount
           operator: lt
           value: 500000
@@ -133,6 +151,9 @@ hard_exclusions:
           operator: equals
           value: "011"
         - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
           operator: lt
           value: 250000
   - id: grants-mca-below-minimum-value
@@ -145,6 +166,9 @@ hard_exclusions:
         - field: sourceData.federalOrganizationCode
           operator: equals
           value: "524"
+        - field: value.amount
+          operator: gt
+          value: 0
         - field: value.amount
           operator: lt
           value: 250000
@@ -169,6 +193,9 @@ hard_exclusions:
           operator: equals
           value: "524"
         - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
           operator: lt
           value: 500000
       none:
@@ -182,172 +209,6 @@ hard_exclusions:
           operator: contains
           value: Millennium Challenge Account
 scoring_rules:
-  - id: sam-dos-dfc-minimum-value
-    description: DOS or DFC SAM.gov opportunity meets the $500,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: sam-gov
-        - field: sourceData.federalOrganizationCode
-          operator: in
-          value: ["019", "077"]
-        - field: value.amount
-          operator: gte
-          value: 500000
-  - id: sam-ustda-minimum-value
-    description: USTDA SAM.gov opportunity meets the $250,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: sam-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "011"
-        - field: value.amount
-          operator: gte
-          value: 250000
-  - id: sam-mca-minimum-value
-    description: Millennium Challenge Account SAM.gov opportunity meets the $250,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: sam-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "524"
-        - field: value.amount
-          operator: gte
-          value: 250000
-      any:
-        - field: clientName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: procuringEntityName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: sourceData.fullParentPathName
-          operator: contains
-          value: Millennium Challenge Account
-  - id: sam-mcc-minimum-value
-    description: MCC SAM.gov opportunity meets the $500,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: sam-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "524"
-        - field: value.amount
-          operator: gte
-          value: 500000
-      none:
-        - field: clientName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: procuringEntityName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: sourceData.fullParentPathName
-          operator: contains
-          value: Millennium Challenge Account
-  - id: grants-dos-minimum-value
-    description: DOS Grants.gov opportunity meets the $2,000,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: grants-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "019"
-        - field: value.amount
-          operator: gte
-          value: 2000000
-  - id: grants-dfc-minimum-value
-    description: DFC Grants.gov opportunity meets the $500,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: grants-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "077"
-        - field: value.amount
-          operator: gte
-          value: 500000
-  - id: grants-ustda-minimum-value
-    description: USTDA Grants.gov opportunity meets the $250,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: grants-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "011"
-        - field: value.amount
-          operator: gte
-          value: 250000
-  - id: grants-mca-minimum-value
-    description: Millennium Challenge Account Grants.gov opportunity meets the $250,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: grants-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "524"
-        - field: value.amount
-          operator: gte
-          value: 250000
-      any:
-        - field: clientName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: procuringEntityName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: sourceData.fullParentPathName
-          operator: contains
-          value: Millennium Challenge Account
-  - id: grants-mcc-minimum-value
-    description: MCC Grants.gov opportunity meets the $500,000 minimum value.
-    points: 1
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: grants-gov
-        - field: sourceData.federalOrganizationCode
-          operator: equals
-          value: "524"
-        - field: value.amount
-          operator: gte
-          value: 500000
-      none:
-        - field: clientName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: procuringEntityName
-          operator: contains
-          value: Millennium Challenge Account
-        - field: sourceData.fullParentPathName
-          operator: contains
-          value: Millennium Challenge Account
   - id: service-terms
     description: Opportunity contains positive evidence of services.
     points: 2

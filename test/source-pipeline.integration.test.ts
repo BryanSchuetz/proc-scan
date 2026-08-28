@@ -211,8 +211,8 @@ describe("Source processing integration", () => {
         addressability_status: string;
       }>();
     expect(rows.results).toEqual([
-      { source_event_id: "notice-a", event_type: "tender", addressability_status: "uncertain" },
-      { source_event_id: "notice-b", event_type: "modification", addressability_status: "uncertain" },
+      { source_event_id: "notice-a", event_type: "tender", addressability_status: "addressable" },
+      { source_event_id: "notice-b", event_type: "modification", addressability_status: "addressable" },
       { source_event_id: "notice-climate", event_type: "tender", addressability_status: "uncertain" },
     ]);
 
@@ -370,7 +370,6 @@ describe("Source processing integration", () => {
     const revisedAddressability = {
       ...addressability,
       schema_version: addressability.schema_version + 1,
-      threshold: 1,
     };
     const second = await processSingleCandidateScan(
       "scan_grants_fixture_reclass_second",
@@ -392,8 +391,8 @@ describe("Source processing integration", () => {
       }>();
     expect(events.results).toEqual([{
       event_type: "tender",
-      addressability_status: "addressable",
-      addressability_score: 1,
+      addressability_status: "uncertain",
+      addressability_score: 0,
       addressability_config_version: revisedAddressability.schema_version,
     }]);
   });

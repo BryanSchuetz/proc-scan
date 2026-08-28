@@ -53,7 +53,7 @@ The evaluation of a Bidding Event against business criteria such as value and Cl
 _Avoid_: Technical Area Classification, relevance
 
 **Minimum Value Floor**:
-The minimum known Opportunity value required for a specific Source and Client. A known value below this floor is a hard exclusion; a missing value is not.
+The minimum known Opportunity value required for a specific Source and Client. A known positive value below this floor is a hard exclusion; zero, null, and missing values are treated as unknown.
 _Avoid_: Addressability threshold, score threshold
 
 **Client**:
@@ -70,16 +70,15 @@ _Avoid_: Bidding Event identifier, internal record identifier
 
 ## Addressability Scoring Contract
 
-The same deterministic scoring approach applies to every Source and Client. Source- and Client-specific configuration may vary the Minimum Value Floor and add structured hard exclusions, but it must not change the shared evidence weights or final score threshold.
+The same deterministic fit scoring applies to every Source and Client. Source- and Client-specific configuration may vary the Minimum Value Floor and add structured hard exclusions, but value is a gate and never contributes to the fit score.
 
 Assessment proceeds in this order:
 
-1. Apply hard exclusions. A known value below the applicable Minimum Value Floor is Excluded. Source-specific structured evidence may also exclude an event, such as a SAM.gov product PSC or manufacturing NAICS code. Missing evidence never triggers a hard exclusion.
+1. Apply hard exclusions. A known positive value below the applicable Minimum Value Floor is Excluded without fit scoring. Zero, null, and missing values are treated as unknown, so they do not trigger the value exclusion. Source-specific structured evidence may also exclude an event, such as a SAM.gov product PSC or manufacturing NAICS code.
 2. If the event is not excluded, score each evidence category at most once:
 
 | Evidence | Score |
 | --- | ---: |
-| Known value meets the applicable Source and Client Minimum Value Floor | +1 |
 | Title or description contains one or more service terms | +2 |
 | Title or description contains one or more goods terms | −2 |
 
@@ -89,4 +88,4 @@ The goods terms are: `goods`, `supply`, `supplies`, `equipment`, `vehicles`, `ha
 
 Term matching is case-insensitive against the normalized Opportunity title and description. Multiple terms in one category do not compound its score; service and goods evidence are independent and can both match.
 
-After hard exclusions, a score of 3 or more is **Addressable** and appears on the Marked page. A lower score is **Uncertain** and appears on the Unmarked page. Therefore, an event normally needs both a qualifying known value and service evidence to be Addressable. If it also contains goods evidence, its score falls to 1 and it remains Uncertain.
+After hard exclusions, a fit score of 2 or more is **Addressable** and appears on the Marked page. A lower score is **Uncertain** and appears on the Unmarked page. Service evidence without goods evidence is therefore Addressable whether the value is above the floor or unknown. If goods evidence is also present, it offsets the service score to 0 and the event remains Uncertain.
