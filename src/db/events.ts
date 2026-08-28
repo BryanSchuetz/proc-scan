@@ -110,6 +110,10 @@ interface PriorEventRow {
   ocds_release_json: string;
   event_identity: string;
   content_fingerprint: string;
+  addressability_status: "addressable" | "uncertain";
+  addressability_score: number;
+  addressability_config_version: number;
+  addressability_evidence_json: string;
   technical_classification_version: number;
   technical_areas_json: string;
 }
@@ -117,6 +121,7 @@ interface PriorEventRow {
 export interface StoredPriorBiddingEvent extends PriorBiddingEvent {
   eventIdentity: string;
   contentFingerprint: string;
+  addressability: RetainedBiddingEvent["addressability"];
 }
 
 export interface PriorBiddingEventMatch {
@@ -399,6 +404,12 @@ function priorEventFromRow(row: PriorEventRow): StoredPriorBiddingEvent {
     sourceData: JSON.parse(row.source_data_json),
     eventIdentity: row.event_identity,
     contentFingerprint: row.content_fingerprint,
+    addressability: {
+      status: row.addressability_status,
+      score: row.addressability_score,
+      matchedRules: JSON.parse(row.addressability_evidence_json),
+      configVersion: row.addressability_config_version,
+    },
     technicalClassificationVersion: row.technical_classification_version,
     technicalAreas: JSON.parse(row.technical_areas_json),
   };
@@ -417,7 +428,9 @@ async function findPrior(
       e.procuring_entity_name, e.implementing_entity_names_json, e.value_amount,
       e.value_currency, e.due_date, e.place_of_performance, e.country_code,
       e.eligibility, e.source_status, e.source_data_json, e.ocds_release_json,
-      e.event_identity, e.content_fingerprint, e.technical_classification_version,
+      e.event_identity, e.content_fingerprint, e.addressability_status,
+      e.addressability_score, e.addressability_config_version, e.addressability_evidence_json,
+      e.technical_classification_version,
       (SELECT COALESCE(json_group_array(json_object(
         'id', area.id,
         'name', area.name,

@@ -52,6 +52,10 @@ _Avoid_: Other, closest match
 The evaluation of a Bidding Event against business criteria such as value and Client to assign Addressable, Uncertain, or Excluded.
 _Avoid_: Technical Area Classification, relevance
 
+**Minimum Value Floor**:
+The minimum known Opportunity value required for a specific Source and Client. A known value below this floor is a hard exclusion; a missing value is not.
+_Avoid_: Addressability threshold, score threshold
+
 **Client**:
 A buying organization that issues or owns an Opportunity, corresponding to the OCDS buyer. Funders and procuring or implementing entities are distinct when identified.
 _Avoid_: Customer, source, website
@@ -63,3 +67,26 @@ _Avoid_: Client, portal
 **Source Opportunity Identifier**:
 An identifier assigned by a Source to the Opportunity shared by its related Bidding Events.
 _Avoid_: Bidding Event identifier, internal record identifier
+
+## Addressability Scoring Contract
+
+The same deterministic scoring approach applies to every Source and Client. Source- and Client-specific configuration may vary the Minimum Value Floor and add structured hard exclusions, but it must not change the shared evidence weights or final score threshold.
+
+Assessment proceeds in this order:
+
+1. Apply hard exclusions. A known value below the applicable Minimum Value Floor is Excluded. Source-specific structured evidence may also exclude an event, such as a SAM.gov product PSC or manufacturing NAICS code. Missing evidence never triggers a hard exclusion.
+2. If the event is not excluded, score each evidence category at most once:
+
+| Evidence | Score |
+| --- | ---: |
+| Known value meets the applicable Source and Client Minimum Value Floor | +1 |
+| Title or description contains one or more service terms | +2 |
+| Title or description contains one or more goods terms | −2 |
+
+The service terms are: `advisory`, `capacity building`, `consultancy`, `consultant`, `consulting`, `implementation support`, `professional services`, `services`, and `technical assistance`.
+
+The goods terms are: `goods`, `supply`, `supplies`, `equipment`, `vehicles`, `hardware`, `furniture`, `materials`, and `computers`.
+
+Term matching is case-insensitive against the normalized Opportunity title and description. Multiple terms in one category do not compound its score; service and goods evidence are independent and can both match.
+
+After hard exclusions, a score of 3 or more is **Addressable** and appears on the Marked page. A lower score is **Uncertain** and appears on the Unmarked page. Therefore, an event normally needs both a qualifying known value and service evidence to be Addressable. If it also contains goods evidence, its score falls to 1 and it remains Uncertain.

@@ -1,4 +1,4 @@
-schema_version: 2
+schema_version: 3
 status: active
 threshold: 3
 hard_exclusions:
@@ -24,32 +24,6 @@ hard_exclusions:
         - field: sourceData.naicsCode
           operator: startsWith
           value: ["31", "32", "33"]
-  - id: sam-explicit-goods-language
-    description: SAM.gov opportunity explicitly procures goods, supplies, equipment, or manufacturing.
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: sam-gov
-      any:
-        - field: opportunityName
-          operator: contains
-          value:
-            - procurement of goods
-            - procurement of supplies
-            - supply and delivery
-            - purchase of equipment
-            - supply of equipment
-            - manufacture and delivery
-        - field: description
-          operator: contains
-          value:
-            - procurement of goods
-            - procurement of supplies
-            - supply and delivery
-            - purchase of equipment
-            - supply of equipment
-            - manufacture and delivery
   - id: sam-dos-dfc-below-minimum-value
     description: DOS and DFC SAM.gov opportunities must have a known value of at least $500,000.
     conditions:
@@ -374,65 +348,61 @@ scoring_rules:
         - field: sourceData.fullParentPathName
           operator: contains
           value: Millennium Challenge Account
-  - id: grants-technical-assistance
-    description: Grants.gov opportunity contains positive evidence of technical assistance services.
+  - id: service-terms
+    description: Opportunity contains positive evidence of services.
     points: 2
     conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: grants-gov
       any:
         - field: opportunityName
           operator: contains
           value:
-            - technical assistance
-            - advisory services
-            - consulting services
-            - consultancy services
+            - advisory
             - capacity building
-            - institutional strengthening
-            - feasibility study
-            - training services
+            - consultancy
+            - consultant
+            - consulting
+            - implementation support
+            - professional services
+            - services
+            - technical assistance
         - field: description
           operator: contains
           value:
-            - technical assistance
-            - advisory services
-            - consulting services
-            - consultancy services
+            - advisory
             - capacity building
-            - institutional strengthening
-            - feasibility study
-            - training services
-  - id: sam-technical-assistance
-    description: SAM.gov opportunity contains positive evidence of technical assistance services.
-    points: 2
+            - consultancy
+            - consultant
+            - consulting
+            - implementation support
+            - professional services
+            - services
+            - technical assistance
+  - id: goods-terms
+    description: Opportunity contains negative evidence of goods or supplies.
+    points: -2
     conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: sam-gov
       any:
         - field: opportunityName
           operator: contains
           value:
-            - technical assistance
-            - advisory services
-            - consulting services
-            - consultancy services
-            - capacity building
-            - institutional strengthening
-            - feasibility study
-            - training services
+            - goods
+            - supply
+            - supplies
+            - equipment
+            - vehicles
+            - hardware
+            - furniture
+            - materials
+            - computers
         - field: description
           operator: contains
           value:
-            - technical assistance
-            - advisory services
-            - consulting services
-            - consultancy services
-            - capacity building
-            - institutional strengthening
-            - feasibility study
-            - training services
+            - goods
+            - supply
+            - supplies
+            - equipment
+            - vehicles
+            - hardware
+            - furniture
+            - materials
+            - computers

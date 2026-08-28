@@ -4,6 +4,7 @@ A Cloudflare-hosted scanner and read-only registry for procurement Bidding Event
 
 - [Development plan](DEVELOPMENT_PLAN.md)
 - [Domain language](CONTEXT.md)
+- [Addressability scoring](CONTEXT.md#addressability-scoring-contract)
 - [Technical-area taxonomy](tech-area-classification.yaml)
 
 ## Local foundation preview
@@ -19,6 +20,10 @@ npm run dev
 
 The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds. The deployed Worker is protected by a Worker-level Access application with the same 12-hour login policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN login methods.
 
+## Addressability Assessment
+
+Every Source and Client uses the shared scoring contract documented in [CONTEXT.md](CONTEXT.md#addressability-scoring-contract): a qualifying known value contributes 1 point, service language contributes 2 points, goods language subtracts 2 points, and the Addressable threshold is 3. Minimum value floors and structured hard exclusions remain Source- and Client-specific. Missing value or service evidence remains Uncertain rather than being guessed or excluded.
+
 ## SAM.gov Source
 
 The first Source adapter uses the official SAM.gov Get Opportunities Public API v2. Migration `0002_sam_gov_source.sql` enables it, and the Workflow reads its API key from the `SAM_API_KEY` secret. For local Workflow runs, copy `.dev.vars.example` to `.dev.vars` and supply the key there; never commit that file.
@@ -29,7 +34,7 @@ The adapter collects pre-solicitations, Sources Sought, Special Notices, solicit
 
 SAM.gov returns each description as a separate authenticated URL rather than inline search data. The adapter preserves a credential-free description URL in structured Source data but does not spend one API request per notice to download descriptions. Opportunity titles and the other search metadata are therefore available for the initial deterministic classification pass; bulk description ingestion or selective enrichment remains a follow-up decision after measuring the account's request quota.
 
-Addressability configuration version 2 applies the initial SAM.gov business rules. DOS, MCC, and DFC use a $500,000 minimum; USTDA and notices owned by a country Millennium Challenge Account use a $250,000 minimum. A Bidding Event becomes Addressable only when it has both a known value meeting the applicable band and positive technical-assistance language. Known values below the band, numeric product PSCs, manufacturing NAICS sectors, and explicit goods/supplies procurement language are hard exclusions. Missing value or technical-assistance evidence remains Uncertain rather than being guessed or excluded. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so SAM.gov value extraction remains required before those value bands can promote live notices to Addressable.
+Addressability configuration version 3 applies the shared scoring contract with SAM.gov-specific Minimum Value Floors. DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known values below the applicable floor, numeric product PSCs, and manufacturing NAICS sectors are hard exclusions. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so SAM.gov value extraction remains required before those value floors can promote live notices to Addressable.
 
 ## Grants.gov Source
 
@@ -39,7 +44,7 @@ At the start of each scan, the adapter reads Grants.gov's current agency facet a
 
 The adapter scans the complete active/forecasted snapshot because `search2` does not document an update-time cursor that would safely detect changes to older opportunities. Repeated snapshots are deduplicated by the shared pipeline. A change between known deadline or amount values becomes a Modification, while newly available descriptions, eligibility, or values enrich the existing Tender in place. Search results provide title, agency, status, dates, and Assistance Listing numbers but not the full synopsis, so the adapter enriches each approved result through the public, unauthenticated `fetchOpportunity` endpoint in bounded batches. It normalizes synopsis or forecast text for Technical Area Classification and stores eligibility, estimated total funding, award ceiling, and award floor. The displayed normalized value uses estimated total funding when present and otherwise the award ceiling, always retaining the exact value basis in structured Source data.
 
-Grants.gov Addressability requires positive technical-assistance language plus a known value meeting the Client band: $2 million for DOS, $500,000 for MCC and DFC, and $250,000 for USTDA and country Millennium Challenge Accounts. Known values below the applicable band are excluded; missing value or technical-assistance evidence remains Uncertain.
+Grants.gov uses the shared scoring contract with Source- and Client-specific Minimum Value Floors: $2 million for DOS, $500,000 for MCC and DFC, and $250,000 for USTDA and country Millennium Challenge Accounts. Known values below the applicable floor are excluded.
 
 ## Checks
 

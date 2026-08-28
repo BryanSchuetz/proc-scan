@@ -11,7 +11,10 @@ import grantsPage0 from "./fixtures/grants-gov-page-0.json";
 import grantsPage1 from "./fixtures/grants-gov-page-1.json";
 import page0 from "./fixtures/sam-gov-page-0.json";
 import page1 from "./fixtures/sam-gov-page-1.json";
-import { parseAddressabilityYaml } from "../src/classification/addressability";
+import {
+  parseAddressabilityYaml,
+  type AddressabilityConfig,
+} from "../src/classification/addressability";
 import {
   parseTaxonomyYaml,
   parseTechnicalClassificationYaml,
@@ -133,6 +136,7 @@ async function processSingleCandidateScan(
   cycleKey: string,
   now: Date,
   candidate: SourceCandidate,
+  addressabilityConfig: AddressabilityConfig = addressability,
 ) {
   await claimScanRun(env.DB, {
     id: scanRunId,
@@ -161,7 +165,7 @@ async function processSingleCandidateScan(
     now,
     taxonomy,
     technicalClassification,
-    addressability,
+    addressability: addressabilityConfig,
   });
   await completeScanRun(env.DB, scanRunId);
   return result;
@@ -176,6 +180,7 @@ beforeAll(async () => {
     'scan_grants_fixture_first', 'scan_grants_fixture_enriched',
     'scan_grants_fixture_repeat', 'scan_grants_fixture_description',
     'scan_grants_fixture_amount',
+    'scan_grants_fixture_reclass_first', 'scan_grants_fixture_reclass_second',
     'scan_grants_fixture_cancel_tender', 'scan_grants_fixture_cancelled',
     'scan_sam_fixture_first', 'scan_sam_fixture_second'
   )`).run();
@@ -338,6 +343,59 @@ describe("Source processing integration", () => {
     expect(JSON.parse(source?.cursor_json ?? "{}")).toEqual({
       value: "2026-08-29T22:00:00.000Z",
     });
+  });
+
+  it("reclassifies an unchanged event in place when the Addressability config advances", async () => {
+    const candidate: SourceCandidate = {
+      sourceId: "grants-gov",
+      sourceEventId: "reclass-fixture",
+      sourceOpportunityId: "reclass-fixture",
+      canonicalUrl: "https://grants.gov/search-results-detail/reclass-fixture",
+      eventType: "tender",
+      publishedAt: "2026-08-30T10:00:00.000Z",
+      opportunityName: "General program",
+      description: "General program",
+      value: { amount: 2_000_000, currency: "USD" },
+      dueDate: "2026-10-01T17:00:00.000Z",
+      sourceData: { federalOrganizationCode: "019" },
+    };
+    const first = await processSingleCandidateScan(
+      "scan_grants_fixture_reclass_first",
+      "grants-fixture:reclass-first",
+      new Date("2026-08-30T10:00:00.000Z"),
+      candidate,
+    );
+    expect(first).toMatchObject({ retainedCount: 1, duplicateCount: 0 });
+
+    const revisedAddressability = {
+      ...addressability,
+      schema_version: addressability.schema_version + 1,
+      threshold: 1,
+    };
+    const second = await processSingleCandidateScan(
+      "scan_grants_fixture_reclass_second",
+      "grants-fixture:reclass-second",
+      new Date("2026-08-30T22:00:00.000Z"),
+      candidate,
+      revisedAddressability,
+    );
+    expect(second).toMatchObject({ retainedCount: 1, duplicateCount: 0 });
+
+    const events = await env.DB.prepare(`SELECT event_type, addressability_status,
+      addressability_score, addressability_config_version
+      FROM bidding_events WHERE source_id = 'grants-gov' AND source_event_id = 'reclass-fixture'`)
+      .all<{
+        event_type: string;
+        addressability_status: string;
+        addressability_score: number;
+        addressability_config_version: number;
+      }>();
+    expect(events.results).toEqual([{
+      event_type: "tender",
+      addressability_status: "addressable",
+      addressability_score: 1,
+      addressability_config_version: revisedAddressability.schema_version,
+    }]);
   });
 
   it("retains an explicit Cancellation as a separate Bidding Event", async () => {

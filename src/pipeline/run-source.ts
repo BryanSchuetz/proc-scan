@@ -123,7 +123,11 @@ export async function runSourceAdapter(
       continue;
     }
     if (eventToUpdate) {
-      if (processed.event.contentFingerprint === eventToUpdate.contentFingerprint) {
+      if (
+        processed.event.contentFingerprint === eventToUpdate.contentFingerprint &&
+        processed.event.addressability.configVersion === eventToUpdate.addressability.configVersion &&
+        processed.event.technicalClassificationVersion === eventToUpdate.technicalClassificationVersion
+      ) {
         duplicateCount += 1;
         continue;
       }

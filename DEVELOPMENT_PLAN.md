@@ -8,7 +8,7 @@ This is a living plan. It records the agreed product behavior, target architectu
 
 The local foundation includes the React/Worker application, D1 migrations and FTS5 index, fixture seed, read-only paginated API and table, deterministic classifier/config schemas, event identity and inheritance logic, OCDS-shaped release mapping, Cloudflare Access JWT guard, and New York-time Workflow schedule gate. SAM.gov and Grants.gov are registered Sources. SAM.gov's official v2 API adapter implements bounded cursor overlap, organization-scoped page-index pagination, credential-safe failures, and notice normalization. Grants.gov's official unauthenticated adapter discovers its current agency hierarchy, crosswalks it to the same approved federal organizations, scans only forecasted and posted opportunities, paginates a complete active snapshot, and enriches approved results through `fetchOpportunity` for synopsis/forecast text, eligibility, and funding values. Both use shared classification, persistence, deduplication, and per-Source run accounting.
 
-Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, deadline/value Modification handling, in-place enrichment, and repeated-scan idempotency. Bounded live requests confirmed the SAM.gov search, Grants.gov search, and unauthenticated Grants.gov detail response shapes. Addressability configuration version 2 activates the supplied source-specific SAM.gov and Grants.gov agency value bands and shared technical-assistance requirement, with deterministic SAM.gov goods/supplies/manufacturing exclusions. Missing evidence remains Uncertain.
+Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, SAM.gov and Grants.gov response mapping and pagination, approved-organization scoping, deadline/value Modification handling, in-place enrichment, and repeated-scan idempotency. Bounded live requests confirmed the SAM.gov search, Grants.gov search, and unauthenticated Grants.gov detail response shapes. Addressability configuration version 3 activates the supplied source-specific agency value bands, shared positive service-term scoring, shared negative goods-term scoring, and deterministic SAM.gov product/manufacturing exclusions. Missing evidence remains Uncertain.
 
 The Worker, static assets, Workflow, production D1 database, migrations, SAM.gov secret, and Worker-level Cloudflare Access application are deployed. Access uses the same 12-hour policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN identity providers. The Worker independently validates the Access issuer and application audience. The first API-triggered Cloudflare cycle completed in 21 seconds with the expected partial status: Grants.gov discovered and retained 128 records, while SAM.gov returned its quota-exhausted response and was recorded as a Source failure without blocking Grants.gov. The first scheduled cycle remains to be confirmed, and no email provider has been configured. SAM.gov description and pre-award value enrichment remain unresolved because descriptions consume additional keyed requests and the public search schema has no estimated solicitation value.
 
@@ -43,7 +43,7 @@ Build a Cloudflare-hosted application that:
   - **Addressable**: meets or exceeds the addressability threshold and is retained.
   - **Uncertain**: scores below the addressability threshold and is retained with that status.
 - A low score alone never permanently drops a Bidding Event.
-- The initial SAM.gov and Grants.gov addressability rules are defined. Rules for other Sources and any additional cross-Source criteria remain to be supplied.
+- The service/goods evidence weights and final Addressable score threshold are shared across every Source and Client. Each Source integration supplies the applicable Client Minimum Value Floors and any justified structured hard exclusions.
 - Because Excluded events are not retained, later rule changes cannot recover them unless a Source publishes or returns them again. This is an accepted consequence of the retention decision.
 
 ### Classification boundaries
@@ -57,7 +57,7 @@ Build a Cloudflare-hosted application that:
 - Assign only the most specific matching taxonomy labels. A child match such as Cybersecurity is not also stored or displayed as its parent Digital unless the parent independently matches.
 - Parent filters include events assigned to any descendant label, preserving broad discovery without redundant labels in the digest.
 - A separate Addressability Assessment determines whether a Bidding Event is Addressable, Uncertain, or Excluded.
-- Addressability will consider award value, Client, and additional criteria still to be supplied.
+- Addressability considers the Source- and Client-specific Minimum Value Floor plus shared service and goods language evidence.
 - Addressability uses explicit, project-owned, configurable rules rather than an AI model's final judgment.
 - The configuration defines hard exclusions, weighted criteria such as value bands and Client preferences, and the final score threshold.
 - Missing data contributes no points for that criterion but never triggers a hard exclusion; all remaining known criteria are still scored.
@@ -286,7 +286,7 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 - Keep taxonomy and addressability rules as versioned repository files validated at build/test time.
 - Extend `tech-area-classification.yaml` with explicit machine-readable positive terms, negative terms, weights, and tie-breaking rules. Retain prose definitions and `include_when`/`exclude_when` as human documentation.
 - Add a separate addressability configuration containing a schema version, hard exclusions, weighted criteria, value bands, Client rules, threshold, and stable rule IDs. Store matched rule IDs and score contributions on each retained event.
-- Store the taxonomy and addressability configuration versions used for each Bidding Event. Apply changed configuration to historical retained events only through an explicit, tested reclassification job, not implicitly during deployment.
+- Store the taxonomy and addressability configuration versions used for each Bidding Event. A Source scan reapplies a newer configuration to rediscovered events in place; deployment alone does not mutate stored events. Historical events no longer returned by a Source require an explicit, tested reclassification job.
 - Reclassification alone does not make an old Bidding Event “new” and never adds it to a digest retroactively.
 - Keep non-secret Source settings in versioned configuration. Store API keys, login credentials, session material, Cloudflare IDs/tokens, email credentials, and the digest recipient as Cloudflare secrets or environment-specific bindings.
 - Commit an example environment file containing names only, never secret values.
@@ -307,7 +307,7 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 - **Present**: SAM.gov API key in the `SAM_API_KEY` project secret.
 - **Present**: Cloudflare account ID and Workers deployment credentials in project secrets.
 - **Present**: Worker-level Access application, allow policy, team domain, and application audience.
-- **Before Addressability Assessment can be accepted across all Sources**: rules for Sources other than SAM.gov and Grants.gov, plus any remaining cross-Source criteria.
+- **Before enabling each additional Source**: approved Client Minimum Value Floors and any Source-specific structured hard exclusions.
 - **Before SAM.gov value bands can classify live pre-award notices**: an authoritative estimated-value extraction strategy; the public search response does not provide this field.
 - **Before live digest delivery**: destination distribution-list address, sender identity, and selected email provider credentials/configuration.
 - **Before Phase 2 login-based adapters**: credentials for login-based Sources, supplied through project secrets.
@@ -416,7 +416,7 @@ The phase numbers below continue to describe authentication complexity, not curr
 
 These do not need more interview time now, but they must be resolved before the milestone that depends on them:
 
-- Addressability rules for Sources other than SAM.gov and Grants.gov, plus any remaining cross-Source criteria — before Milestone 1 acceptance.
+- Client Minimum Value Floors and justified structured hard exclusions for each new Source — during that Source's onboarding.
 - Exact machine-readable taxonomy weights, threshold, and tie-break rules — during Milestone 0.
 - Email provider, sender domain/address, failure alert when no digest is sent, and delivery tracking details — before Milestone 2.
 - UI record-age cutoff and whether visitors can expand to all history — revisit after observing volume and user behavior.

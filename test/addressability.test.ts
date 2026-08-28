@@ -124,7 +124,7 @@ describe("Addressability Assessment", () => {
     });
   });
 
-  it("applies the configured Grants.gov agency value bands and technical-assistance requirement", () => {
+  it("applies the configured Grants.gov agency value bands and service-evidence requirement", () => {
     expect(assessAddressability(grantsEvent({ amount: 2_000_000 }), configuredRules).status)
       .toBe("addressable");
     expect(assessAddressability(grantsEvent({ amount: 1_999_999 }), configuredRules)).toMatchObject({
@@ -175,12 +175,70 @@ describe("Addressability Assessment", () => {
     }), configuredRules).status).toBe("uncertain");
   });
 
-  it("keeps missing value or technical-assistance evidence Uncertain", () => {
+  it("scores every configured service term positively and every goods term negatively", () => {
+    const serviceTerms = [
+      "advisory",
+      "capacity building",
+      "consultancy",
+      "consultant",
+      "consulting",
+      "implementation support",
+      "professional services",
+      "services",
+      "technical assistance",
+    ];
+    for (const term of serviceTerms) {
+      const result = assessAddressability(grantsEvent({
+        amount: 2_000_000,
+        description: `Program provides ${term}.`,
+        opportunityName: "General program",
+      }), configuredRules);
+      expect(result).toMatchObject({ status: "addressable", score: 3 });
+      expect(result.matchedRules).toContainEqual({ ruleId: "service-terms", points: 2 });
+    }
+
+    const goodsTerms = [
+      "goods",
+      "supply",
+      "supplies",
+      "equipment",
+      "vehicles",
+      "hardware",
+      "furniture",
+      "materials",
+      "computers",
+    ];
+    for (const term of goodsTerms) {
+      const result = assessAddressability(grantsEvent({
+        amount: 2_000_000,
+        description: `Advisory services involving ${term}.`,
+        opportunityName: "General program",
+      }), configuredRules);
+      expect(result).toMatchObject({ status: "uncertain", score: 1 });
+      expect(result.matchedRules).toContainEqual({ ruleId: "goods-terms", points: -2 });
+    }
+  });
+
+  it("applies service and goods evidence consistently to every Source", () => {
+    const result = assessAddressability(biddingEvent({
+      sourceId: "future-source",
+      opportunityName: "Professional services and equipment",
+      description: "General opportunity",
+      value: undefined,
+    }), configuredRules);
+    expect(result).toMatchObject({ status: "uncertain", score: 0 });
+    expect(result.matchedRules).toEqual([
+      { ruleId: "service-terms", points: 2 },
+      { ruleId: "goods-terms", points: -2 },
+    ]);
+  });
+
+  it("keeps missing value or service evidence Uncertain", () => {
     expect(assessAddressability(federalEvent({ amount: undefined }), configuredRules).status).toBe("uncertain");
     expect(assessAddressability(federalEvent({
       amount: 1_000_000,
-      description: "General services",
-      opportunityName: "General services requirement",
+      description: "General program",
+      opportunityName: "General requirement",
     }), configuredRules).status).toBe("uncertain");
   });
 
