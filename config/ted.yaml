@@ -1,0 +1,22 @@
+schema_version: 1
+funding: external-aid-program
+clients:
+  - DG AGRI
+  - DG CLIMA
+  - DG ECHO
+  - DG CINEA
+  - DG GROW
+  - DG IDEA
+  - DG REA
+  - DG INTPA
+  - DG DEV
+  - DG ENEST
+  - DG MENA
+  - DG TRADE
+sort: publication-number DESC
+scope: ACTIVE
+only_latest_versions: false
+pursuable_form_types:
+  - planning
+  - competition
+page_size: 250

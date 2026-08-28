@@ -73,6 +73,17 @@ function grantsEvent(overrides: Parameters<typeof federalEvent>[0]) {
   return federalEvent({ ...overrides, sourceId: "grants-gov" });
 }
 
+function tedEvent(amount?: number, currency = "EUR") {
+  return biddingEvent({
+    sourceId: "ted",
+    clientName: "European Commission, INTPA",
+    opportunityName: "Technical assistance opportunity",
+    description: "Capacity building and advisory services",
+    value: amount === undefined ? undefined : { amount, currency },
+    sourceData: {},
+  });
+}
+
 describe("Addressability Assessment", () => {
   it("applies hard exclusions before scoring", () => {
     const result = assessAddressability(biddingEvent({ clientName: "Blocked Agency" }), activeConfig);
@@ -178,6 +189,38 @@ describe("Addressability Assessment", () => {
       description: "General grant program",
       opportunityName: "General grant program",
     }), configuredRules).status).toBe("addressable");
+  });
+
+  it("applies TED's €1 million value floor before shared fit scoring", () => {
+    expect(assessAddressability(tedEvent(1_000_000), configuredRules))
+      .toMatchObject({ status: "addressable", score: 4 });
+    expect(assessAddressability(tedEvent(999_999), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "ted-below-minimum-eur-value",
+    });
+    for (const event of [tedEvent(0), tedEvent(), tedEvent(999_999, "GBP")]) {
+      expect(assessAddressability(event, configuredRules))
+        .toMatchObject({ status: "addressable", score: 4 });
+    }
+  });
+
+  it("uses the shared DAI-Fit and Miss-Fit scoring for TED", () => {
+    expect(assessAddressability(tedEvent(2_000_000), configuredRules))
+      .toMatchObject({ status: "addressable", score: 4 });
+    expect(assessAddressability(biddingEvent({
+      sourceId: "ted",
+      opportunityName: "Supply of computers and equipment",
+      description: "General procurement requirement",
+      value: { amount: 2_000_000, currency: "EUR" },
+      sourceData: {},
+    }), configuredRules)).toMatchObject({ status: "uncertain", score: 0 });
+    expect(assessAddressability(biddingEvent({
+      sourceId: "ted",
+      opportunityName: "Technical assistance and equipment",
+      description: "General procurement requirement",
+      value: { amount: 2_000_000, currency: "EUR" },
+      sourceData: {},
+    }), configuredRules)).toMatchObject({ status: "addressable", score: 2 });
   });
 
   it("scores every configured DAI-fit term positively and every miss-fit term negatively", () => {

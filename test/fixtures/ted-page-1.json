@@ -1,0 +1,72 @@
+{
+  "totalNoticeCount": 5,
+  "iterationNextToken": "ted-finished",
+  "timedOut": false,
+  "notices": [
+    {
+      "publication-number": "100005-2026",
+      "notice-identifier": "goods-notice",
+      "notice-version": 2,
+      "procedure-identifier": "procedure-goods",
+      "publication-date": "2026-08-24Z",
+      "notice-title": {
+        "eng": "Bosnia and Herzegovina – Equipment – Supply of computers"
+      },
+      "title-proc": {
+        "eng": "Supply of computers and equipment"
+      },
+      "description-lot": {
+        "eng": ["Delivery of computer hardware and office equipment."]
+      },
+      "buyer-name": {
+        "eng": ["European Commission, ENEST"]
+      },
+      "buyer-country": ["BIH"],
+      "place-of-performance": ["BIH", "anyw"],
+      "place-of-performance-country-lot": ["BIH"],
+      "deadline-receipt-tender-date-lot": ["2026-10-20Z"],
+      "deadline-receipt-tender-time-lot": ["16:00:59Z"],
+      "notice-type": "cn-standard",
+      "form-type": "competition",
+      "classification-cpv": ["30200000"],
+      "funding": ["external-aid-program"]
+    },
+    {
+      "publication-number": "100004-2026",
+      "notice-identifier": "change-notice",
+      "notice-version": 1,
+      "procedure-identifier": "procedure-digital",
+      "publication-date": "2026-08-23+02:00",
+      "notice-title": {
+        "eng": "Montenegro – IT services – Digital government advisory"
+      },
+      "title-proc": {
+        "eng": "Digital government advisory"
+      },
+      "description-proc": {
+        "eng": "Technical assistance for digital public services."
+      },
+      "description-lot": {
+        "eng": ["Capacity building and implementation support."]
+      },
+      "buyer-name": {
+        "eng": ["European Commission, IDEA - Inspire, Debate, Engage and Accelerate Action"]
+      },
+      "buyer-country": ["MNE"],
+      "place-of-performance": ["MNE", "MEZZZ"],
+      "place-of-performance-country-proc": ["MNE"],
+      "deadline-receipt-request-date-lot": ["2026-10-15+02:00"],
+      "deadline-receipt-request-time-lot": ["16:00:59+02:00"],
+      "estimated-value-proc": 3000000,
+      "estimated-value-cur-proc": "EUR",
+      "notice-type": "cn-standard",
+      "form-type": "competition",
+      "classification-cpv": ["72000000"],
+      "funding": ["external-aid-program"],
+      "change-notice-version-identifier": "original-notice-01",
+      "change-description": {
+        "eng": ["The participation deadline was extended."]
+      }
+    }
+  ]
+}

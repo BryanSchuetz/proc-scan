@@ -1,4 +1,4 @@
-schema_version: 6
+schema_version: 7
 status: active
 threshold: 2
 hard_exclusions:
@@ -208,6 +208,22 @@ hard_exclusions:
         - field: sourceData.fullParentPathName
           operator: contains
           value: Millennium Challenge Account
+  - id: ted-below-minimum-eur-value
+    description: TED opportunities with a known EUR value must have a value of at least €1,000,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: ted
+        - field: value.currency
+          operator: equals
+          value: EUR
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 1000000
 scoring_rules:
   - id: inclusive-baseline
     description: Every non-excluded opportunity starts from an inclusive baseline.

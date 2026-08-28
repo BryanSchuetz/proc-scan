@@ -4,6 +4,8 @@ import { createGrantsGovAdapter, grantsGovSourceDefinition } from "./grants-gov"
 import type { GrantsGovConfig } from "./grants-gov";
 import { createSamGovAdapter, samGovSourceDefinition } from "./sam-gov";
 import type { SamGovConfig } from "./sam-gov";
+import { createTedAdapter, tedSourceDefinition } from "./ted";
+import type { TedConfig } from "./ted";
 
 export interface SourceSecrets {
   SAM_API_KEY?: string;
@@ -12,6 +14,7 @@ export interface SourceSecrets {
 export interface SourceConfigurations {
   grantsGov: GrantsGovConfig;
   samGov: SamGovConfig;
+  ted: TedConfig;
 }
 
 export function createRegisteredSourceAdapter(
@@ -29,6 +32,8 @@ export function createRegisteredSourceAdapter(
         apiKey: secrets.SAM_API_KEY ?? "",
         organizations: configurations.samGov.organizations,
       });
+    case tedSourceDefinition.id:
+      return createTedAdapter({ config: configurations.ted });
     default:
       throw new SourceScanError(
         "adapter_not_registered",

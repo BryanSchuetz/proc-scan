@@ -1,0 +1,110 @@
+{
+  "totalNoticeCount": 5,
+  "iterationNextToken": "ted-page-2",
+  "timedOut": false,
+  "notices": [
+    {
+      "publication-number": "100003-2026",
+      "notice-identifier": "result-notice",
+      "notice-version": 1,
+      "procedure-identifier": "procedure-awarded",
+      "publication-date": "2026-08-22+02:00",
+      "notice-title": {
+        "eng": "Award result for equipment"
+      },
+      "title-proc": {
+        "eng": "Supply of equipment"
+      },
+      "buyer-name": {
+        "eng": ["European Commission, TRADE - Trade and Economic Security"]
+      },
+      "buyer-country": ["BEL"],
+      "place-of-performance": ["BIH", "anyw"],
+      "place-of-performance-country-proc": ["BIH"],
+      "notice-type": "can-standard",
+      "form-type": "result",
+      "classification-cpv": ["30000000"],
+      "funding": ["external-aid-program"],
+      "links": {
+        "xml": {
+          "MUL": "https://ted.europa.eu/en/notice/100003-2026/xml"
+        }
+      }
+    },
+    {
+      "publication-number": "100002-2026",
+      "notice-identifier": "original-notice",
+      "notice-version": 1,
+      "procedure-identifier": "procedure-digital",
+      "publication-date": "2026-08-21+02:00",
+      "notice-title": {
+        "eng": "Montenegro – IT services – Digital government advisory"
+      },
+      "title-proc": {
+        "eng": "Digital government advisory"
+      },
+      "title-lot": {
+        "eng": ["Digital strategy support"]
+      },
+      "description-proc": {
+        "eng": "Technical assistance for digital public services."
+      },
+      "description-lot": {
+        "eng": ["Capacity building and implementation support."]
+      },
+      "buyer-name": {
+        "eng": ["European Commission, IDEA - Inspire, Debate, Engage and Accelerate Action"]
+      },
+      "buyer-country": ["MNE"],
+      "place-of-performance": ["MNE", "MEZZZ"],
+      "place-of-performance-country-proc": ["MNE"],
+      "deadline-receipt-tender-date-lot": ["2026-10-08+02:00"],
+      "deadline-receipt-tender-time-lot": ["14:30:59+02:00"],
+      "estimated-value-proc": "3000000",
+      "estimated-value-cur-proc": "EUR",
+      "estimated-value-lot": ["3000000"],
+      "estimated-value-cur-lot": ["EUR"],
+      "notice-type": "cn-standard",
+      "form-type": "competition",
+      "classification-cpv": ["72000000", "72000000"],
+      "funding": ["external-aid-program"],
+      "links": {
+        "xml": {
+          "MUL": "https://ted.europa.eu/en/notice/100002-2026/xml"
+        }
+      }
+    },
+    {
+      "publication-number": "100001-2026",
+      "notice-identifier": "planning-notice",
+      "notice-version": 1,
+      "publication-date": "2026-08-20+02:00",
+      "notice-title": {
+        "eng": "Myanmar – Advisory services – Climate resilience programme"
+      },
+      "title-proc": {
+        "eng": "Climate resilience programme"
+      },
+      "description-proc": {
+        "eng": "Advance notice of climate policy advisory services."
+      },
+      "buyer-name": {
+        "eng": ["European Commission, INTPA"]
+      },
+      "buyer-country": ["MMR"],
+      "place-of-performance": ["MMR", "anyw"],
+      "place-of-performance-country-proc": ["MMR"],
+      "estimated-value-proc": "750000",
+      "estimated-value-cur-proc": "EUR",
+      "notice-type": "pin-only",
+      "form-type": "planning",
+      "classification-cpv": ["79410000"],
+      "funding": ["external-aid-program"],
+      "links": {
+        "xml": {
+          "MUL": "https://ted.europa.eu/en/notice/100001-2026/xml"
+        }
+      }
+    }
+  ]
+}

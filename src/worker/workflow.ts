@@ -6,6 +6,7 @@ import classificationRaw from "../../config/technical-classification.yaml?raw";
 import addressabilityRaw from "../../config/addressability.yaml?raw";
 import grantsGovRaw from "../../config/grants-gov.yaml?raw";
 import samGovRaw from "../../config/sam-gov.yaml?raw";
+import tedRaw from "../../config/ted.yaml?raw";
 import { parseAddressabilityYaml } from "../classification/addressability";
 import {
   parseTaxonomyYaml,
@@ -25,6 +26,7 @@ import { SourceScanError } from "../sources/adapter";
 import { createRegisteredSourceAdapter } from "../sources";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../sources/grants-gov";
 import { parseSamGovConfig } from "../sources/sam-gov";
+import { parseTedConfig } from "../sources/ted";
 import type { AppEnv } from "./index";
 
 const TIME_ZONE = "America/New_York";
@@ -34,6 +36,7 @@ const taxonomyVersion = technicalClassification.schema_version;
 const addressability = parseAddressabilityYaml(addressabilityRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const grantsGov = parseGrantsGovConfig(grantsGovRaw);
+const ted = parseTedConfig(tedRaw);
 validateGrantsGovScope(grantsGov, samGov.organizations);
 
 export interface ScanWorkflowParams {
@@ -124,7 +127,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       let failure: SourceFailure | undefined;
 
       try {
-        const adapter = createRegisteredSourceAdapter(source.id, this.env, { grantsGov, samGov });
+        const adapter = createRegisteredSourceAdapter(source.id, this.env, { grantsGov, samGov, ted });
         const outcome = await step.do(`scan and process ${source.id}`, async () => {
           try {
             return {

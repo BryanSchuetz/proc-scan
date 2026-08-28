@@ -3,6 +3,7 @@ import taxonomyRaw from "../tech-area-classification.yaml?raw";
 import classificationRaw from "../config/technical-classification.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
+import tedRaw from "../config/ted.yaml?raw";
 import {
   classifyTechnicalAreas,
   flattenTaxonomy,
@@ -12,6 +13,7 @@ import {
 } from "../src/classification/taxonomy";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
+import { parseTedConfig } from "../src/sources/ted";
 
 const taxonomy = parseTaxonomyYaml(taxonomyRaw);
 const config = parseTechnicalClassificationYaml(classificationRaw);
@@ -91,5 +93,59 @@ describe("Grants.gov configuration", () => {
     expect(() => validateGrantsGovScope(grantsGov, [{ code: "524" }])).toThrow(
       "Grants.gov federal organization codes must match the approved SAM.gov scope",
     );
+  });
+});
+
+describe("TED configuration", () => {
+  it("loads the active external-aid search with the approved DG clients", () => {
+    expect(parseTedConfig(tedRaw)).toEqual({
+      schema_version: 1,
+      funding: "external-aid-program",
+      clients: [
+        "DG AGRI",
+        "DG CLIMA",
+        "DG ECHO",
+        "DG CINEA",
+        "DG GROW",
+        "DG IDEA",
+        "DG REA",
+        "DG INTPA",
+        "DG DEV",
+        "DG ENEST",
+        "DG MENA",
+        "DG TRADE",
+      ],
+      sort: "publication-number DESC",
+      scope: "ACTIVE",
+      only_latest_versions: false,
+      pursuable_form_types: ["planning", "competition"],
+      page_size: 250,
+    });
+  });
+
+  it("rejects duplicate clients", () => {
+    expect(() => parseTedConfig(`
+schema_version: 1
+funding: external-aid-program
+clients: [DG INTPA, DG INTPA]
+sort: publication-number DESC
+scope: ACTIVE
+only_latest_versions: false
+pursuable_form_types: [competition]
+page_size: 250
+`)).toThrow("Duplicate TED client");
+  });
+
+  it("rejects duplicate pursuable form types", () => {
+    expect(() => parseTedConfig(`
+schema_version: 1
+funding: external-aid-program
+clients: [DG INTPA]
+sort: publication-number DESC
+scope: ACTIVE
+only_latest_versions: false
+pursuable_form_types: [competition, competition]
+page_size: 250
+`)).toThrow("Duplicate TED pursuable form type");
   });
 });

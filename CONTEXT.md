@@ -72,6 +72,10 @@ _Avoid_: Bidding Event identifier, internal record identifier
 
 The same deterministic fit scoring applies to every Source and Client. Source- and Client-specific configuration may vary the Minimum Value Floor and add structured hard exclusions, but value is a gate and never contributes to the fit score.
 
+TED Client scope is restricted to DG AGRI, DG CLIMA, DG ECHO, DG CINEA, DG GROW, DG IDEA, DG REA, DG INTPA, DG DEV, DG ENEST, DG MENA, and DG TRADE. A TED notice is in scope only when at least one localized buyer name contains the configured Directorate-General code as a complete token.
+
+TED has a Minimum Value Floor of €1,000,000. The floor applies when TED publishes a known positive EUR procedure estimate. A missing value remains eligible for fit scoring, and a value published in another currency is not compared to the EUR floor without an authoritative conversion.
+
 Assessment proceeds in this order:
 
 1. Apply hard exclusions. A known positive value below the applicable Minimum Value Floor is Excluded without fit scoring. Zero, null, and missing values are treated as unknown, so they do not trigger the value exclusion. Source-specific structured evidence may also exclude an event, such as a SAM.gov product PSC or manufacturing NAICS code.
