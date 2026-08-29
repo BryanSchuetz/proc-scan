@@ -32,7 +32,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | SAM.gov | Deployed; scans are currently quota-constrained | API key | Pre-award notices from MCC, DFC, USTDA, and Department of State |
 | Grants.gov | Deployed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
 | TED | Deployed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
-| EU Funding & Tenders Portal | Implemented locally; not yet deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
+| EU Funding & Tenders Portal | Deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
 
 The planned Source backlog is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). It currently includes:
 
