@@ -1,5 +1,10 @@
 import type { SourceAdapter } from "./adapter";
 import { SourceScanError } from "./adapter";
+import {
+  createEuFundingTendersAdapter,
+  euFundingTendersSourceDefinition,
+} from "./eu-funding-tenders";
+import type { EuFundingTendersConfig } from "./eu-funding-tenders";
 import { createGrantsGovAdapter, grantsGovSourceDefinition } from "./grants-gov";
 import type { GrantsGovConfig } from "./grants-gov";
 import { createSamGovAdapter, samGovSourceDefinition } from "./sam-gov";
@@ -12,6 +17,7 @@ export interface SourceSecrets {
 }
 
 export interface SourceConfigurations {
+  euFundingTenders: EuFundingTendersConfig;
   grantsGov: GrantsGovConfig;
   samGov: SamGovConfig;
   ted: TedConfig;
@@ -23,6 +29,8 @@ export function createRegisteredSourceAdapter(
   configurations: SourceConfigurations,
 ): SourceAdapter {
   switch (sourceId) {
+    case euFundingTendersSourceDefinition.id:
+      return createEuFundingTendersAdapter({ config: configurations.euFundingTenders });
     case grantsGovSourceDefinition.id:
       return createGrantsGovAdapter({
         organizations: configurations.grantsGov.organizations,

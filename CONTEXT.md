@@ -72,9 +72,9 @@ _Avoid_: Bidding Event identifier, internal record identifier
 
 The same deterministic fit scoring applies to every Source and Client. Source- and Client-specific configuration may vary the Minimum Value Floor and add structured hard exclusions, but value is a gate and never contributes to the fit score.
 
-TED Client scope is restricted to DG AGRI, DG CLIMA, DG ECHO, DG CINEA, DG GROW, DG IDEA, DG REA, DG INTPA, DG DEV, DG ENEST, DG MENA, and DG TRADE. A TED notice is in scope only when at least one localized buyer name contains the configured Directorate-General code as a complete token.
+TED and EU Funding & Tenders Client scope is restricted to DG AGRI, DG CLIMA, DG ECHO, DG CINEA, DG GROW, DG IDEA, DG REA, DG INTPA, DG DEV, DG ENEST, DG MENA, and DG TRADE. A TED notice is in scope only when at least one localized buyer name contains the configured Directorate-General code as a complete token. An EU Funding & Tenders call is in scope only when its structured lead contracting authority contains one of those codes as a complete token. Funding & Tenders grant topics are not scanned because their search records do not identify an authoritative responsible Directorate-General to which this Client filter can be applied.
 
-TED has a Minimum Value Floor of €1,000,000. The floor applies when TED publishes a known positive EUR procedure estimate. A missing value remains eligible for fit scoring, and a value published in another currency is not compared to the EUR floor without an authoritative conversion.
+TED and EU Funding & Tenders each have a Minimum Value Floor of €1,000,000. The floor applies when the Source publishes a known positive EUR procedure estimate. A missing value remains eligible for fit scoring, and a value published in another currency is not compared to the EUR floor without an authoritative conversion.
 
 Assessment proceeds in this order:
 

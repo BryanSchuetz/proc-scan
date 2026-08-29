@@ -4,6 +4,7 @@ import { NonRetryableError } from "cloudflare:workflows";
 import taxonomyRaw from "../../tech-area-classification.yaml?raw";
 import classificationRaw from "../../config/technical-classification.yaml?raw";
 import addressabilityRaw from "../../config/addressability.yaml?raw";
+import euFundingTendersRaw from "../../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../../config/grants-gov.yaml?raw";
 import samGovRaw from "../../config/sam-gov.yaml?raw";
 import tedRaw from "../../config/ted.yaml?raw";
@@ -24,6 +25,10 @@ import { syncTechnicalAreas } from "../db/taxonomy";
 import { runSourceAdapter } from "../pipeline/run-source";
 import { SourceScanError } from "../sources/adapter";
 import { createRegisteredSourceAdapter } from "../sources";
+import {
+  parseEuFundingTendersConfig,
+  validateEuFundingTendersClientScope,
+} from "../sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../sources/grants-gov";
 import { parseSamGovConfig } from "../sources/sam-gov";
 import { parseTedConfig } from "../sources/ted";
@@ -37,7 +42,9 @@ const addressability = parseAddressabilityYaml(addressabilityRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const grantsGov = parseGrantsGovConfig(grantsGovRaw);
 const ted = parseTedConfig(tedRaw);
+const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
 validateGrantsGovScope(grantsGov, samGov.organizations);
+validateEuFundingTendersClientScope(euFundingTenders, ted.clients);
 
 export interface ScanWorkflowParams {
   requestedAt?: string;
@@ -127,7 +134,12 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       let failure: SourceFailure | undefined;
 
       try {
-        const adapter = createRegisteredSourceAdapter(source.id, this.env, { grantsGov, samGov, ted });
+        const adapter = createRegisteredSourceAdapter(source.id, this.env, {
+          euFundingTenders,
+          grantsGov,
+          samGov,
+          ted,
+        });
         const outcome = await step.do(`scan and process ${source.id}`, async () => {
           try {
             return {

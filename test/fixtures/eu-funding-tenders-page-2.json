@@ -1,0 +1,52 @@
+{
+  "apiVersion": "2.154",
+  "totalResults": 5,
+  "pageNumber": 2,
+  "pageSize": 3,
+  "results": [
+    {
+      "reference": "44444444-4444-4444-8444-444444444444-CN",
+      "url": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/tender-details/44444444-4444-4444-8444-444444444444-CN",
+      "summary": "Digital government technical assistance",
+      "content": "Digital government technical assistance",
+      "metadata": {
+        "identifier": ["44444444-4444-4444-8444-444444444444-CN"],
+        "cftId": ["44444444-4444-4444-8444-444444444444-CN"],
+        "callIdentifier": ["EC-INTPA/2026/EA-RP/0111"],
+        "title": ["Digital government technical assistance"],
+        "description": ["Technical assistance, training and implementation support for public digital services."],
+        "status": ["31094502"],
+        "type": ["0"],
+        "startDate": ["2026-08-24T00:00:00.000+0000"],
+        "twoStageDeadlineDate": ["2026-10-15T14:00:59Z"],
+        "cftPublicationDateEForm": ["2026-08-24T00:00:00"],
+        "cftEstimatedTotalProcedureValue": ["3000000 EUR"],
+        "cftEstimatedOverallContractAmount": ["3000000"],
+        "cftEstimatedOverallContractCurrency": ["EUR"],
+        "cftLeadContractingAuthorityCode": ["[{\"name\":\"Commission européenne, INTPA - International Partnerships\",\"isLeadAuthority\":true}]"],
+        "cftPartyLegalEntityId": ["47352310"],
+        "procedureType": ["47396221"],
+        "contractType": ["31095498"],
+        "mainCpv": ["72000000", "79410000"],
+        "geographicalZones": ["20000953"],
+        "cftCorrigendaList": []
+      }
+    },
+    {
+      "reference": "55555555-5555-4555-8555-555555555555-CN",
+      "summary": "Development research services",
+      "metadata": {
+        "identifier": ["55555555-5555-4555-8555-555555555555-CN"],
+        "callIdentifier": ["OTHER/2026/OP/0001"],
+        "title": ["Development research services"],
+        "description": ["Research requirement."],
+        "status": ["31094502"],
+        "type": ["0"],
+        "startDate": ["2026-08-25T00:00:00.000+0000"],
+        "cftEstimatedTotalProcedureValue": ["4000000 EUR"],
+        "cftLeadContractingAuthorityCode": ["[{\"name\":\"International Development Agency\",\"isLeadAuthority\":true}]"],
+        "cftCorrigendaList": []
+      }
+    }
+  ]
+}

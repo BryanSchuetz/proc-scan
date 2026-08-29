@@ -3,9 +3,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import taxonomyRaw from "../tech-area-classification.yaml?raw";
 import classificationRaw from "../config/technical-classification.yaml?raw";
 import addressabilityRaw from "../config/addressability.yaml?raw";
+import euFundingTendersRaw from "../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
 import tedRaw from "../config/ted.yaml?raw";
+import euFundingTendersPage1 from "./fixtures/eu-funding-tenders-page-1.json";
+import euFundingTendersPage2 from "./fixtures/eu-funding-tenders-page-2.json";
 import grantsAgencyDiscovery from "./fixtures/grants-gov-agencies.json";
 import grantsOpportunityDetails from "./fixtures/grants-gov-details.json";
 import grantsPage0 from "./fixtures/grants-gov-page-0.json";
@@ -26,6 +29,10 @@ import { claimScanRun, completeScanRun, startSourceRun } from "../src/db/scan-ru
 import { syncTechnicalAreas } from "../src/db/taxonomy";
 import { runSourceAdapter } from "../src/pipeline/run-source";
 import type { SourceAdapter, SourceCandidate } from "../src/sources/adapter";
+import {
+  createEuFundingTendersAdapter,
+  parseEuFundingTendersConfig,
+} from "../src/sources/eu-funding-tenders";
 import { createGrantsGovAdapter, parseGrantsGovConfig } from "../src/sources/grants-gov";
 import { createSamGovAdapter, parseSamGovConfig } from "../src/sources/sam-gov";
 import { createTedAdapter, parseTedConfig } from "../src/sources/ted";
@@ -33,6 +40,7 @@ import { createTedAdapter, parseTedConfig } from "../src/sources/ted";
 const taxonomy = parseTaxonomyYaml(taxonomyRaw);
 const technicalClassification = parseTechnicalClassificationYaml(classificationRaw);
 const addressability = parseAddressabilityYaml(addressabilityRaw);
+const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
 const grantsGov = parseGrantsGovConfig(grantsGovRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const ted = parseTedConfig(tedRaw);
@@ -99,6 +107,21 @@ function tedFixtureAdapter() {
         return Response.json({ totalNoticeCount: 5, timedOut: false, notices: [] });
       }
       return Response.json(tedPage0);
+    }) as typeof fetch,
+  });
+}
+
+function euFundingTendersFixtureAdapter() {
+  return createEuFundingTendersAdapter({
+    config: euFundingTenders,
+    pageSize: 3,
+    fetch: (async (input: RequestInfo | URL) => {
+      const url = new URL(input instanceof Request ? input.url : input.toString());
+      return Response.json(
+        url.searchParams.get("pageNumber") === "2"
+          ? euFundingTendersPage2
+          : euFundingTendersPage1,
+      );
     }) as typeof fetch,
   });
 }
@@ -174,6 +197,28 @@ async function processTedScan(scanRunId: string, cycleKey: string, now: Date) {
   return result;
 }
 
+async function processEuFundingTendersScan(scanRunId: string, cycleKey: string, now: Date) {
+  await claimScanRun(env.DB, {
+    id: scanRunId,
+    cycleKey,
+    scheduledFor: now.toISOString(),
+  });
+  const sourceRunId = await startSourceRun(env.DB, scanRunId, "eu-funding-tenders");
+  const result = await runSourceAdapter({
+    db: env.DB,
+    adapter: euFundingTendersFixtureAdapter(),
+    sourceRunId,
+    scanRunId,
+    signal: new AbortController().signal,
+    now,
+    taxonomy,
+    technicalClassification,
+    addressability,
+  });
+  await completeScanRun(env.DB, scanRunId);
+  return result;
+}
+
 async function processSingleCandidateScan(
   scanRunId: string,
   cycleKey: string,
@@ -215,9 +260,11 @@ async function processSingleCandidateScan(
 }
 
 beforeAll(async () => {
+  await env.DB.prepare("DELETE FROM bidding_events WHERE source_id = 'eu-funding-tenders'").run();
   await env.DB.prepare("DELETE FROM bidding_events WHERE source_id = 'grants-gov'").run();
   await env.DB.prepare("DELETE FROM bidding_events WHERE source_id = 'sam-gov'").run();
   await env.DB.prepare("DELETE FROM bidding_events WHERE source_id = 'ted'").run();
+  await env.DB.prepare("DELETE FROM source_runs WHERE source_id = 'eu-funding-tenders'").run();
   await env.DB.prepare("DELETE FROM source_runs WHERE source_id = 'grants-gov'").run();
   await env.DB.prepare("DELETE FROM source_runs WHERE source_id = 'sam-gov'").run();
   await env.DB.prepare("DELETE FROM source_runs WHERE source_id = 'ted'").run();
@@ -228,8 +275,10 @@ beforeAll(async () => {
     'scan_grants_fixture_reclass_first', 'scan_grants_fixture_reclass_second',
     'scan_grants_fixture_cancel_tender', 'scan_grants_fixture_cancelled',
     'scan_sam_fixture_first', 'scan_sam_fixture_second',
-    'scan_ted_fixture_first', 'scan_ted_fixture_second'
+    'scan_ted_fixture_first', 'scan_ted_fixture_second',
+    'scan_eu_funding_tenders_fixture_first', 'scan_eu_funding_tenders_fixture_second'
   )`).run();
+  await env.DB.prepare("UPDATE sources SET cursor_json = NULL WHERE id = 'eu-funding-tenders'").run();
   await env.DB.prepare("UPDATE sources SET cursor_json = NULL WHERE id = 'grants-gov'").run();
   await env.DB.prepare("UPDATE sources SET cursor_json = NULL WHERE id = 'sam-gov'").run();
   await env.DB.prepare("UPDATE sources SET cursor_json = NULL WHERE id = 'ted'").run();
@@ -432,6 +481,62 @@ describe("Source processing integration", () => {
     const stored = await env.DB.prepare("SELECT COUNT(*) AS total FROM bidding_events WHERE source_id = 'ted'")
       .first<{ total: number }>();
     expect(stored?.total).toBe(3);
+  });
+
+  it("applies the EU Funding & Tenders floor, shared scoring, and snapshot idempotency", async () => {
+    const first = await processEuFundingTendersScan(
+      "scan_eu_funding_tenders_fixture_first",
+      "eu-funding-tenders-fixture:first",
+      new Date("2026-08-29T10:00:00.000Z"),
+    );
+    expect(first).toMatchObject({
+      discoveredCount: 3,
+      retainedCount: 2,
+      excludedCount: 1,
+      duplicateCount: 0,
+    });
+
+    const rows = await env.DB.prepare(`SELECT source_event_id, event_type, addressability_status,
+      value_amount FROM bidding_events WHERE source_id = 'eu-funding-tenders'
+      ORDER BY published_at, source_event_id`)
+      .all<{
+        source_event_id: string;
+        event_type: string;
+        addressability_status: string;
+        value_amount: number;
+      }>();
+    expect(rows.results).toEqual([
+      {
+        source_event_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        event_type: "modification",
+        addressability_status: "uncertain",
+        value_amount: 1_000_000,
+      },
+      {
+        source_event_id: "44444444-4444-4444-8444-444444444444-CN",
+        event_type: "tender",
+        addressability_status: "addressable",
+        value_amount: 3_000_000,
+      },
+    ]);
+
+    const second = await processEuFundingTendersScan(
+      "scan_eu_funding_tenders_fixture_second",
+      "eu-funding-tenders-fixture:second",
+      new Date("2026-08-29T22:00:00.000Z"),
+    );
+    expect(second).toMatchObject({
+      discoveredCount: 3,
+      retainedCount: 0,
+      excludedCount: 1,
+      duplicateCount: 2,
+    });
+    const source = await env.DB.prepare(
+      "SELECT cursor_json FROM sources WHERE id = 'eu-funding-tenders'",
+    ).first<{ cursor_json: string }>();
+    expect(JSON.parse(source?.cursor_json ?? "{}")).toEqual({
+      value: "2026-08-29T22:00:00.000Z",
+    });
   });
 
   it("reclassifies an unchanged event in place when the Addressability config advances", async () => {

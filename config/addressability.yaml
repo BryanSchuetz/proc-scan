@@ -1,4 +1,4 @@
-schema_version: 7
+schema_version: 8
 status: active
 threshold: 2
 hard_exclusions:
@@ -215,6 +215,22 @@ hard_exclusions:
         - field: sourceId
           operator: equals
           value: ted
+        - field: value.currency
+          operator: equals
+          value: EUR
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 1000000
+  - id: eu-funding-tenders-below-minimum-eur-value
+    description: EU Funding & Tenders opportunities with a known EUR value must have a value of at least €1,000,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: eu-funding-tenders
         - field: value.currency
           operator: equals
           value: EUR

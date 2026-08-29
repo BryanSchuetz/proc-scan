@@ -1,0 +1,21 @@
+schema_version: 1
+opportunity_type: calls-for-tenders
+pursuable_statuses:
+  - forthcoming
+  - open
+clients:
+  - DG AGRI
+  - DG CLIMA
+  - DG ECHO
+  - DG CINEA
+  - DG GROW
+  - DG IDEA
+  - DG REA
+  - DG INTPA
+  - DG DEV
+  - DG ENEST
+  - DG MENA
+  - DG TRADE
+language: en
+sort: startDate DESC
+page_size: 100

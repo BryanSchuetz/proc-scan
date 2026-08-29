@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import taxonomyRaw from "../tech-area-classification.yaml?raw";
 import classificationRaw from "../config/technical-classification.yaml?raw";
+import euFundingTendersRaw from "../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
 import tedRaw from "../config/ted.yaml?raw";
@@ -11,6 +12,10 @@ import {
   parseTechnicalClassificationYaml,
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
+import {
+  parseEuFundingTendersConfig,
+  validateEuFundingTendersClientScope,
+} from "../src/sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
 import { parseTedConfig } from "../src/sources/ted";
@@ -147,5 +152,40 @@ only_latest_versions: false
 pursuable_form_types: [competition, competition]
 page_size: 250
 `)).toThrow("Duplicate TED pursuable form type");
+  });
+});
+
+describe("EU Funding & Tenders configuration", () => {
+  it("loads open tender calls with the same approved clients as TED", () => {
+    const portal = parseEuFundingTendersConfig(euFundingTendersRaw);
+    const ted = parseTedConfig(tedRaw);
+
+    expect(() => validateEuFundingTendersClientScope(portal, ted.clients)).not.toThrow();
+    expect(portal).toEqual({
+      schema_version: 1,
+      opportunity_type: "calls-for-tenders",
+      pursuable_statuses: ["forthcoming", "open"],
+      clients: ted.clients,
+      language: "en",
+      sort: "startDate DESC",
+      page_size: 100,
+    });
+  });
+
+  it("rejects duplicate clients and a client scope that drifts from TED", () => {
+    expect(() => parseEuFundingTendersConfig(`
+schema_version: 1
+opportunity_type: calls-for-tenders
+pursuable_statuses: [open]
+clients: [DG INTPA, DG INTPA]
+language: en
+sort: startDate DESC
+page_size: 100
+`)).toThrow("Duplicate EU Funding & Tenders client");
+
+    const portal = parseEuFundingTendersConfig(euFundingTendersRaw);
+    expect(() => validateEuFundingTendersClientScope(portal, ["DG INTPA"])).toThrow(
+      "EU Funding & Tenders clients must match the approved TED client scope",
+    );
   });
 });
