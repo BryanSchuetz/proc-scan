@@ -1,0 +1,4 @@
+UPDATE sources
+SET enabled = 1,
+    updated_at = '2026-08-31T00:00:00.000Z'
+WHERE id = 'eib';

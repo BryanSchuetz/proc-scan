@@ -36,7 +36,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | EU Funding & Tenders Portal | Deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
 | dgMarket | Paused; adapter deployed | Public HTML | MCA and EU member-state government consultancy notices |
 | FMO Open Tenders | Deployed | Public HTML | FMO tender listings with a €500,000 floor and shared addressability scoring |
-| EIB Procurement | Implemented locally; disabled pending authorization | Public JSON + TED API | Open EIB TA Operations with a €500,000 floor and shared addressability scoring |
+| EIB Procurement | Deployed | Public JSON + TED API | Open EIB TA Operations with a €500,000 floor and shared addressability scoring |
 
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The remaining backlog currently includes:
 
@@ -111,7 +111,7 @@ The EIB adapter reads the first-party JSON endpoint behind the supplied [All pro
 
 EIB's JSON does not expose a description or estimated value. Each detail record does expose its Official Journal publication history, so the adapter resolves those publication numbers in one official TED Search API request. It uses the newest available TED description and exact deadline. For value, it prefers the authoritative procedure estimate; when that is absent, it sums published lot estimates only when they all use one currency. The stable EIB record ID identifies the Bidding Event, the displayed EIB procurement reference identifies the Source Opportunity, and the canonical URL remains the public EIB detail page.
 
-EIB is always the Client and European Investment Bank is the procuring entity. Addressability configuration version 11 keeps the €500,000 Minimum Value Floor separate from shared DAI-Fit/Miss-Fit scoring: a known positive EUR value below €500,000 is Excluded, while missing, zero, and non-EUR values remain eligible for normal fit scoring. Migration `0009_eib_source.sql` registers the adapter disabled. EIB's `robots.txt` disallows the JSON provider path and its Terms of Use restrict automated reuse, so the Source must not be enabled until the owner confirms suitable authorization.
+EIB is always the Client and European Investment Bank is the procuring entity. Addressability configuration version 11 keeps the €500,000 Minimum Value Floor separate from shared DAI-Fit/Miss-Fit scoring: a known positive EUR value below €500,000 is Excluded, while missing, zero, and non-EUR values remain eligible for normal fit scoring. Migration `0009_eib_source.sql` registers the adapter disabled; migration `0010_enable_eib_source.sql` enables it after the owner confirmed permission for programmatic access to EIB content on August 31, 2026.
 
 ## Checks
 
