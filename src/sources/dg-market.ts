@@ -117,6 +117,15 @@ function normalizedText(value: string | undefined): string | undefined {
   return normalized || undefined;
 }
 
+function appendText(
+  parts: string[] | undefined,
+  text: { readonly text: string; readonly lastInTextNode: boolean },
+): void {
+  if (!parts) return;
+  parts.push(text.text);
+  if (text.lastInTextNode) parts.push(" ");
+}
+
 function parseCount(value: string | undefined, label: string): number {
   const parsed = Number(value?.replaceAll(",", ""));
   if (!Number.isInteger(parsed) || parsed < 0) {
@@ -145,7 +154,7 @@ function fieldFromRow(row: string, label: string): string | undefined {
     .map((candidate) => candidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join("|");
   const match = new RegExp(
-    `${escapedLabel}\\s*:\\s*(.*?)(?=\\s+(?:${otherLabels})\\s*:|\\s+View Details|$)`,
+    `${escapedLabel}\\s*:\\s*(.*?)(?=\\s*(?:${otherLabels})\\s*:|\\s*View Details|$)`,
     "i",
   ).exec(row);
   return normalizedText(match?.[1]);
@@ -197,22 +206,24 @@ async function parseListPage(response: Response): Promise<ParsedListPage> {
   let currentTitleParts: string[] | undefined;
   let currentRowParts: string[] | undefined;
 
-  const transformed = new HTMLRewriter()
-    .on("body", {
+  const bodyTextResponse = new HTMLRewriter()
+    .on("div#searchInfo span", {
       text(text) {
-        bodyParts.push(text.text);
+        appendText(bodyParts, text);
       },
     })
+    .transform(response.clone());
+  const transformed = new HTMLRewriter()
     .on("div.pr-5", {
       element(element) {
         totalText = [];
         element.onEndTag(() => {
-          const match = /^([\d,]+) notices found$/i.exec(normalizedText(totalText?.join(" ")) ?? "");
+          const match = /^([\d,]+) notices found$/i.exec(normalizedText(totalText?.join("")) ?? "");
           if (match) totalText = [match[1]];
         });
       },
       text(text) {
-        totalText?.push(text.text);
+        appendText(totalText, text);
       },
     })
     .on("select#pageSize option[selected]", {
@@ -220,7 +231,7 @@ async function parseListPage(response: Response): Promise<ParsedListPage> {
         pageSizeText = [element.getAttribute("value") ?? ""];
       },
       text(text) {
-        pageSizeText?.push(text.text);
+        appendText(pageSizeText, text);
       },
     })
     .on("li.page-item.active a.page-link", {
@@ -228,7 +239,7 @@ async function parseListPage(response: Response): Promise<ParsedListPage> {
         currentPageText = [];
       },
       text(text) {
-        currentPageText?.push(text.text);
+        appendText(currentPageText, text);
       },
     })
     .on("div.mb-2", {
@@ -267,12 +278,12 @@ async function parseListPage(response: Response): Promise<ParsedListPage> {
         currentCard.canonicalUrl = new URL(href as string, BASE_URL).toString();
         currentTitleParts = [];
         element.onEndTag(() => {
-          if (currentCard) currentCard.title = normalizedText(currentTitleParts?.join(" "));
+          if (currentCard) currentCard.title = normalizedText(currentTitleParts?.join(""));
           currentTitleParts = undefined;
         });
       },
       text(text) {
-        currentTitleParts?.push(text.text);
+        appendText(currentTitleParts, text);
       },
     })
     .on("div.mb-2 tr", {
@@ -280,7 +291,7 @@ async function parseListPage(response: Response): Promise<ParsedListPage> {
         currentRowParts = [];
         element.onEndTag(() => {
           if (!currentCard) return;
-          const row = normalizedText(currentRowParts?.join(" ")) ?? "";
+          const row = normalizedText(currentRowParts?.join("")) ?? "";
           currentCard.buyer ??= fieldFromRow(row, "Buyer");
           currentCard.changedAt ??= fieldFromRow(row, "Create/Change Date");
           currentCard.countries ??= fieldFromRow(row, "Countries");
@@ -292,21 +303,21 @@ async function parseListPage(response: Response): Promise<ParsedListPage> {
         });
       },
       text(text) {
-        currentRowParts?.push(text.text);
+        appendText(currentRowParts, text);
       },
     })
     .transform(response);
-  await transformed.arrayBuffer();
+  await Promise.all([bodyTextResponse.arrayBuffer(), transformed.arrayBuffer()]);
 
   const total = parseCount(totalText?.[0], "notice count");
   const pageSize = parseCount(pageSizeText?.[0], "page size");
-  const currentPageValue = normalizedText(currentPageText?.join(" "));
+  const currentPageValue = normalizedText(currentPageText?.join(""));
   const currentPage = currentPageValue ? parseCount(currentPageValue, "current page") : undefined;
   return {
     total,
     pageSize,
     currentPage,
-    bodyText: normalizedText(bodyParts.join(" ")) ?? "",
+    bodyText: normalizedText(bodyParts.join("")) ?? "",
     records,
   };
 }
@@ -430,10 +441,11 @@ function expectedCriteria(config: DgMarketConfig, scope: SearchScope, window: Da
 
 function assertExpectedCriteria(page: ParsedListPage, criteria: readonly string[]): void {
   const body = page.bodyText.toLocaleLowerCase();
-  if (criteria.some((criterion) => !body.includes(criterion.toLocaleLowerCase()))) {
+  const missing = criteria.filter((criterion) => !body.includes(criterion.toLocaleLowerCase()));
+  if (missing.length > 0) {
     throw new SourceScanError(
       "unexpected_scope",
-      "dgMarket did not apply the configured notice search criteria.",
+      `dgMarket did not apply the configured notice search criteria: ${missing.join(", ")}.`,
       true,
     );
   }
