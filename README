@@ -34,7 +34,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | Grants.gov | Deployed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
 | TED | Deployed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
 | EU Funding & Tenders Portal | Deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
-| dgMarket | Approved and configured for deployment | Public HTML | MCA and EU member-state government consultancy notices |
+| dgMarket | Deployed | Public HTML | MCA and EU member-state government consultancy notices |
 
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The backlog currently includes:
 
