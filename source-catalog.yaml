@@ -24,17 +24,18 @@
 - site: Atamis Portal
   clients:
     - DEFRA
-  actual_link: "https://atamis-9529.my.site.com/ProSpend__CustomCommunitiesLogin?startURL=%2Fhome%2Fhome.jsp"
-  additional_links: null
+  actual_link: "https://atamis-9529.my.salesforce-sites.com/?searchtype=Projects"
+  additional_links:
+    - "https://atamis-9529.my.site.com/ProSpend__CustomCommunitiesLogin?startURL=%2Fhome%2Fhome.jsp"
   filters_narrative: "£250k minimum; limited to technical assistance (i.e., excludes goods)"
-  requires_login: true
+  requires_login: false
   username: secret:ATAMIS_DEFRA_USERNAME
   password: secret:ATAMIS_DEFRA_PASSWORD
-  filters_automation_rules: null
-  result_set: login
-  authentication: null
-  source_module: null
-  access_method: null
+  filters_automation_rules: "Download the complete public opportunity CSV; retain non-closed records with a response deadline on or after the scan date; map the DEFRA-family catalogue to Client DEFRA; apply the £250k floor only to known positive GBP values"
+  result_set: public
+  authentication: "Public catalogue requires no login; supplier actions and restricted documents still require the supplier account"
+  source_module: atamis-defra
+  access_method: csv
 
 - site: Jaggaer Portal for DEZNZ
   clients:
