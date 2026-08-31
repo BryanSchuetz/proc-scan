@@ -1,5 +1,7 @@
 import type { SourceAdapter } from "./adapter";
 import { SourceScanError } from "./adapter";
+import { createDgMarketAdapter, dgMarketSourceDefinition } from "./dg-market";
+import type { DgMarketConfig } from "./dg-market";
 import {
   createEuFundingTendersAdapter,
   euFundingTendersSourceDefinition,
@@ -17,6 +19,7 @@ export interface SourceSecrets {
 }
 
 export interface SourceConfigurations {
+  dgMarket: DgMarketConfig;
   euFundingTenders: EuFundingTendersConfig;
   grantsGov: GrantsGovConfig;
   samGov: SamGovConfig;
@@ -29,6 +32,8 @@ export function createRegisteredSourceAdapter(
   configurations: SourceConfigurations,
 ): SourceAdapter {
   switch (sourceId) {
+    case dgMarketSourceDefinition.id:
+      return createDgMarketAdapter({ config: configurations.dgMarket });
     case euFundingTendersSourceDefinition.id:
       return createEuFundingTendersAdapter({ config: configurations.euFundingTenders });
     case grantsGovSourceDefinition.id:

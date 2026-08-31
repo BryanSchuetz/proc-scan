@@ -6,6 +6,7 @@ A Cloudflare-hosted scanner and read-only registry for procurement Bidding Event
 - [Domain language](CONTEXT.md)
 - [Addressability scoring](CONTEXT.md#addressability-scoring-contract)
 - [Source integration guide](SOURCE_INTEGRATION_GUIDE.md)
+- [Desired Source catalog](source-catalog.yaml)
 - [Technical-area taxonomy](tech-area-classification.yaml)
 
 ## Local foundation preview
@@ -33,10 +34,11 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | Grants.gov | Deployed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
 | TED | Deployed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
 | EU Funding & Tenders Portal | Deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
+| dgMarket | Approved and configured for deployment | Public HTML | MCA and EU member-state government consultancy notices |
 
-The planned Source backlog is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). It currently includes:
+The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The backlog currently includes:
 
-- **Public sources:** dgMarket, European Investment Bank procurement, and FMO Open Tenders.
+- **Public sources:** European Investment Bank procurement and FMO Open Tenders.
 - **Login or unattended-authentication sources:** Atamis Supplier Portal, BEIS/Jaggaer, EBRD ECEPP, and GSA eBuy.
 - **Interactive two-factor sources:** FCDO eSourcing Portal and SIMAP.
 
@@ -52,7 +54,7 @@ The adapter collects pre-solicitations, Sources Sought, Special Notices, solicit
 
 SAM.gov returns each description as a separate authenticated URL rather than inline search data. The adapter preserves a credential-free description URL in structured Source data but does not spend one API request per notice to download descriptions. Opportunity titles and the other search metadata are therefore available for the initial deterministic classification pass; bulk description ingestion or selective enrichment remains a follow-up decision after measuring the account's request quota.
 
-Addressability configuration version 8 applies the shared scoring contract with SAM.gov-specific Minimum Value Floors. DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, numeric product PSCs, and manufacturing NAICS sectors are hard exclusions. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
+Addressability configuration version 9 applies the shared scoring contract with Source-specific Minimum Value Floors. For SAM.gov, DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, numeric product PSCs, and manufacturing NAICS sectors are hard exclusions. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
 
 ## Grants.gov Source
 
@@ -85,6 +87,14 @@ The Source intentionally does not ingest Funding & Tenders grant topics. Grant-t
 The portal reference is the stable Bidding Event identifier and its notice suffix is removed to link PIN, contract-notice, and ex-ante publications for the same Opportunity. When the portal exposes formal corrigenda, the latest corrigendum notice ID and publication date identify a Modification while the parent portal reference remains in structured Source data. The adapter normalizes publication and submission dates, titles, descriptions, Client, CPV and procedure codes, and the authoritative procedure estimate. It uses the same shared DAI-Fit/Miss-Fit scoring and €1 million rule as TED: a known positive EUR value below €1 million is Excluded, while missing, zero, and non-EUR values remain eligible for fit scoring.
 
 Some Commission tender calls are also published through TED. Registry identity remains Source-specific, so an Opportunity found through both Sources is retained once per Source; cross-Source reconciliation is not part of this adapter.
+
+## dgMarket Source
+
+The dgMarket adapter uses direct HTTP requests against the server-rendered public search at `www2.dgmarket.com`; it does not use Browser Rendering or retrieve subscription-gated notice bodies. Migration `0006_dg_market_source.sql` enables the Source following confirmation of permission for this systematic access. `config/dg-market.yaml` defines the two approved scopes. MCA notices use funding agency `1385098` (Millennium Challenge Corporation). EU notices run one search per member state because dgMarket does not reliably accept all 27 notice-contact countries in one request; each search requires the `GOVERNMENT` buyer type. Both scopes require dgMarket's Consultancy category. Public and private organizations, NGOs, contract awards, auctions, and project records are not retained through this adapter.
+
+The search stores its criteria and pagination in a `JSESSIONID` session. The adapter verifies that dgMarket echoed every configured criterion, preserves the session cookie across pages, uses the site's default 25-record page size, throttles requests, caps pages per country, and fails rather than silently accepting changed HTML or dropped filters. The first scan covers 90 days. Later scans use the saved scan cursor with a two-day calendar overlap so delayed indexing and date-boundary changes are rediscovered safely; stable dgMarket notice IDs let the shared pipeline deduplicate that overlap.
+
+List pages provide title, buyer, country of performance, create/change date, deadline, notice type, language, and estimated value. They do not expose the subscription-gated notice body, so initial Technical Area and DAI-Fit/Miss-Fit classification uses the title and other public fields. A displayed zero value is retained in structured Source data as unknown rather than normalized as a real Opportunity value. MCA notices have a $500,000 floor for known USD values, while EU member-state government notices have a €1 million floor for known EUR values. Other currencies are not converted.
 
 ## Checks
 

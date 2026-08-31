@@ -95,6 +95,23 @@ function euFundingTendersEvent(amount?: number, currency = "EUR") {
   });
 }
 
+function dgMarketEvent(
+  clientCohort: "mca" | "eu-member-state-government",
+  amount?: number,
+  currency = clientCohort === "mca" ? "USD" : "EUR",
+) {
+  return biddingEvent({
+    sourceId: "dg-market",
+    clientName: clientCohort === "mca"
+      ? "Millennium Challenge Account Nepal"
+      : "Federal Ministry for Economic Cooperation and Development",
+    opportunityName: "Technical assistance opportunity",
+    description: "Capacity building and advisory services",
+    value: amount === undefined ? undefined : { amount, currency },
+    sourceData: { clientCohort },
+  });
+}
+
 describe("Addressability Assessment", () => {
   it("applies hard exclusions before scoring", () => {
     const result = assessAddressability(biddingEvent({ clientName: "Blocked Agency" }), activeConfig);
@@ -256,6 +273,35 @@ describe("Addressability Assessment", () => {
       value: { amount: 2_000_000, currency: "EUR" },
       sourceData: {},
     }), configuredRules)).toMatchObject({ status: "uncertain", score: 0 });
+  });
+
+  it("applies separate dgMarket MCA and EU government-buyer value floors", () => {
+    expect(assessAddressability(dgMarketEvent("mca", 499_999), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "dg-market-mca-below-minimum-usd-value",
+    });
+    expect(assessAddressability(dgMarketEvent("mca", 500_000), configuredRules))
+      .toMatchObject({ status: "addressable", score: 4 });
+    expect(assessAddressability(
+      dgMarketEvent("eu-member-state-government", 999_999),
+      configuredRules,
+    )).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "dg-market-eu-government-below-minimum-eur-value",
+    });
+    expect(assessAddressability(
+      dgMarketEvent("eu-member-state-government", 1_000_000),
+      configuredRules,
+    )).toMatchObject({ status: "addressable", score: 4 });
+    for (const event of [
+      dgMarketEvent("mca"),
+      dgMarketEvent("mca", 499_999, "EUR"),
+      dgMarketEvent("eu-member-state-government"),
+      dgMarketEvent("eu-member-state-government", 999_999, "USD"),
+    ]) {
+      expect(assessAddressability(event, configuredRules))
+        .toMatchObject({ status: "addressable", score: 4 });
+    }
   });
 
   it("scores every configured DAI-fit term positively and every miss-fit term negatively", () => {

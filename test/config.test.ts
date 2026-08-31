@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import taxonomyRaw from "../tech-area-classification.yaml?raw";
 import classificationRaw from "../config/technical-classification.yaml?raw";
+import dgMarketRaw from "../config/dg-market.yaml?raw";
 import euFundingTendersRaw from "../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
@@ -12,6 +13,7 @@ import {
   parseTechnicalClassificationYaml,
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
+import { parseDgMarketConfig } from "../src/sources/dg-market";
 import {
   parseEuFundingTendersConfig,
   validateEuFundingTendersClientScope,
@@ -187,5 +189,32 @@ page_size: 100
     expect(() => validateEuFundingTendersClientScope(portal, ["DG INTPA"])).toThrow(
       "EU Funding & Tenders clients must match the approved TED client scope",
     );
+  });
+});
+
+describe("dgMarket configuration", () => {
+  it("loads MCA and all 27 EU government-buyer scopes", () => {
+    const dgMarket = parseDgMarketConfig(dgMarketRaw);
+    expect(dgMarket.mca).toEqual({
+      funding_agency_id: "1385098",
+      funding_agency_name: "Millennium Challenge Corporation (MCC)",
+    });
+    expect(dgMarket.notice_category).toEqual({ code: "2", name: "Consultancy" });
+    expect(dgMarket.eu_member_states.buyer_type).toBe("GOVERNMENT");
+    expect(dgMarket.eu_member_states.countries).toHaveLength(27);
+  });
+
+  it("rejects an incomplete or duplicate EU government-buyer scope", () => {
+    const config = parseDgMarketConfig(dgMarketRaw);
+    expect(() => parseDgMarketConfig(`
+${dgMarketRaw.replace(
+  /    - code: se\n      name: Sweden\n/,
+  "",
+)}`)).toThrow("dgMarket EU buyer scope must contain exactly the 27 EU member states");
+    expect(() => parseDgMarketConfig(`
+${dgMarketRaw.replace(
+  "    - code: se\n      name: Sweden\n",
+  `    - code: ${config.eu_member_states.countries[0].code}\n      name: Duplicate\n`,
+)}`)).toThrow("Duplicate dgMarket EU member-state code");
   });
 });

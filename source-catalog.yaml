@@ -1,0 +1,246 @@
+# Desired procurement Source catalog. `source_module` is the registered adapter ID
+# when an implementation exists; null means the Source has not been implemented.
+# `access_method` records the verified automated access method; null means it has
+# not been established yet.
+# Credential fields contain secret-binding references only. Never store credential
+# values, session material, or two-factor codes in this file.
+
+- site: Jaggaer Portal for FCDO
+  clients:
+    - FCDO
+    - framework buyers
+  actual_link: https://fcdo.bravosolution.co.uk/web/login.html
+  additional_links: null
+  filters_narrative: "£250k minimum for all full and open; limited to technical assistance (i.e., excludes goods); no minimum threshold for framework tenders"
+  requires_login: true
+  username: secret:FCDO_ESOURCING_USERNAME
+  password: secret:FCDO_ESOURCING_PASSWORD
+  filters_automation_rules: null
+  result_set: login 2factor
+  authentication: null
+  source_module: null
+  access_method: null
+
+- site: Atamis Portal
+  clients:
+    - DEFRA
+  actual_link: "https://atamis-9529.my.site.com/ProSpend__CustomCommunitiesLogin?startURL=%2Fhome%2Fhome.jsp"
+  additional_links: null
+  filters_narrative: "£250k minimum; limited to technical assistance (i.e., excludes goods)"
+  requires_login: true
+  username: secret:ATAMIS_DEFRA_USERNAME
+  password: secret:ATAMIS_DEFRA_PASSWORD
+  filters_automation_rules: null
+  result_set: login
+  authentication: null
+  source_module: null
+  access_method: null
+
+- site: Jaggaer Portal for DEZNZ
+  clients:
+    - DEZNZ
+  actual_link: "https://beisgroup.ukp.app.jaggaer.com/esop/ogc-host/public/beisgroup/web/error.jst?_ncp=1785141439137.292039-1"
+  additional_links: null
+  filters_narrative: "£250k minimum; limited to technical assistance (i.e., excludes goods)"
+  requires_login: true
+  username: secret:DEZNZ_JAGGAER_USERNAME
+  password: secret:DEZNZ_JAGGAER_PASSWORD
+  filters_automation_rules: null
+  result_set: login
+  authentication: null
+  source_module: null
+  access_method: null
+
+- site: TED
+  clients:
+    - DG AGRI
+    - DG CLIMA
+    - DG ECHO
+    - DG CINEA
+    - DG GROW
+    - DG IDEA
+    - DG REA
+    - DG INTPA
+    - DG DEV
+    - DG ENEST
+    - DG MENA
+    - DG TRADE
+  actual_link: "https://ted.europa.eu/en/search/result?query=%28funding+IN+%28external-aid-program%29%29+AND+%28buyer-name+IN+%28AGRI+CLIMA+ECHO+CINEA+GROW+IDEA+REA+INTPA+DEV+ENEST+MENA+TRADE%29%29+SORT+BY+publication-number+DESC&scope=ACTIVE&onlyLatestVersions=false&sortColumn=publication-number&sortOrder=DESC&page=1"
+  additional_links: null
+  filters_narrative: "€1m; service tender"
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: null
+  result_set: public
+  authentication: filter by services
+  source_module: ted
+  access_method: api
+
+- site: EU Funding & Tenders Portal
+  clients:
+    - DG AGRI
+    - DG CLIMA
+    - DG ECHO
+    - DG CINEA
+    - DG GROW
+    - DG IDEA
+    - DG REA
+    - DG INTPA
+    - DG DEV
+    - DG ENEST
+    - DG MENA
+    - DG TRADE
+  actual_link: https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/home
+  additional_links: null
+  filters_narrative: "€1m; service tender"
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: null
+  result_set: public
+  authentication: calls for proposals and tenders
+  source_module: eu-funding-tenders
+  access_method: api
+
+- site: DGMARKET
+  clients:
+    - MCA
+    - EU member-state government organizations
+  actual_link: https://www2.dgmarket.com/advanced-search
+  additional_links:
+    - https://mcc.dgmarket.com/
+  filters_narrative: '$500k minimum for MCA; €1m for EU member-state opportunities; limited to "technical assistance"'
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules:
+    notice_category:
+      code: "2"
+      name: Consultancy
+    mca:
+      funding_agency_id: "1385098"
+    eu_member_states:
+      country_field: noticeContactCountry
+      buyer_type: GOVERNMENT
+  result_set: public
+  authentication: null
+  source_module: dg-market
+  access_method: html
+
+- site: sam.gov
+  clients:
+    - MCC
+    - MCA
+    - DFC
+    - USTDA
+    - DOS
+  actual_link: https://sam.gov/
+  additional_links: null
+  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $500k minimum for DOS, MCC, and DFC; $250k minimum for USTDA and MCA"
+  requires_login: api_key
+  username: null
+  password: null
+  filters_automation_rules: null
+  result_set: api key
+  authentication: null
+  source_module: sam-gov
+  access_method: api
+
+- site: grants.gov
+  clients:
+    - MCC
+    - MCA
+    - DFC
+    - USTDA
+    - DOS
+  actual_link: https://www.grants.gov/
+  additional_links: null
+  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $2M minimum for DOS; $500k minimum for MCC and DFC; $250k minimum for USTDA and MCA"
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: null
+  result_set: null
+  authentication: null
+  source_module: grants-gov
+  access_method: api
+
+- site: eBuy
+  clients:
+    - MCC
+    - MCA
+    - DFC
+    - USTDA
+    - DOS
+  actual_link: https://www.ebuy.gsa.gov/ebuy/
+  additional_links: null
+  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $500k minimum for DOS, MCC, and DFC; $250k minimum for USTDA and MCA"
+  requires_login: TBD
+  username: null
+  password: null
+  filters_automation_rules: null
+  result_set: login
+  authentication: "sean?"
+  source_module: null
+  access_method: null
+
+- site: SIMAP
+  clients:
+    - Swiss-SDC/SECO
+  actual_link: https://www.simap.ch/en
+  additional_links: null
+  filters_narrative: "CHF 1m minimum"
+  requires_login: true
+  username: secret:SIMAP_USERNAME
+  password: secret:SIMAP_PASSWORD
+  filters_automation_rules: null
+  result_set: login 2factor
+  authentication: null
+  source_module: null
+  access_method: null
+
+- site: ECEPP
+  clients:
+    - EBRD
+  actual_link: "https://ecepp.ebrd.com/delta/mainMenu.html?login=true"
+  additional_links: null
+  filters_narrative: '€/$250k minimum; "consultancy" or "advisory"-related'
+  requires_login: true
+  username: secret:ECEPP_USERNAME
+  password: secret:ECEPP_PASSWORD
+  filters_automation_rules: null
+  result_set: login
+  authentication: null
+  source_module: null
+  access_method: null
+
+- site: EIB procurement page
+  clients:
+    - EIB
+  actual_link: "https://www.eib.org/en/about/procurement/all/index?sortColumn=configuration.contentStart&sortDir=desc&pageNumber=0&itemPerPage=25&pageable=true&la=EN&deLa=EN&orYearTo=true&orYearFrom=true&procurementStatus=All&_g_procurementInformations_type=call-technical-assistance&or_g_procurementInformations_type=true"
+  additional_links: null
+  filters_narrative: "€500k minimum; TA Operations"
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: null
+  result_set: public
+  authentication: null
+  source_module: null
+  access_method: null
+
+- site: FMO procurement page
+  clients:
+    - FMO
+  actual_link: https://www.fmo.nl/open-tenders
+  additional_links: null
+  filters_narrative: '€500k minimum; limited to "technical assistance"'
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: null
+  result_set: public
+  authentication: null
+  source_module: null
+  access_method: null

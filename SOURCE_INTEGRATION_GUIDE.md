@@ -93,6 +93,8 @@ Preserve missing data as missing. Do not invent values, organization mappings, d
 
 The adapter must paginate completely within its documented scope, pass the provided abort signal to requests, use bounded retries/timeouts, return a cursor that cannot skip updates, and throw credential-safe `SourceScanError` values for expected Source failures.
 
+For direct-HTML Sources, prefer server-rendered HTTP extraction with Cloudflare `HTMLRewriter` over Browser Rendering. The adapter owns selectors and Source semantics; do not create a generic selector-driven scraper. Preserve required session cookies without logging them, verify the Source echoed every configured search criterion, cap and validate pagination, throttle requests, and fail on structural drift rather than silently returning an incomplete scan. Browser Rendering is the fallback only when direct HTTP cannot expose the required fields or complete an approved authentication flow. Keep sanitized HTML fragments as contract fixtures and never store subscription-gated bodies unless their use is explicitly authorized.
+
 ## Files for one Source
 
 A complete Source integration normally includes:

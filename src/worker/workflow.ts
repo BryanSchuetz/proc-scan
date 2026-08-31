@@ -4,6 +4,7 @@ import { NonRetryableError } from "cloudflare:workflows";
 import taxonomyRaw from "../../tech-area-classification.yaml?raw";
 import classificationRaw from "../../config/technical-classification.yaml?raw";
 import addressabilityRaw from "../../config/addressability.yaml?raw";
+import dgMarketRaw from "../../config/dg-market.yaml?raw";
 import euFundingTendersRaw from "../../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../../config/grants-gov.yaml?raw";
 import samGovRaw from "../../config/sam-gov.yaml?raw";
@@ -25,6 +26,7 @@ import { syncTechnicalAreas } from "../db/taxonomy";
 import { runSourceAdapter } from "../pipeline/run-source";
 import { SourceScanError } from "../sources/adapter";
 import { createRegisteredSourceAdapter } from "../sources";
+import { parseDgMarketConfig } from "../sources/dg-market";
 import {
   parseEuFundingTendersConfig,
   validateEuFundingTendersClientScope,
@@ -39,6 +41,7 @@ const taxonomy = parseTaxonomyYaml(taxonomyRaw);
 const technicalClassification = parseTechnicalClassificationYaml(classificationRaw);
 const taxonomyVersion = technicalClassification.schema_version;
 const addressability = parseAddressabilityYaml(addressabilityRaw);
+const dgMarket = parseDgMarketConfig(dgMarketRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const grantsGov = parseGrantsGovConfig(grantsGovRaw);
 const ted = parseTedConfig(tedRaw);
@@ -135,6 +138,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
 
       try {
         const adapter = createRegisteredSourceAdapter(source.id, this.env, {
+          dgMarket,
           euFundingTenders,
           grantsGov,
           samGov,

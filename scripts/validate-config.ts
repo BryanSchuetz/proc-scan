@@ -7,6 +7,7 @@ import {
   parseTechnicalClassificationYaml,
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
+import { parseDgMarketConfig } from "../src/sources/dg-market";
 import {
   parseEuFundingTendersConfig,
   validateEuFundingTendersClientScope,
@@ -20,6 +21,7 @@ const [
   taxonomyRaw,
   classificationRaw,
   addressabilityRaw,
+  dgMarketRaw,
   euFundingTendersRaw,
   grantsGovRaw,
   samGovRaw,
@@ -28,6 +30,7 @@ const [
   readFile(resolve(root, "tech-area-classification.yaml"), "utf8"),
   readFile(resolve(root, "config/technical-classification.yaml"), "utf8"),
   readFile(resolve(root, "config/addressability.yaml"), "utf8"),
+  readFile(resolve(root, "config/dg-market.yaml"), "utf8"),
   readFile(resolve(root, "config/eu-funding-tenders.yaml"), "utf8"),
   readFile(resolve(root, "config/grants-gov.yaml"), "utf8"),
   readFile(resolve(root, "config/sam-gov.yaml"), "utf8"),
@@ -38,6 +41,7 @@ const taxonomy = parseTaxonomyYaml(taxonomyRaw);
 const classification = parseTechnicalClassificationYaml(classificationRaw);
 validateTechnicalClassification(taxonomy, classification);
 const addressability = parseAddressabilityYaml(addressabilityRaw);
+const dgMarket = parseDgMarketConfig(dgMarketRaw);
 const grantsGov = parseGrantsGovConfig(grantsGovRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const ted = parseTedConfig(tedRaw);
@@ -51,6 +55,7 @@ console.log(
     `addressability v${addressability.schema_version} (${addressability.status}); ` +
     `${grantsGov.organizations.length} Grants.gov organizations; ` +
     `${samGov.organizations.length} SAM.gov organizations; ` +
+    `dgMarket MCA plus ${dgMarket.eu_member_states.countries.length} EU government-buyer countries; ` +
     `TED ${ted.scope.toLocaleLowerCase()} external-aid scope with ${ted.clients.length} clients; ` +
     `EU Funding & Tenders ${euFundingTenders.opportunity_type} with ${euFundingTenders.clients.length} clients.`,
 );

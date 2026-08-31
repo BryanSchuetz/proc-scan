@@ -1,4 +1,4 @@
-schema_version: 8
+schema_version: 9
 status: active
 threshold: 2
 hard_exclusions:
@@ -231,6 +231,44 @@ hard_exclusions:
         - field: sourceId
           operator: equals
           value: eu-funding-tenders
+        - field: value.currency
+          operator: equals
+          value: EUR
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 1000000
+  - id: dg-market-mca-below-minimum-usd-value
+    description: dgMarket MCA opportunities with a known USD value must have a value of at least $500,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: dg-market
+        - field: sourceData.clientCohort
+          operator: equals
+          value: mca
+        - field: value.currency
+          operator: equals
+          value: USD
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 500000
+  - id: dg-market-eu-government-below-minimum-eur-value
+    description: dgMarket EU member-state government opportunities with a known EUR value must have a value of at least €1,000,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: dg-market
+        - field: sourceData.clientCohort
+          operator: equals
+          value: eu-member-state-government
         - field: value.currency
           operator: equals
           value: EUR

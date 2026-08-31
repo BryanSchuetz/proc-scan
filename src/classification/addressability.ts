@@ -19,6 +19,7 @@ const fieldSchema = z.enum([
   "sourceData.classificationCode",
   "sourceData.naicsCode",
   "sourceData.fullParentPathName",
+  "sourceData.clientCohort",
 ]);
 
 const conditionSchema = z.discriminatedUnion("operator", [
@@ -99,6 +100,8 @@ function fieldValue(event: NormalizedBiddingEvent, field: z.infer<typeof fieldSc
       return event.sourceData.naicsCode;
     case "sourceData.fullParentPathName":
       return event.sourceData.fullParentPathName;
+    case "sourceData.clientCohort":
+      return event.sourceData.clientCohort;
     default:
       return event[field];
   }
