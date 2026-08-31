@@ -123,6 +123,17 @@ function fmoEvent(amount?: number, currency = "EUR", opportunityName = "Technica
   });
 }
 
+function eibEvent(amount?: number, currency = "EUR", opportunityName = "Technical assistance opportunity") {
+  return biddingEvent({
+    sourceId: "eib",
+    clientName: "EIB",
+    opportunityName,
+    description: "Capacity building and advisory services",
+    value: amount === undefined ? undefined : { amount, currency },
+    sourceData: {},
+  });
+}
+
 describe("Addressability Assessment", () => {
   it("applies hard exclusions before scoring", () => {
     const result = assessAddressability(biddingEvent({ clientName: "Blocked Agency" }), activeConfig);
@@ -327,6 +338,21 @@ describe("Addressability Assessment", () => {
         .toMatchObject({ status: "addressable", score: 4 });
     }
     expect(assessAddressability(fmoEvent(1_000_000, "EUR", "Supply of computers and equipment"), configuredRules))
+      .toMatchObject({ status: "addressable", score: 2 });
+  });
+
+  it("applies EIB's €500,000 floor before normal shared fit scoring", () => {
+    expect(assessAddressability(eibEvent(499_999), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "eib-below-minimum-eur-value",
+    });
+    expect(assessAddressability(eibEvent(500_000), configuredRules))
+      .toMatchObject({ status: "addressable", score: 4 });
+    for (const event of [eibEvent(0), eibEvent(), eibEvent(499_999, "USD")]) {
+      expect(assessAddressability(event, configuredRules))
+        .toMatchObject({ status: "addressable", score: 4 });
+    }
+    expect(assessAddressability(eibEvent(1_000_000, "EUR", "Supply of computers and equipment"), configuredRules))
       .toMatchObject({ status: "addressable", score: 2 });
   });
 

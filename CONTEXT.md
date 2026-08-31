@@ -80,6 +80,8 @@ dgMarket has two Client cohorts. MCA notices are selected through dgMarket's Mil
 
 FMO Open Tenders has FMO as its Client and a €500,000 Minimum Value Floor for known positive EUR maximum-budget values. Missing, zero, and non-EUR values remain eligible for the same shared fit scoring as every other Source.
 
+EIB Procurement has EIB as its Client and a €500,000 Minimum Value Floor for known positive EUR values enriched from linked official TED notices. The procedure estimate is authoritative; same-currency lot estimates are summed only when the procedure estimate is absent. Missing, zero, and non-EUR values remain eligible for the same shared fit scoring as every other Source.
+
 Assessment proceeds in this order:
 
 1. Apply hard exclusions. A known positive value below the applicable Minimum Value Floor is Excluded without fit scoring. Zero, null, and missing values are treated as unknown, so they do not trigger the value exclusion. Source-specific structured evidence may also exclude an event, such as a SAM.gov product PSC or manufacturing NAICS code.

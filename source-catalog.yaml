@@ -224,11 +224,11 @@
   requires_login: false
   username: null
   password: null
-  filters_automation_rules: null
+  filters_automation_rules: "Query active TA Operations through EIB's public JSON backing endpoint; retain records with a known current closing date; enrich values and descriptions from linked official TED notices; apply the €500k floor only to known positive EUR values"
   result_set: public
-  authentication: null
-  source_module: null
-  access_method: null
+  authentication: "Source remains disabled pending authorization for systematic access"
+  source_module: eib
+  access_method: api
 
 - site: FMO procurement page
   clients:

@@ -1,0 +1,60 @@
+{
+  "eib-active-high": {
+    "id": "eib-active-high",
+    "url": "aa-012824001",
+    "title": "Preparatory studies for vaccines production capacity increase project in Egypt",
+    "pageType": "procurement",
+    "pageSubType": "callTechnicalAssistance",
+    "navContents": [
+      {
+        "code": "procurementInformations",
+        "content": {
+          "reference": ["AA-012824-001"],
+          "closeDate": [1790200800000],
+          "type": ["call-technical-assistance"],
+          "publicationDate": [1783288800000],
+          "items": [
+            {
+              "code": "procurementHistory",
+              "content": {
+                "date": [1783288800000],
+                "reference": ["464153"],
+                "step": ["Open Contract Notice"],
+                "oj": ["127"]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "eib-active-low": {
+    "id": "eib-active-low",
+    "url": "aa-013468001",
+    "title": "Critical raw materials heatmap",
+    "pageType": "procurement",
+    "pageSubType": "callTechnicalAssistance",
+    "navContents": [
+      {
+        "code": "procurementInformations",
+        "content": {
+          "reference": ["AA-013468-001"],
+          "closeDate": [1788904800000],
+          "type": ["call-technical-assistance"],
+          "publicationDate": [1784498400000],
+          "items": [
+            {
+              "code": "procurementHistory",
+              "content": {
+                "date": [1784498400000],
+                "reference": ["111111"],
+                "step": ["Open Contract Notice"],
+                "oj": ["138"]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

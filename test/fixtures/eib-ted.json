@@ -1,0 +1,50 @@
+{
+  "notices": [
+    {
+      "publication-number": "464153-2026",
+      "notice-identifier": "ted-high",
+      "notice-version": 1,
+      "publication-date": "2026-07-06+02:00",
+      "notice-title": { "eng": "Luxembourg – Technical assistance services – Vaccine production studies" },
+      "title-proc": { "eng": "Preparatory studies for vaccines production capacity increase project in Egypt" },
+      "description-proc": { "eng": "Technical assistance for vaccine manufacturing feasibility and market analysis." },
+      "description-lot": null,
+      "buyer-name": { "eng": ["European Investment Bank"] },
+      "place-of-performance-country-proc": ["EGY"],
+      "place-of-performance-country-lot": null,
+      "deadline-receipt-tender-date-lot": ["2026-09-24+02:00"],
+      "deadline-receipt-tender-time-lot": ["12:00:00+02:00"],
+      "estimated-value-proc": "750000",
+      "estimated-value-cur-proc": "EUR",
+      "estimated-value-lot": ["750000"],
+      "estimated-value-cur-lot": ["EUR"],
+      "notice-type": "cn-standard",
+      "form-type": "competition",
+      "classification-cpv": ["71356200"]
+    },
+    {
+      "publication-number": "111111-2026",
+      "notice-identifier": "ted-low",
+      "notice-version": 1,
+      "publication-date": "2026-07-20+02:00",
+      "notice-title": { "eng": "Luxembourg – Technical assistance services – Critical raw materials heatmap" },
+      "title-proc": { "eng": "Critical raw materials heatmap" },
+      "description-proc": { "fra": "Conseil technique et analyse des chaînes d’approvisionnement." },
+      "description-lot": null,
+      "buyer-name": { "eng": ["European Investment Bank"] },
+      "place-of-performance-country-proc": null,
+      "place-of-performance-country-lot": null,
+      "deadline-receipt-tender-date-lot": ["2026-09-09+02:00"],
+      "deadline-receipt-tender-time-lot": ["18:59:59+02:00"],
+      "estimated-value-proc": null,
+      "estimated-value-cur-proc": null,
+      "estimated-value-lot": ["400000"],
+      "estimated-value-cur-lot": ["EUR"],
+      "notice-type": "cn-standard",
+      "form-type": "competition",
+      "classification-cpv": ["71356200"]
+    }
+  ],
+  "totalNoticeCount": 2,
+  "timedOut": false
+}

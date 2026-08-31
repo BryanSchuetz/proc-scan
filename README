@@ -36,10 +36,10 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | EU Funding & Tenders Portal | Deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
 | dgMarket | Paused; adapter deployed | Public HTML | MCA and EU member-state government consultancy notices |
 | FMO Open Tenders | Deployed | Public HTML | FMO tender listings with a €500,000 floor and shared addressability scoring |
+| EIB Procurement | Implemented locally; disabled pending authorization | Public JSON + TED API | Open EIB TA Operations with a €500,000 floor and shared addressability scoring |
 
-The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The backlog currently includes:
+The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The remaining backlog currently includes:
 
-- **Public sources:** European Investment Bank procurement.
 - **Login or unattended-authentication sources:** Atamis Supplier Portal, BEIS/Jaggaer, EBRD ECEPP, and GSA eBuy.
 - **Interactive two-factor sources:** FCDO eSourcing Portal and SIMAP.
 
@@ -55,7 +55,7 @@ The adapter collects pre-solicitations, Sources Sought, Special Notices, solicit
 
 SAM.gov returns each description as a separate authenticated URL rather than inline search data. The adapter preserves a credential-free description URL in structured Source data but does not spend one API request per notice to download descriptions. Opportunity titles and the other search metadata are therefore available for the initial deterministic classification pass; bulk description ingestion or selective enrichment remains a follow-up decision after measuring the account's request quota.
 
-Addressability configuration version 10 applies the shared scoring contract with Source-specific Minimum Value Floors. For SAM.gov, DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, numeric product PSCs, and manufacturing NAICS sectors are hard exclusions. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
+Addressability configuration version 11 applies the shared scoring contract with Source-specific Minimum Value Floors. For SAM.gov, DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, numeric product PSCs, and manufacturing NAICS sectors are hard exclusions. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
 
 ## Grants.gov Source
 
@@ -104,6 +104,14 @@ The FMO adapter makes one direct HTTP request per scan to the server-rendered [O
 The adapter maps the contract name, procurement method, publication date, submission deadline, original language, public description, and stated maximum budget. CET and CEST deadlines are normalized to UTC. FMO is always the Client and procuring entity. Ancillary Q&A, prior-information, and award-document link text is omitted from the normalized description; the public listing page remains the canonical Source URL. Listings remain historical Bidding Events even when their displayed deadlines have passed.
 
 FMO uses normal shared DAI-Fit/Miss-Fit scoring and a €500,000 Minimum Value Floor. A known positive EUR maximum budget below €500,000 is Excluded. Missing, zero, and non-EUR values remain eligible for fit scoring. FMO's `robots.txt` allows general crawling. The owner authorized enabling the Source on August 31, 2026.
+
+## EIB Procurement Source
+
+The EIB adapter reads the first-party JSON endpoint behind the supplied [All procurement search](https://www.eib.org/en/about/procurement/all/index?sortColumn=configuration.contentStart&sortDir=desc&pageNumber=0&itemPerPage=25&pageable=true&la=EN&deLa=EN&orYearTo=true&orYearFrom=true&procurementStatus=All&_g_procurementInformations_type=call-technical-assistance&or_g_procurementInformations_type=true). It requests EIB's `On going` TA Operations scope, verifies the returned type and status, and retains only records with a known closing date that has not passed. This excludes stale records that EIB still labels On going but that have no current deadline. The adapter paginates a complete current snapshot and retrieves the EIB detail record in bounded batches.
+
+EIB's JSON does not expose a description or estimated value. Each detail record does expose its Official Journal publication history, so the adapter resolves those publication numbers in one official TED Search API request. It uses the newest available TED description and exact deadline. For value, it prefers the authoritative procedure estimate; when that is absent, it sums published lot estimates only when they all use one currency. The stable EIB record ID identifies the Bidding Event, the displayed EIB procurement reference identifies the Source Opportunity, and the canonical URL remains the public EIB detail page.
+
+EIB is always the Client and European Investment Bank is the procuring entity. Addressability configuration version 11 keeps the €500,000 Minimum Value Floor separate from shared DAI-Fit/Miss-Fit scoring: a known positive EUR value below €500,000 is Excluded, while missing, zero, and non-EUR values remain eligible for normal fit scoring. Migration `0009_eib_source.sql` registers the adapter disabled. EIB's `robots.txt` disallows the JSON provider path and its Terms of Use restrict automated reuse, so the Source must not be enabled until the owner confirms suitable authorization.
 
 ## Checks
 

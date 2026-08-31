@@ -1,4 +1,4 @@
-schema_version: 10
+schema_version: 11
 status: active
 threshold: 2
 hard_exclusions:
@@ -288,6 +288,25 @@ hard_exclusions:
         - field: clientName
           operator: equals
           value: FMO
+        - field: value.currency
+          operator: equals
+          value: EUR
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 500000
+  - id: eib-below-minimum-eur-value
+    description: EIB opportunities with a known EUR value must have a value of at least €500,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: eib
+        - field: clientName
+          operator: equals
+          value: EIB
         - field: value.currency
           operator: equals
           value: EUR

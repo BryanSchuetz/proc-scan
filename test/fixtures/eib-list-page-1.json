@@ -1,0 +1,41 @@
+{
+  "valid": true,
+  "message": null,
+  "pageNumber": 1,
+  "itemPerPage": 2,
+  "pageable": true,
+  "resultItems": 2,
+  "totalItems": 4,
+  "data": [
+    {
+      "id": "eib-active-low",
+      "url": "aa-013468001",
+      "title": "Critical raw materials heatmap",
+      "subType": "procurements-call-technical-assistance",
+      "startDate": 1784533500000,
+      "endDate": 1788904800000,
+      "additionalInformation": [
+        "On going",
+        "TA operations",
+        "AA-013468-001",
+        "20/07/2026",
+        "09/09/2026"
+      ]
+    },
+    {
+      "id": "eib-no-deadline",
+      "url": "aa-stale001",
+      "title": "Stale technical assistance study",
+      "subType": "procurements-call-technical-assistance",
+      "startDate": 1756192500000,
+      "endDate": null,
+      "additionalInformation": [
+        "On going",
+        "TA operations",
+        "AA-STALE-001",
+        "26/08/2025",
+        " "
+      ]
+    }
+  ]
+}

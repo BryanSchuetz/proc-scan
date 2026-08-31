@@ -2,6 +2,7 @@ import type { SourceAdapter } from "./adapter";
 import { SourceScanError } from "./adapter";
 import { createDgMarketAdapter, dgMarketSourceDefinition } from "./dg-market";
 import type { DgMarketConfig } from "./dg-market";
+import { createEibAdapter, eibSourceDefinition } from "./eib";
 import {
   createEuFundingTendersAdapter,
   euFundingTendersSourceDefinition,
@@ -35,6 +36,8 @@ export function createRegisteredSourceAdapter(
   switch (sourceId) {
     case dgMarketSourceDefinition.id:
       return createDgMarketAdapter({ config: configurations.dgMarket });
+    case eibSourceDefinition.id:
+      return createEibAdapter();
     case euFundingTendersSourceDefinition.id:
       return createEuFundingTendersAdapter({ config: configurations.euFundingTenders });
     case fmoSourceDefinition.id:

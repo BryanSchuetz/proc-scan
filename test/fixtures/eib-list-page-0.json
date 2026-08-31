@@ -1,0 +1,41 @@
+{
+  "valid": true,
+  "message": null,
+  "pageNumber": 0,
+  "itemPerPage": 2,
+  "pageable": true,
+  "resultItems": 2,
+  "totalItems": 4,
+  "data": [
+    {
+      "id": "eib-active-high",
+      "url": "aa-012824001",
+      "title": "Preparatory studies for vaccines production capacity increase project in Egypt",
+      "subType": "procurements-call-technical-assistance",
+      "startDate": 1787727600000,
+      "endDate": 1790200800000,
+      "additionalInformation": [
+        "On going",
+        "TA operations",
+        "AA-012824-001",
+        "06/07/2026",
+        "24/09/2026"
+      ]
+    },
+    {
+      "id": "eib-expired",
+      "url": "aa-expired001",
+      "title": "Expired technical assistance study",
+      "subType": "procurements-call-technical-assistance",
+      "startDate": 1787000000000,
+      "endDate": 1788048000000,
+      "additionalInformation": [
+        "On going",
+        "TA operations",
+        "AA-EXPIRED-001",
+        "01/08/2026",
+        "30/08/2026"
+      ]
+    }
+  ]
+}
