@@ -35,7 +35,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | TED | Deployed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
 | EU Funding & Tenders Portal | Deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
 | dgMarket | Paused; adapter deployed | Public HTML | MCA and EU member-state government consultancy notices |
-| FMO Open Tenders | Implemented; disabled pending access approval | Public HTML | FMO tender listings with a €500,000 floor and shared addressability scoring |
+| FMO Open Tenders | Enabled | Public HTML | FMO tender listings with a €500,000 floor and shared addressability scoring |
 
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The backlog currently includes:
 
@@ -99,11 +99,11 @@ List pages provide title, buyer, country of performance, create/change date, dea
 
 ## FMO Open Tenders Source
 
-The FMO adapter makes one direct HTTP request per scan to the server-rendered [Open Tenders page](https://www.fmo.nl/open-tenders). The page exposes no API, feed, or pagination. Each scan reads a complete snapshot and uses FMO's reference number as both the stable Bidding Event and Source Opportunity identifier, allowing the shared pipeline to deduplicate repeated snapshots and detect changed known deadlines or values. Migration `0008_fmo_source.sql` registers the adapter as disabled.
+The FMO adapter makes one direct HTTP request per scan to the server-rendered [Open Tenders page](https://www.fmo.nl/open-tenders). The page exposes no API, feed, or pagination. Each scan reads a complete snapshot and uses FMO's reference number as both the stable Bidding Event and Source Opportunity identifier, allowing the shared pipeline to deduplicate repeated snapshots and detect changed known deadlines or values. Migration `0008_fmo_source.sql` enables the adapter.
 
 The adapter maps the contract name, procurement method, publication date, submission deadline, original language, public description, and stated maximum budget. CET and CEST deadlines are normalized to UTC. FMO is always the Client and procuring entity. Ancillary Q&A, prior-information, and award-document link text is omitted from the normalized description; the public listing page remains the canonical Source URL. Listings remain historical Bidding Events even when their displayed deadlines have passed.
 
-FMO uses normal shared DAI-Fit/Miss-Fit scoring and a €500,000 Minimum Value Floor. A known positive EUR maximum budget below €500,000 is Excluded. Missing, zero, and non-EUR values remain eligible for fit scoring. FMO's `robots.txt` allows general crawling, but its general website disclaimer restricts copying or republication without prior consent. The Source therefore remains disabled until access and reuse permission is confirmed.
+FMO uses normal shared DAI-Fit/Miss-Fit scoring and a €500,000 Minimum Value Floor. A known positive EUR maximum budget below €500,000 is Excluded. Missing, zero, and non-EUR values remain eligible for fit scoring. FMO's `robots.txt` allows general crawling. The owner authorized enabling the Source on August 31, 2026.
 
 ## Checks
 
