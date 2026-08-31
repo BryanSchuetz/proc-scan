@@ -3,8 +3,8 @@ PRAGMA foreign_keys = ON;
 INSERT OR IGNORE INTO sources (
   id, display_name, phase, access_mode, enabled, adapter_version, created_at, updated_at
 ) VALUES
-  ('grants-gov', 'Grants.gov', 1, 'public', 0, 'fixture-v1', '2026-08-26T10:00:00.000Z', '2026-08-26T10:00:00.000Z'),
-  ('ted', 'TED', 1, 'public', 0, 'fixture-v1', '2026-08-26T10:00:00.000Z', '2026-08-26T10:00:00.000Z')
+  ('grants-gov', 'Grants.gov', 1, 'public', 1, 'fixture-v1', '2026-08-26T10:00:00.000Z', '2026-08-26T10:00:00.000Z'),
+  ('ted', 'TED', 1, 'public', 1, 'fixture-v1', '2026-08-26T10:00:00.000Z', '2026-08-26T10:00:00.000Z')
 ON CONFLICT(id) DO UPDATE SET
   enabled = excluded.enabled,
   adapter_version = excluded.adapter_version,

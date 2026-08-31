@@ -49,6 +49,29 @@ describe("D1 registry integration", () => {
     expect(body.facets.technicalAreas.map((area) => area.id)).toContain("digital");
   });
 
+  it("hides disabled Source records and their facet values without deleting them", async () => {
+    await env.DB.prepare("UPDATE sources SET enabled = 0 WHERE id = 'ted'").run();
+    try {
+      const response = await SELF.fetch("http://localhost/api/opportunities");
+      expect(response.status).toBe(200);
+      const body = await response.json<EventsResponse>();
+
+      expect(body.pagination.total).toBe(3);
+      expect(body.items.every((item) => item.sourceId === "grants-gov")).toBe(true);
+      expect(body.facets.sources).toEqual([{ id: "grants-gov", name: "Grants.gov" }]);
+      expect(body.facets.clients).not.toContain("European Cooperation Office");
+      expect(body.facets.technicalAreas.map((area) => area.id)).not.toContain("agriculture-and-market-systems");
+      expect(body.facets.technicalAreas.map((area) => area.id)).not.toContain("unclassified");
+
+      const stored = await env.DB.prepare(
+        "SELECT COUNT(*) AS total FROM bidding_events WHERE source_id = 'ted'",
+      ).first<{ total: number }>();
+      expect(stored?.total).toBe(3);
+    } finally {
+      await env.DB.prepare("UPDATE sources SET enabled = 1 WHERE id = 'ted'").run();
+    }
+  });
+
   it("supports the separate Addressable and Uncertain registry views", async () => {
     const addressableResponse = await SELF.fetch("http://localhost/api/opportunities?status=addressable");
     const addressable = await addressableResponse.json<EventsResponse>();

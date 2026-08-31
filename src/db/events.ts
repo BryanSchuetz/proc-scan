@@ -263,13 +263,24 @@ function buildWhere(query: EventsQuery): { sql: string; values: BindValue[] } {
 
 async function loadFacets(db: D1Database): Promise<EventsFacets> {
   const [clientResult, sourceResult, technicalAreaResult, fixtureResult, unclassifiedResult] = await Promise.all([
-    db.prepare("SELECT DISTINCT client_name AS value FROM bidding_events WHERE client_name IS NOT NULL ORDER BY client_name")
+    db.prepare(`SELECT DISTINCT e.client_name AS value
+      FROM bidding_events e
+      JOIN sources s ON s.id = e.source_id
+      WHERE s.enabled = 1 AND e.client_name IS NOT NULL
+      ORDER BY e.client_name`)
       .all<{ value: string }>(),
     db.prepare(`SELECT DISTINCT s.id, s.display_name AS name
-      FROM sources s JOIN bidding_events e ON e.source_id = s.id ORDER BY s.display_name`)
+      FROM sources s
+      JOIN bidding_events e ON e.source_id = s.id
+      WHERE s.enabled = 1
+      ORDER BY s.display_name`)
       .all<{ id: string; name: string }>(),
     db.prepare(`WITH RECURSIVE included(id) AS (
-        SELECT DISTINCT technical_area_id FROM bidding_event_technical_areas
+        SELECT DISTINCT assignment.technical_area_id
+        FROM bidding_event_technical_areas assignment
+        JOIN bidding_events event ON event.id = assignment.bidding_event_id
+        JOIN sources source ON source.id = event.source_id
+        WHERE source.enabled = 1
         UNION
         SELECT area.parent_id
         FROM technical_areas area
@@ -281,11 +292,14 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
       JOIN included ON included.id = area.id
       ORDER BY area.name`)
       .all<{ id: string; name: string; parent_id: string | null }>(),
-    db.prepare("SELECT EXISTS(SELECT 1 FROM sources WHERE adapter_version LIKE 'fixture-%') AS fixture_data")
+    db.prepare(`SELECT EXISTS(
+      SELECT 1 FROM sources WHERE enabled = 1 AND adapter_version LIKE 'fixture-%'
+    ) AS fixture_data`)
       .first<{ fixture_data: number }>(),
     db.prepare(`SELECT EXISTS(
       SELECT 1 FROM bidding_events event
-      WHERE NOT EXISTS (
+      JOIN sources source ON source.id = event.source_id
+      WHERE source.enabled = 1 AND NOT EXISTS (
         SELECT 1 FROM bidding_event_technical_areas assignment
         WHERE assignment.bidding_event_id = event.id
       )
@@ -311,7 +325,9 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
 
 export async function listBiddingEvents(db: D1Database, query: EventsQuery): Promise<EventsResponse> {
   const where = buildWhere(query);
-  const from = `FROM bidding_events e JOIN sources s ON s.id = e.source_id WHERE ${where.sql}`;
+  const from = `FROM bidding_events e
+    JOIN sources s ON s.id = e.source_id
+    WHERE s.enabled = 1 AND ${where.sql}`;
   const technicalAreas = `(SELECT COALESCE(json_group_array(json_object(
     'id', ta.id, 'name', ta.name, 'parentId', ta.parent_id
   )), '[]')

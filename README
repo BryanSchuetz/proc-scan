@@ -34,7 +34,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | Grants.gov | Deployed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
 | TED | Deployed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
 | EU Funding & Tenders Portal | Deployed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
-| dgMarket | Deployed | Public HTML | MCA and EU member-state government consultancy notices |
+| dgMarket | Paused; adapter deployed | Public HTML | MCA and EU member-state government consultancy notices |
 
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The backlog currently includes:
 
@@ -90,7 +90,7 @@ Some Commission tender calls are also published through TED. Registry identity r
 
 ## dgMarket Source
 
-The dgMarket adapter uses direct HTTP requests against the server-rendered public search at `www2.dgmarket.com`; it does not use Browser Rendering or retrieve subscription-gated notice bodies. Migration `0006_dg_market_source.sql` enables the Source following confirmation of permission for this systematic access. `config/dg-market.yaml` defines the two approved scopes. MCA notices use funding agency `1385098` (Millennium Challenge Corporation). EU notices run one search per member state because dgMarket does not reliably accept all 27 notice-contact countries in one request; each search requires the `GOVERNMENT` buyer type. Both scopes require dgMarket's Consultancy category. Public and private organizations, NGOs, contract awards, auctions, and project records are not retained through this adapter.
+The dgMarket adapter uses direct HTTP requests against the server-rendered public search at `www2.dgmarket.com`; it does not use Browser Rendering or retrieve subscription-gated notice bodies. Migration `0006_dg_market_source.sql` enabled the Source following confirmation of permission for this systematic access. Migration `0007_disable_dg_market_source.sql` pauses it while its result-set noise is reviewed. Disabled Sources are omitted from registry results and facets, but their records and saved cursor are retained so the Source can be restored without another initial snapshot. `config/dg-market.yaml` defines the two approved scopes. MCA notices use funding agency `1385098` (Millennium Challenge Corporation). EU notices run one search per member state because dgMarket does not reliably accept all 27 notice-contact countries in one request; each search requires the `GOVERNMENT` buyer type. Both scopes require dgMarket's Consultancy category. Public and private organizations, NGOs, contract awards, auctions, and project records are not retained through this adapter.
 
 The search stores its criteria and pagination in a `JSESSIONID` session. The adapter verifies that dgMarket echoed every configured criterion, preserves the session cookie across pages, uses the site's default 25-record page size, throttles requests, caps pages per country, and fails rather than silently accepting changed HTML or dropped filters. The first scan covers 90 days. Later scans use the saved scan cursor with a two-day calendar overlap so delayed indexing and date-boundary changes are rediscovered safely; stable dgMarket notice IDs let the shared pipeline deduplicate that overlap.
 
