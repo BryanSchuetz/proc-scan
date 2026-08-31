@@ -7,6 +7,7 @@ import {
   euFundingTendersSourceDefinition,
 } from "./eu-funding-tenders";
 import type { EuFundingTendersConfig } from "./eu-funding-tenders";
+import { createFmoAdapter, fmoSourceDefinition } from "./fmo";
 import { createGrantsGovAdapter, grantsGovSourceDefinition } from "./grants-gov";
 import type { GrantsGovConfig } from "./grants-gov";
 import { createSamGovAdapter, samGovSourceDefinition } from "./sam-gov";
@@ -36,6 +37,8 @@ export function createRegisteredSourceAdapter(
       return createDgMarketAdapter({ config: configurations.dgMarket });
     case euFundingTendersSourceDefinition.id:
       return createEuFundingTendersAdapter({ config: configurations.euFundingTenders });
+    case fmoSourceDefinition.id:
+      return createFmoAdapter();
     case grantsGovSourceDefinition.id:
       return createGrantsGovAdapter({
         organizations: configurations.grantsGov.organizations,

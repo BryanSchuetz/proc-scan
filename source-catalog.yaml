@@ -235,12 +235,12 @@
     - FMO
   actual_link: https://www.fmo.nl/open-tenders
   additional_links: null
-  filters_narrative: '€500k minimum; limited to "technical assistance"'
+  filters_narrative: "€500k minimum; shared DAI-Fit/Miss-Fit addressability scoring"
   requires_login: false
   username: null
   password: null
   filters_automation_rules: null
   result_set: public
   authentication: null
-  source_module: null
-  access_method: null
+  source_module: fmo
+  access_method: html

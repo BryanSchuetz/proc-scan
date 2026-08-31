@@ -78,6 +78,8 @@ TED and EU Funding & Tenders each have a Minimum Value Floor of €1,000,000. Th
 
 dgMarket has two Client cohorts. MCA notices are selected through dgMarket's Millennium Challenge Corporation funding-agency filter and have a $500,000 Minimum Value Floor for known USD values. EU member-state notices are selected by the buyer's notice-contact country, restricted to the 27 EU member states and dgMarket's Government Organization buyer type, and have a €1,000,000 Minimum Value Floor for known EUR values. The Source's country-of-performance field does not establish the Client cohort.
 
+FMO Open Tenders has FMO as its Client and a €500,000 Minimum Value Floor for known positive EUR maximum-budget values. Missing, zero, and non-EUR values remain eligible for the same shared fit scoring as every other Source.
+
 Assessment proceeds in this order:
 
 1. Apply hard exclusions. A known positive value below the applicable Minimum Value Floor is Excluded without fit scoring. Zero, null, and missing values are treated as unknown, so they do not trigger the value exclusion. Source-specific structured evidence may also exclude an event, such as a SAM.gov product PSC or manufacturing NAICS code.

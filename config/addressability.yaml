@@ -1,4 +1,4 @@
-schema_version: 9
+schema_version: 10
 status: active
 threshold: 2
 hard_exclusions:
@@ -278,6 +278,25 @@ hard_exclusions:
         - field: value.amount
           operator: lt
           value: 1000000
+  - id: fmo-below-minimum-eur-value
+    description: FMO opportunities with a known EUR value must have a value of at least €500,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: fmo
+        - field: clientName
+          operator: equals
+          value: FMO
+        - field: value.currency
+          operator: equals
+          value: EUR
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 500000
 scoring_rules:
   - id: inclusive-baseline
     description: Every non-excluded opportunity starts from an inclusive baseline.
