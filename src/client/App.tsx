@@ -121,7 +121,7 @@ function ColumnMenu({
         aria-label={`${accessibleLabel}: sort and filter`}
         aria-expanded={open}
         aria-controls={menuId}
-        data-filtered={filterValue !== ""}
+        data-active={sortDirection !== false || filterValue !== ""}
         onClick={() => setOpen((value) => !value)}
       >
         {label}
@@ -505,23 +505,28 @@ export default function App() {
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
                       const columnMenu = columnMenuFor(header.column.id);
+                      const sortDirection = header.column.getIsSorted();
                       return (
                         <th key={header.id} scope="col" aria-sort={
-                          header.column.getIsSorted() === "asc" ? "ascending" :
-                            header.column.getIsSorted() === "desc" ? "descending" : undefined
+                          sortDirection === "asc" ? "ascending" :
+                            sortDirection === "desc" ? "descending" : undefined
                         }>
                           <div className="column-header">
                             {columnMenu ? (
                               <ColumnMenu
                                 label={flexRender(header.column.columnDef.header, header.getContext())}
-                                sortDirection={header.column.getIsSorted()}
+                                sortDirection={sortDirection}
                                 onSort={(direction) => header.column.toggleSorting(direction === "desc")}
                                 {...columnMenu}
                               />
                             ) : header.column.getCanSort() ? (
-                              <button type="button" onClick={header.column.getToggleSortingHandler()}>
+                              <button
+                                type="button"
+                                data-active={sortDirection !== false}
+                                onClick={header.column.getToggleSortingHandler()}
+                              >
                                 {flexRender(header.column.columnDef.header, header.getContext())}
-                                <SortIndicator direction={header.column.getIsSorted()} />
+                                <SortIndicator direction={sortDirection} />
                               </button>
                             ) : flexRender(header.column.columnDef.header, header.getContext())}
                           </div>

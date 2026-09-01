@@ -301,7 +301,8 @@ th {
 .column-header > button:hover,
 .column-menu__trigger:hover,
 .column-menu__trigger[aria-expanded="true"] { color: var(--navy-deep); background: var(--gray-100); }
-.column-menu__trigger[data-filtered="true"] { box-shadow: inset 0 -2px 0 var(--teal); color: var(--navy-deep); }
+.column-header > button[data-active="true"],
+.column-menu__trigger[data-active="true"] { box-shadow: inset 0 -2px 0 var(--teal); color: var(--navy-deep); }
 .column-menu { position: relative; margin: -10px -6px; }
 .column-menu__popover {
   position: absolute;
