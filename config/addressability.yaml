@@ -1,4 +1,4 @@
-schema_version: 12
+schema_version: 13
 status: active
 threshold: 2
 hard_exclusions:
@@ -326,6 +326,25 @@ hard_exclusions:
         - field: clientName
           operator: equals
           value: DEFRA
+        - field: value.currency
+          operator: equals
+          value: GBP
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 250000
+  - id: deznz-jaggaer-below-minimum-gbp-value
+    description: DEZNZ Jaggaer opportunities with a known GBP value must have a value of at least £250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: deznz-jaggaer
+        - field: clientName
+          operator: equals
+          value: DEZNZ
         - field: value.currency
           operator: equals
           value: GBP

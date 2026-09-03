@@ -149,6 +149,21 @@ function atamisDefraEvent(
   });
 }
 
+function deznzJaggaerEvent(
+  amount?: number,
+  currency = "GBP",
+  opportunityName = "Technical assistance opportunity",
+) {
+  return biddingEvent({
+    sourceId: "deznz-jaggaer",
+    clientName: "DEZNZ",
+    opportunityName,
+    description: "Capacity building and advisory services",
+    value: amount === undefined ? undefined : { amount, currency },
+    sourceData: {},
+  });
+}
+
 describe("Addressability Assessment", () => {
   it("applies hard exclusions before scoring", () => {
     const result = assessAddressability(biddingEvent({ clientName: "Blocked Agency" }), activeConfig);
@@ -388,6 +403,27 @@ describe("Addressability Assessment", () => {
     }
     expect(assessAddressability(
       atamisDefraEvent(500_000, "GBP", "Supply of computers and equipment"),
+      configuredRules,
+    )).toMatchObject({ status: "addressable", score: 2 });
+  });
+
+  it("applies DEZNZ Jaggaer's £250,000 floor before normal shared fit scoring", () => {
+    expect(assessAddressability(deznzJaggaerEvent(249_999), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "deznz-jaggaer-below-minimum-gbp-value",
+    });
+    expect(assessAddressability(deznzJaggaerEvent(250_000), configuredRules))
+      .toMatchObject({ status: "addressable", score: 4 });
+    for (const event of [
+      deznzJaggaerEvent(0),
+      deznzJaggaerEvent(),
+      deznzJaggaerEvent(249_999, "EUR"),
+    ]) {
+      expect(assessAddressability(event, configuredRules))
+        .toMatchObject({ status: "addressable", score: 4 });
+    }
+    expect(assessAddressability(
+      deznzJaggaerEvent(500_000, "GBP", "Supply of computers and equipment"),
       configuredRules,
     )).toMatchObject({ status: "addressable", score: 2 });
   });

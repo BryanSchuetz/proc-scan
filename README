@@ -32,7 +32,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 |---|---|---|---|---|
 | FCDO Jaggaer | No | Not implemented | Login + two-factor | FCDO and framework-buyer technical-assistance opportunities |
 | DEFRA Atamis | Yes | Enabled; live scan completed | Public CSV | Active DEFRA-family catalogue opportunities with a £250,000 floor for known GBP values |
-| DEZNZ Jaggaer | No | Not implemented | Login | DEZNZ technical-assistance opportunities |
+| DEZNZ Jaggaer | Yes | Implemented locally; ready to deploy enabled | Public HTML | Current DEZNZ service opportunities with a £250,000 floor for known GBP values |
 | TED | Yes | Enabled; live scans completed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
 | EU Funding & Tenders Portal | Yes | Enabled; live scans completed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
 | dgMarket | Yes | Paused after live scans | Public HTML | MCA and EU member-state government consultancy notices |
@@ -46,7 +46,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The remaining backlog currently includes:
 
-- **Login or unattended-authentication sources:** BEIS/Jaggaer, EBRD ECEPP, and GSA eBuy.
+- **Login or unattended-authentication sources:** EBRD ECEPP and GSA eBuy.
 - **Interactive two-factor sources:** FCDO eSourcing Portal and SIMAP.
 
 Backlog order is not committed. Each Source still needs API/feed discovery, access and automation review, field-coverage validation, approved Client scope, and a Source-specific Minimum Value Floor before implementation.
@@ -61,7 +61,7 @@ The adapter collects pre-solicitations, Sources Sought, Special Notices, solicit
 
 SAM.gov returns each description as a separate authenticated URL rather than inline search data. The adapter preserves a credential-free description URL in structured Source data but does not spend one API request per notice to download descriptions. Opportunity titles and the other search metadata are therefore available for the initial deterministic classification pass; bulk description ingestion or selective enrichment remains a follow-up decision after measuring the account's request quota.
 
-Addressability configuration version 12 applies the shared scoring contract with Source-specific Minimum Value Floors. For SAM.gov, DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, numeric product PSCs, and manufacturing NAICS sectors are hard exclusions. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
+Addressability configuration version 13 applies the shared scoring contract with Source-specific Minimum Value Floors. For SAM.gov, DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, numeric product PSCs, and manufacturing NAICS sectors are hard exclusions. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
 
 ## Grants.gov Source
 
@@ -117,7 +117,7 @@ The EIB adapter reads the first-party JSON endpoint behind the supplied [All pro
 
 EIB's JSON does not expose a description or estimated value. Each detail record does expose its Official Journal publication history, so the adapter resolves those publication numbers in one official TED Search API request. It uses the newest available TED description and exact deadline. For value, it prefers the authoritative procedure estimate; when that is absent, it sums published lot estimates only when they all use one currency. The stable EIB record ID identifies the Bidding Event, the displayed EIB procurement reference identifies the Source Opportunity, and the canonical URL remains the public EIB detail page.
 
-EIB is always the Client and European Investment Bank is the procuring entity. Addressability configuration version 12 keeps the €500,000 Minimum Value Floor separate from shared DAI-Fit/Miss-Fit scoring: a known positive EUR value below €500,000 is Excluded, while missing, zero, and non-EUR values remain eligible for normal fit scoring. Migration `0009_eib_source.sql` registers the adapter disabled; migration `0010_enable_eib_source.sql` enables it after the owner confirmed permission for programmatic access to EIB content on August 31, 2026.
+EIB is always the Client and European Investment Bank is the procuring entity. Addressability configuration version 13 keeps the €500,000 Minimum Value Floor separate from shared DAI-Fit/Miss-Fit scoring: a known positive EUR value below €500,000 is Excluded, while missing, zero, and non-EUR values remain eligible for normal fit scoring. Migration `0009_eib_source.sql` registers the adapter disabled; migration `0010_enable_eib_source.sql` enables it after the owner confirmed permission for programmatic access to EIB content on August 31, 2026.
 
 ## DEFRA Atamis Source
 
@@ -125,9 +125,19 @@ The DEFRA Atamis adapter makes one direct HTTP request per scan to the public ca
 
 The adapter retains non-closed listings with a known response-deadline date that has not passed in the UK, avoiding stale catalogue rows that still display time remaining but have no deadline. It normalizes the title, description, category, opening date, response deadline, publication date, and status. The catalogue covers the DEFRA group rather than only the core department, but it does not expose the individual contracting authority in the public CSV; all records are therefore mapped to the approved Client `DEFRA`, while the procuring entity remains missing rather than guessed.
 
-Addressability configuration version 12 keeps the £250,000 Minimum Value Floor separate from normal shared DAI-Fit/Miss-Fit scoring. A known positive GBP value below £250,000 is Excluded; zero, missing, and non-GBP values remain eligible for fit scoring. The public CSV and public detail page do not currently publish an estimated value, so version 1 records have unknown value and the floor cannot exclude them until an authoritative value-enrichment path is added. The catalogue's free-text category is retained for provenance but is not authoritative enough to hard-exclude all goods; obvious Miss-Fit language still affects shared scoring.
+Addressability configuration version 13 keeps the £250,000 Minimum Value Floor separate from normal shared DAI-Fit/Miss-Fit scoring. A known positive GBP value below £250,000 is Excluded; zero, missing, and non-GBP values remain eligible for fit scoring. The public CSV and public detail page do not currently publish an estimated value, so version 1 records have unknown value and the floor cannot exclude them until an authoritative value-enrichment path is added. The catalogue's free-text category is retained for provenance but is not authoritative enough to hard-exclude all goods; obvious Miss-Fit language still affects shared scoring.
 
 The first production scan completed on August 31, 2026. It discovered and retained 16 current listings: 15 Addressable and one Uncertain. All 16 have unknown value because the public catalogue does not publish an estimate.
+
+## DEZNZ Jaggaer Source
+
+The DEZNZ Jaggaer adapter reads the portal's public [Current Opportunities](https://beisgroup.ukp.app.jaggaer.com/esop/guest/go/public/opportunity/current) list and public detail pages; supplier login is not required for discovery. It establishes a new ephemeral public visitor session for each scan, never persists the visitor identifier, validates that the single displayed list is complete, and retrieves detail pages sequentially with a request delay. The numeric Jaggaer opportunity ID identifies the Bidding Event, the project code identifies the Source Opportunity, and the stable public list remains the canonical URL because detail URLs require ephemeral visitor state.
+
+The adapter retains only `Services` records. The portal is shared by DESNZ and DSIT: an exact Department for Energy Security and Net Zero buyer is accepted directly, while records attributed to `DESNZ & DSIT Group Commercial` require explicit DESNZ evidence in the project description. This excludes old BEIS and DSIT-only opportunities rather than mapping every listing to DEZNZ.
+
+The adapter normalizes explicitly labelled GBP estimates and sums multiple amounts only when each is identified as a separate lot. Unlabelled or ambiguous numbers remain unknown instead of inferring a currency. Addressability version 13 applies the £250,000 Minimum Value Floor as a hard gate for known positive GBP values before the unchanged shared DAI-Fit/Miss-Fit scoring.
+
+Migration `0012_deznz_jaggaer_source.sql` registers the adapter enabled following the owner's confirmation of permission for programmatic access on September 3, 2026. The configured supplier credentials are not read by this public-discovery adapter.
 
 ## Checks
 

@@ -40,17 +40,17 @@
 - site: Jaggaer Portal for DEZNZ
   clients:
     - DEZNZ
-  actual_link: "https://beisgroup.ukp.app.jaggaer.com/esop/ogc-host/public/beisgroup/web/error.jst?_ncp=1785141439137.292039-1"
+  actual_link: "https://beisgroup.ukp.app.jaggaer.com/esop/guest/go/public/opportunity/current"
   additional_links: null
   filters_narrative: "£250k minimum; limited to technical assistance (i.e., excludes goods)"
-  requires_login: true
-  username: secret:DEZNZ_JAGGAER_USERNAME
-  password: secret:DEZNZ_JAGGAER_PASSWORD
-  filters_automation_rules: null
-  result_set: login
-  authentication: null
-  source_module: null
-  access_method: null
+  requires_login: false
+  username: secret:JAGGER_DEZNZ_USER
+  password: secret:JAGGER_DZENZ_PW
+  filters_automation_rules: "Read the complete public Current Opportunities list; retain Work Category Services only; accept the exact Department for Energy Security and Net Zero buyer, or require explicit DESNZ text in the project description when the shared DESNZ & DSIT Group Commercial buyer is used; apply the £250k floor only to known positive GBP values"
+  result_set: public
+  authentication: "Public discovery requires no login; supplier actions still use the configured account. Permission for programmatic access was confirmed by the owner on September 3, 2026."
+  source_module: deznz-jaggaer
+  access_method: html
 
 - site: TED
   clients:

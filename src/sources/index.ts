@@ -1,6 +1,10 @@
 import type { SourceAdapter } from "./adapter";
 import { SourceScanError } from "./adapter";
 import { atamisDefraSourceDefinition, createAtamisDefraAdapter } from "./atamis-defra";
+import {
+  createDeznzJaggaerAdapter,
+  deznzJaggaerSourceDefinition,
+} from "./deznz-jaggaer";
 import { createDgMarketAdapter, dgMarketSourceDefinition } from "./dg-market";
 import type { DgMarketConfig } from "./dg-market";
 import { createEibAdapter, eibSourceDefinition } from "./eib";
@@ -37,6 +41,8 @@ export function createRegisteredSourceAdapter(
   switch (sourceId) {
     case atamisDefraSourceDefinition.id:
       return createAtamisDefraAdapter();
+    case deznzJaggaerSourceDefinition.id:
+      return createDeznzJaggaerAdapter();
     case dgMarketSourceDefinition.id:
       return createDgMarketAdapter({ config: configurations.dgMarket });
     case eibSourceDefinition.id:
