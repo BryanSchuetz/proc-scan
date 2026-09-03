@@ -32,7 +32,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 |---|---|---|---|---|
 | FCDO Jaggaer | No | Not implemented | Login + two-factor | FCDO and framework-buyer technical-assistance opportunities |
 | DEFRA Atamis | Yes | Enabled; live scan completed | Public CSV | Active DEFRA-family catalogue opportunities with a £250,000 floor for known GBP values |
-| DEZNZ Jaggaer | Yes | Implemented locally; ready to deploy enabled | Public HTML | Current DEZNZ service opportunities with a £250,000 floor for known GBP values |
+| DEZNZ Jaggaer | Yes | Enabled; first live scan pending | Public HTML | Current DEZNZ service opportunities with a £250,000 floor for known GBP values |
 | TED | Yes | Enabled; live scans completed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
 | EU Funding & Tenders Portal | Yes | Enabled; live scans completed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
 | dgMarket | Yes | Paused after live scans | Public HTML | MCA and EU member-state government consultancy notices |
@@ -137,7 +137,7 @@ The adapter retains only `Services` records. The portal is shared by DESNZ and D
 
 The adapter normalizes explicitly labelled GBP estimates and sums multiple amounts only when each is identified as a separate lot. Unlabelled or ambiguous numbers remain unknown instead of inferring a currency. Addressability version 13 applies the £250,000 Minimum Value Floor as a hard gate for known positive GBP values before the unchanged shared DAI-Fit/Miss-Fit scoring.
 
-Migration `0012_deznz_jaggaer_source.sql` registers the adapter enabled following the owner's confirmation of permission for programmatic access on September 3, 2026. The configured supplier credentials are not read by this public-discovery adapter.
+Migration `0012_deznz_jaggaer_source.sql` deployed and enabled the adapter following the owner's confirmation of permission for programmatic access on September 3, 2026. The configured supplier credentials are not read by this public-discovery adapter. Its first production scan is pending.
 
 ## Checks
 
