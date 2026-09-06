@@ -6,5 +6,12 @@ POLICY_AUD=your-access-application-audience
 # Source credentials (add only when the matching adapter is enabled).
 SAM_API_KEY=
 
-# Digest delivery remains deferred.
+# Campaign Monitor transactional digest delivery. Leave all three required
+# values empty to disable delivery locally. CAMP_MONTR_CLIENT_ID is only
+# needed with an account-level API key.
+CAMP_MONTR_KEY=
+CAMP_MONTR_CLIENT_ID=
+DIGEST_FROM=
+DIGEST_REPLY_TO=
 DIGEST_RECIPIENT=
+REGISTRY_URL=

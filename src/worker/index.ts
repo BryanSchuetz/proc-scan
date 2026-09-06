@@ -15,6 +15,12 @@ export interface AppEnv {
   TEAM_DOMAIN?: string;
   POLICY_AUD?: string;
   SAM_API_KEY?: string;
+  CAMP_MONTR_KEY?: string;
+  CAMP_MONTR_CLIENT_ID?: string;
+  DIGEST_FROM?: string;
+  DIGEST_REPLY_TO?: string;
+  DIGEST_RECIPIENT?: string;
+  REGISTRY_URL?: string;
 }
 
 export { ScanWorkflow };

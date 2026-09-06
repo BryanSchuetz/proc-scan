@@ -560,7 +560,7 @@ export async function updateRetainedBiddingEvent(
   const labels = event.technicalAreas.length > 0
     ? event.technicalAreas.map((area) => area.name).join(" | ")
     : "Unclassified";
-  const columns = [
+  const allColumns = [
     "source_id", "scan_run_id", "event_identity", "content_fingerprint",
     "source_event_id", "source_opportunity_id", "source_url", "source_event_type", "event_type",
     "opportunity_name", "description", "client_name", "funder_names_json", "procuring_entity_name",
@@ -570,9 +570,13 @@ export async function updateRetainedBiddingEvent(
     "addressability_score", "addressability_config_version", "addressability_evidence_json",
     "technical_classification_version", "technical_area_labels",
   ];
+  const immutableColumns = new Set(["scan_run_id", "discovered_at"]);
+  const columns = allColumns.filter((column) => !immutableColumns.has(column));
+  const allValues = retainedEventValues(event, labels).slice(1);
+  const values = allValues.filter((_, index) => !immutableColumns.has(allColumns[index]));
   const update = db.prepare(`UPDATE bidding_events SET
     ${columns.map((column) => `${column} = ?`).join(",\n    ")}
-    WHERE id = ?`).bind(...retainedEventValues(event, labels).slice(1), existingEventId);
+    WHERE id = ?`).bind(...values, existingEventId);
   const assignments = technicalAreaStatements(db, event, existingEventId);
   await db.batch([
     update,

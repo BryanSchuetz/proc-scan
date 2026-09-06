@@ -51,6 +51,23 @@ The complete desired Source scope, Client filters, value thresholds, access note
 
 Backlog order is not committed. Each Source still needs API/feed discovery, access and automation review, field-coverage validation, approved Client scope, and a Source-specific Minimum Value Floor before implementation.
 
+## Email Digest
+
+Each configured 6:00 AM and 6:00 PM New York scan prepares one digest after all Source runs settle. The digest contains only newly inserted Addressable events (shown as Marked in the registry), grouped by Client. Bidding Event Type appears on each compact card, with green, yellow, and red left borders distinguishing Tenders, Modifications, and Cancellations. Uncertain events and in-place enrichment of older events are omitted. A partial scan still sends valid events from successful Sources and identifies failed Sources; an empty scan records `skipped_empty` and sends no email. Events from a failed delivery are carried into the next digest until Campaign Monitor accepts them.
+
+Delivery uses Campaign Monitor's Classic Transactional Email API. The Worker supplies responsive HTML and plain-text content, disables open and click tracking, and stores Campaign Monitor's message ID in D1. Digest rows and their event snapshots make preparation idempotent; the external API call runs in its own durable Workflow step so later database retries do not resend an accepted response.
+
+Configure production delivery with these Worker secrets or variables:
+
+- `CAMP_MONTR_KEY` (required secret)
+- `DIGEST_FROM` (required authenticated DAI sender, including an optional display name)
+- `DIGEST_RECIPIENT` (required distribution-list address)
+- `CAMP_MONTR_CLIENT_ID` (required only for an account-level API key)
+- `DIGEST_REPLY_TO` (optional)
+- `REGISTRY_URL` (optional link shown in the digest)
+
+Leaving all three required values empty disables delivery. Supplying only some of them is treated as a configuration error rather than silently dropping a digest.
+
 ## SAM.gov Source
 
 The first Source adapter uses the official SAM.gov Get Opportunities Public API v2. Migration `0002_sam_gov_source.sql` enables it, and the Workflow reads its API key from the `SAM_API_KEY` secret. For local Workflow runs, copy `.dev.vars.example` to `.dev.vars` and supply the key there; never commit that file.

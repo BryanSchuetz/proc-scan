@@ -22,7 +22,19 @@ import {
   listEnabledSources,
   startSourceRun,
 } from "../db/scan-runs";
+import {
+  prepareDigest,
+  recordDigestAttempt,
+  recordDigestFailed,
+  recordDigestSent,
+} from "../db/digests";
 import { syncTechnicalAreas } from "../db/taxonomy";
+import {
+  CampaignMonitorError,
+  sendCampaignMonitorDigest,
+  type CampaignMonitorConfig,
+} from "../digest/campaign-monitor";
+import { renderDigest } from "../digest/render";
 import { runSourceAdapter } from "../pipeline/run-source";
 import { SourceScanError } from "../sources/adapter";
 import { createRegisteredSourceAdapter } from "../sources";
@@ -97,6 +109,23 @@ function safeSourceFailure(error: unknown): SourceFailure {
   return {
     code: "unexpected_source_failure",
     message: "The Source scan failed unexpectedly.",
+  };
+}
+
+function campaignMonitorConfig(env: AppEnv): CampaignMonitorConfig | undefined {
+  const values = [env.CAMP_MONTR_KEY, env.DIGEST_FROM, env.DIGEST_RECIPIENT];
+  if (values.every((value) => !value?.trim())) return undefined;
+  if (values.some((value) => !value?.trim())) {
+    throw new NonRetryableError(
+      "Digest delivery requires CAMP_MONTR_KEY, DIGEST_FROM, and DIGEST_RECIPIENT.",
+    );
+  }
+  return {
+    apiKey: env.CAMP_MONTR_KEY!,
+    clientId: env.CAMP_MONTR_CLIENT_ID?.trim() || undefined,
+    from: env.DIGEST_FROM!,
+    replyTo: env.DIGEST_REPLY_TO?.trim() || undefined,
+    recipient: env.DIGEST_RECIPIENT!,
   };
 }
 
@@ -183,10 +212,72 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
     const completion = await step.do("complete scan run", async () =>
       completeScanRun(this.env.DB, id),
     );
+    const deliveryConfig = campaignMonitorConfig(this.env);
+    if (!deliveryConfig) {
+      return {
+        ...completion,
+        scanRunId: id,
+        sourceCount: enabledSources.length,
+        digestStatus: "not_configured",
+      };
+    }
+
+    const digest = await step.do("prepare digest", async () => prepareDigest(this.env.DB, id));
+    if (digest.status === "skipped_empty" || digest.status === "sent") {
+      return {
+        ...completion,
+        scanRunId: id,
+        sourceCount: enabledSources.length,
+        digestStatus: digest.status,
+      };
+    }
+
+    await step.do("record digest attempt", async () =>
+      recordDigestAttempt(this.env.DB, digest.id),
+    );
+    let providerMessageId: string;
+    try {
+      providerMessageId = await step.do("send digest", {
+        retries: { limit: 3, delay: "10 seconds", backoff: "exponential" },
+        timeout: "1 minute",
+      }, async () => {
+        try {
+          return await sendCampaignMonitorDigest(
+            deliveryConfig,
+            renderDigest(digest, this.env.REGISTRY_URL),
+          );
+        } catch (error) {
+          if (error instanceof CampaignMonitorError && !error.retryable) {
+            throw new NonRetryableError(error.code);
+          }
+          throw error;
+        }
+      });
+    } catch (error) {
+      const errorCode = error instanceof CampaignMonitorError
+        ? error.code
+        : error instanceof Error
+          ? error.message
+          : "digest_delivery_failed";
+      await step.do("record digest failure", async () =>
+        recordDigestFailed(this.env.DB, digest.id, errorCode),
+      );
+      return {
+        ...completion,
+        scanRunId: id,
+        sourceCount: enabledSources.length,
+        digestStatus: "failed",
+      };
+    }
+
+    await step.do("record digest delivery", async () =>
+      recordDigestSent(this.env.DB, digest.id, providerMessageId),
+    );
     return {
       ...completion,
       scanRunId: id,
       sourceCount: enabledSources.length,
+      digestStatus: "sent",
     };
   }
 }

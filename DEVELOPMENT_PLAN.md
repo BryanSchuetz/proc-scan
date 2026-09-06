@@ -10,7 +10,7 @@ The local foundation includes the React/Worker application, D1 migrations and FT
 
 Local verification covers migrations, seed idempotency, search/filter/sort behavior, both retained statuses, Technical Area descendant filtering, read-only API enforcement, Access failure modes, EST/EDT scheduling, all nine Source response mappings and pagination, approved-organization, external-aid, and EU Client scoping, deadline/value Modification handling, in-place enrichment, and repeated-scan idempotency. Bounded live requests confirmed the existing API response shapes, dgMarket's HTML criteria, FMO's server-rendered tender fields, EIB's JSON listing/detail plus linked TED enrichment fields, Atamis's public catalogue and full CSV download, and Jaggaer's public visitor/list/detail flow. Addressability configuration version 13 applies Source-specific Minimum Value Floors as hard exclusions before shared DAI-Fit/Miss-Fit scoring, adding DEZNZ Jaggaer's £250,000 floor to the existing rules. Zero, null, and missing values are treated as unknown and retained for fit scoring. Every non-excluded event starts with an inclusive score of 2, so only unopposed Miss-Fit evidence produces an Uncertain result. Version 6 removed standalone `supply` from Miss-Fit evidence while retaining specific terms such as `supplies` and `furniture supply`.
 
-The Worker, static assets, Workflow, production D1 database, migrations through DEZNZ Jaggaer, Addressability version 13, SAM.gov secret, and Worker-level Cloudflare Access application are deployed. Access uses the same 12-hour policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN identity providers. The Worker independently validates the Access issuer and application audience. Migration `0010` and Addressability version 11 enabled EIB following confirmation of permission for programmatic access; migration `0007` continues to disable dgMarket. Migration `0011` and Addressability version 12 enabled DEFRA Atamis. Migration `0012` and Addressability version 13 enabled DEZNZ Jaggaer after permission for programmatic access was confirmed on September 3, 2026; its first production scan is pending. The registry omits records and facet values belonging to disabled Sources without deleting the stored records or cursor. The manually triggered `2026-09-02:AM` production cycle completed the first live scans for DEFRA Atamis and EIB: Atamis discovered and retained 16 listings as 15 Addressable and one Uncertain, all with unknown value; EIB discovered and retained four Addressable listings with known values. The other five enabled adapters also ran, and the cycle was Partial only because SAM.gov again exhausted its API quota. The preceding `2026-09-01:PM` cycle discovered and retained all four FMO listings with no exclusions or duplicates; all four are Addressable, with known EUR maximum budgets between €2 million and €6.3 million. The `2026-09-01:AM` cycle completed dgMarket's initial 90-day scan before it was paused: 1,768 candidates were discovered, 214 were excluded, and 1,554 were retained as 1,090 Addressable and 464 Uncertain records. Five retained records belong to the MCA cohort and 1,549 to EU member-state government buyers. Automatic schedule execution is confirmed, and no email provider has been configured. SAM.gov description and pre-award value enrichment remain unresolved because descriptions consume additional keyed requests and the public search schema has no estimated solicitation value. DEFRA Atamis value and individual-buyer enrichment remain unresolved because its public catalogue exposes neither field.
+The Worker, static assets, Workflow, production D1 database, migrations through DEZNZ Jaggaer, Addressability version 13, SAM.gov secret, and Worker-level Cloudflare Access application are deployed. Access uses the same 12-hour policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN identity providers. The Worker independently validates the Access issuer and application audience. Migration `0010` and Addressability version 11 enabled EIB following confirmation of permission for programmatic access; migration `0007` continues to disable dgMarket. Migration `0011` and Addressability version 12 enabled DEFRA Atamis. Migration `0012` and Addressability version 13 enabled DEZNZ Jaggaer after permission for programmatic access was confirmed on September 3, 2026; its first production scan is pending. The registry omits records and facet values belonging to disabled Sources without deleting the stored records or cursor. The manually triggered `2026-09-02:AM` production cycle completed the first live scans for DEFRA Atamis and EIB: Atamis discovered and retained 16 listings as 15 Addressable and one Uncertain, all with unknown value; EIB discovered and retained four Addressable listings with known values. The other five enabled adapters also ran, and the cycle was Partial only because SAM.gov again exhausted its API quota. The preceding `2026-09-01:PM` cycle discovered and retained all four FMO listings with no exclusions or duplicates; all four are Addressable, with known EUR maximum budgets between €2 million and €6.3 million. The `2026-09-01:AM` cycle completed dgMarket's initial 90-day scan before it was paused: 1,768 candidates were discovered, 214 were excluded, and 1,554 were retained as 1,090 Addressable and 464 Uncertain records. Five retained records belong to the MCA cohort and 1,549 to EU member-state government buyers. Automatic schedule execution is confirmed. Campaign Monitor has been selected for transactional digest delivery, and the application now prepares an immutable per-scan event snapshot, renders HTML and plain text, retries transient delivery failures, stores provider message IDs, skips empty digests, and carries failed deliveries into the next cycle. The Campaign Monitor API credentials, authenticated DAI sender, and temporary owner test recipient are configured as project secrets; migration `0013` and the digest-enabled Worker remain to be deployed. SAM.gov description and pre-award value enrichment remain unresolved because descriptions consume additional keyed requests and the public search schema has no estimated solicitation value. DEFRA Atamis value and individual-buyer enrichment remain unresolved because its public catalogue exposes neither field.
 
 ## Goal
 
@@ -20,7 +20,7 @@ Build a Cloudflare-hosted application that:
 2. Extracts and normalizes Bidding Events into a common shape based on the Open Contracting Data Standard (OCDS).
 3. Classifies technical areas using an organization-provided taxonomy.
 4. Classifies Bidding Events as Addressable, Uncertain, or Excluded; drops Excluded records and persists the other two outcomes.
-5. Emails a digest of newly discovered Addressable Bidding Events, grouped by Client and then Bidding Event Type.
+5. Emails a digest of newly discovered Addressable Bidding Events, grouped by Client.
 6. Provides an authenticated, searchable, sortable, and filterable web table of retained Bidding Events.
 
 ## Initial Non-Goals
@@ -116,7 +116,7 @@ Build a Cloudflare-hosted application that:
 
 ### Presentation
 
-- The email digest is grouped first by Client and then by Bidding Event Type: Tender, Modification, or Cancellation.
+- The email digest is grouped by Client. Compact cards identify the Bidding Event Type and use distinct left-border colors for Tender, Modification, and Cancellation.
 - Only Addressable Bidding Events appear in the email digest; Uncertain Bidding Events are omitted.
 - Each digest entry includes at least the Opportunity name, place of performance, value, due date, and classified technical areas.
 - The primary web UI at `/` displays only Addressable Bidding Events under the label **Marked**. A separate `/unmarked` view displays Uncertain Bidding Events under the label **Unmarked** using the same read-only table. Excluded Bidding Events are unavailable, and there is no status dropdown.
@@ -252,7 +252,7 @@ Start with these tables; keep migrations in source control.
 - **`bidding_events`**: release identity, shared Source Opportunity Identifier, Bidding Event Type, source/original type, core normalized fields, OCDS release JSON, structured source JSON, addressability status/score, publication/discovery times, and inheritance provenance.
 - **`technical_areas`**: taxonomy version, stable label ID, name, and parent ID loaded from YAML.
 - **`bidding_event_technical_areas`**: event-to-label assignments and deterministic match evidence.
-- **`digests`**: scan-run ID, content fingerprint, provider, provider message ID, status, attempts, and sent time.
+- **`digests`** and **`digest_items`**: scan-run delivery state, content fingerprint, Campaign Monitor message ID, attempts, sent time, and the immutable event set included in each digest.
 - **FTS5 index**: searchable text keyed to `bidding_events`, refreshed in the same transaction as each event.
 
 Enforce uniqueness on `(source_id, event_identity, content_fingerprint)` and on the scan cycle key. Store all timestamps in UTC; convert only for scheduling and display. Use server-side pagination and allowlisted sort columns rather than loading the complete registry into the browser.
@@ -311,7 +311,7 @@ Prefer, in order: official public API, documented feed/download, direct HTTP ext
 - **Present**: Worker-level Access application, allow policy, team domain, and application audience.
 - **Before enabling each additional Source**: approved Client Minimum Value Floors and any Source-specific structured hard exclusions.
 - **Before SAM.gov Minimum Value Floors can exclude live pre-award notices**: an authoritative estimated-value extraction strategy; the public search response does not provide this field.
-- **Before live digest delivery**: destination distribution-list address, sender identity, and selected email provider credentials/configuration.
+- **Before live digest delivery**: destination distribution-list address, authenticated DAI sender identity, and Campaign Monitor API credentials/configuration.
 - **Before Phase 2 login-based adapters**: credentials for login-based Sources, supplied through project secrets.
 - **Before Phase 3**: credentials and an approved manual session-handoff procedure for 2FA Sources.
 
@@ -364,14 +364,14 @@ The phase numbers below continue to describe authentication complexity, not curr
 - Map SAM.gov notices into Bidding Events and OCDS-shaped releases, linking exact organization-and-solicitation identifiers where available.
 - Run Technical Area and Addressability Assessment, persist retained events, index search text, and display them in the table.
 - Decide whether full descriptions should come from the daily Active Opportunities extract or selective authenticated description requests.
-- Render HTML and plain-text digest previews, including Source coverage, while the sending provider remains deferred.
+- Render HTML and plain-text digest previews, including Source coverage, through the selected Campaign Monitor delivery path.
 - Exercise scheduled and manual non-production runs.
 
 **Gate:** a repeated live scan is idempotent; sampled fields match SAM.gov; filters/search/sorting work server-side; Excluded events leave no registry rows; a digest preview contains only newly retained Addressable events.
 
 ### Milestone 2 — Public Sources and production digest
 
-- Select and configure the email provider and sender identity; make delivery idempotent and record provider results.
+- Deploy and validate the configured Campaign Monitor provider and sender identity; keep delivery idempotent and record provider results.
 - Validate Grants.gov live-scan volume and add selective `fetchOpportunity` synopsis enrichment if it is operationally justified.
 - Implement TED search, pagination, XML/eForms parsing, notice-type mapping, and OCDS identifiers.
 - Validate generated OCDS releases with the OCDS Data Review Tool.
@@ -420,7 +420,7 @@ These do not need more interview time now, but they must be resolved before the 
 
 - Client Minimum Value Floors and justified structured hard exclusions for each new Source — during that Source's onboarding.
 - Exact machine-readable taxonomy weights, threshold, and tie-break rules — during Milestone 0.
-- Email provider, sender domain/address, failure alert when no digest is sent, and delivery tracking details — before Milestone 2.
+- Sender address, failure alert when no digest is sent, and Campaign Monitor delivery configuration — before Milestone 2.
 - UI record-age cutoff and whether visitors can expand to all history — revisit after observing volume and user behavior.
 - Export, event detail view, and saved filters — omitted until requested.
 - SAM.gov full-description strategy—daily Active Opportunities extract versus selective API enrichment—before Milestone 1 acceptance.

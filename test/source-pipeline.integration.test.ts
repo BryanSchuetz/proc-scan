@@ -371,12 +371,23 @@ describe("Source processing integration", () => {
       excludedCount: 0,
       duplicateCount: 0,
     });
-    const enrichedRows = await env.DB.prepare(`SELECT event_type, description, value_amount
+    const enrichedRows = await env.DB.prepare(`SELECT event_type, description, value_amount,
+        scan_run_id, discovered_at
       FROM bidding_events WHERE source_id = 'grants-gov'`)
-      .all<{ event_type: string; description: string | null; value_amount: number | null }>();
+      .all<{
+        event_type: string;
+        description: string | null;
+        value_amount: number | null;
+        scan_run_id: string;
+        discovered_at: string;
+      }>();
     expect(enrichedRows.results).toHaveLength(3);
     expect(enrichedRows.results.every(({ event_type }) => event_type === "tender")).toBe(true);
     expect(enrichedRows.results.every(({ description }) => description !== null)).toBe(true);
+    expect(enrichedRows.results.every(({ scan_run_id }) =>
+      scan_run_id === "scan_grants_fixture_first")).toBe(true);
+    expect(enrichedRows.results.every(({ discovered_at }) =>
+      discovered_at === "2026-08-27T22:00:00.000Z")).toBe(true);
 
     const technicalAreas = await env.DB.prepare(`SELECT ta.id
       FROM bidding_event_technical_areas assignment
