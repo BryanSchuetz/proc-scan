@@ -49,6 +49,30 @@ describe("D1 registry integration", () => {
     expect(body.facets.technicalAreas.map((area) => area.id)).toContain("digital");
   });
 
+  it("hides expired events without deleting their history", async () => {
+    await env.DB.prepare(
+      "UPDATE bidding_events SET due_date = '2000-01-01T00:00:00.000Z' " +
+      "WHERE id = 'evt_fixture_health_tender'",
+    ).run();
+    try {
+      const response = await SELF.fetch("http://localhost/api/opportunities");
+      expect(response.status).toBe(200);
+      const body = await response.json<EventsResponse>();
+
+      expect(body.pagination.total).toBe(5);
+      expect(body.items.map((item) => item.id)).not.toContain("evt_fixture_health_tender");
+      const stored = await env.DB.prepare(
+        "SELECT COUNT(*) AS total FROM bidding_events WHERE id = 'evt_fixture_health_tender'",
+      ).first<{ total: number }>();
+      expect(stored?.total).toBe(1);
+    } finally {
+      await env.DB.prepare(
+        "UPDATE bidding_events SET due_date = '2026-09-22T16:00:00.000Z' " +
+        "WHERE id = 'evt_fixture_health_tender'",
+      ).run();
+    }
+  });
+
   it("hides disabled Source records and their facet values without deleting them", async () => {
     await env.DB.prepare("UPDATE sources SET enabled = 0 WHERE id = 'ted'").run();
     try {

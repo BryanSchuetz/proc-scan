@@ -214,7 +214,9 @@ function ftsQuery(search: string): string {
 }
 
 function buildWhere(query: EventsQuery): { sql: string; values: BindValue[] } {
-  const clauses = ["1 = 1"];
+  const clauses = [
+    "(e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
+  ];
   const values: BindValue[] = [];
   const add = (clause: string, value: BindValue) => {
     clauses.push(clause);
@@ -267,20 +269,23 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
       FROM bidding_events e
       JOIN sources s ON s.id = e.source_id
       WHERE s.enabled = 1 AND e.client_name IS NOT NULL
+        AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
       ORDER BY e.client_name`)
       .all<{ value: string }>(),
     db.prepare(`SELECT DISTINCT s.id, s.display_name AS name
       FROM sources s
       JOIN bidding_events e ON e.source_id = s.id
       WHERE s.enabled = 1
+        AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
       ORDER BY s.display_name`)
       .all<{ id: string; name: string }>(),
     db.prepare(`WITH RECURSIVE included(id) AS (
         SELECT DISTINCT assignment.technical_area_id
         FROM bidding_event_technical_areas assignment
-        JOIN bidding_events event ON event.id = assignment.bidding_event_id
-        JOIN sources source ON source.id = event.source_id
+        JOIN bidding_events e ON e.id = assignment.bidding_event_id
+        JOIN sources source ON source.id = e.source_id
         WHERE source.enabled = 1
+          AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
         UNION
         SELECT area.parent_id
         FROM technical_areas area
@@ -297,11 +302,13 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
     ) AS fixture_data`)
       .first<{ fixture_data: number }>(),
     db.prepare(`SELECT EXISTS(
-      SELECT 1 FROM bidding_events event
-      JOIN sources source ON source.id = event.source_id
-      WHERE source.enabled = 1 AND NOT EXISTS (
+      SELECT 1 FROM bidding_events e
+      JOIN sources source ON source.id = e.source_id
+      WHERE source.enabled = 1
+        AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+        AND NOT EXISTS (
         SELECT 1 FROM bidding_event_technical_areas assignment
-        WHERE assignment.bidding_event_id = event.id
+        WHERE assignment.bidding_event_id = e.id
       )
     ) AS has_unclassified`).first<{ has_unclassified: number }>(),
   ]);

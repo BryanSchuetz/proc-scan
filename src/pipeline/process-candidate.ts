@@ -17,6 +17,7 @@ import type {
 
 export interface CandidateProcessingContext {
   scanRunId: string;
+  now: Date;
   taxonomy: TaxonomyFile;
   technicalClassification: TechnicalClassificationConfig;
   addressability: AddressabilityConfig;
@@ -74,7 +75,16 @@ export async function processCandidate(
     ],
     context.taxonomy,
   );
-  const assessment = assessAddressability(event, context.addressability);
+  const assessment: AddressabilityAssessment = event.dueDate &&
+      new Date(event.dueDate).getTime() <= context.now.getTime()
+    ? {
+        status: "excluded",
+        score: 0,
+        matchedRules: [],
+        exclusionRuleId: "past-due-date",
+        configVersion: context.addressability.schema_version,
+      }
+    : assessAddressability(event, context.addressability);
   const eventIdentity = await buildEventIdentity(event);
   const contentFingerprint = await buildMaterialFingerprint(event);
 

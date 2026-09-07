@@ -111,6 +111,7 @@ export async function runSourceAdapter(
 
     const processingContext = {
       scanRunId: context.scanRunId,
+      now: context.now,
       taxonomy: context.taxonomy,
       technicalClassification: context.technicalClassification,
       addressability: context.addressability,

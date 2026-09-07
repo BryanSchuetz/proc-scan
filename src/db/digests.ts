@@ -117,6 +117,9 @@ export async function prepareDigest(db: D1Database, scanRunId: string): Promise<
   const rows = await db.prepare(`SELECT DISTINCT e.id, e.content_fingerprint
     FROM bidding_events e
     WHERE e.addressability_status = 'addressable'
+      AND (e.due_date IS NULL OR e.due_date > (
+        SELECT scheduled_for FROM scan_runs WHERE id = ?
+      ))
       AND (
         e.scan_run_id = ?
         OR EXISTS (
@@ -131,7 +134,7 @@ export async function prepareDigest(db: D1Database, scanRunId: string): Promise<
         WHERE sent_item.bidding_event_id = e.id AND sent_digest.status = 'sent'
       )
     ORDER BY e.id`)
-    .bind(scanRunId)
+    .bind(scanRunId, scanRunId)
     .all<{ id: string; content_fingerprint: string }>();
   const fingerprint = await sha256Hex(
     rows.results.map((row) => `${row.id}:${row.content_fingerprint}`).join("\n"),

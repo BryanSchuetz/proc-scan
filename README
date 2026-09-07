@@ -24,7 +24,7 @@ The local seed contains clearly marked fixture data. Cloudflare Access is bypass
 
 ## Addressability Assessment
 
-Every Source and Client uses the shared scoring contract documented in [CONTEXT.md](CONTEXT.md#addressability-scoring-contract). Minimum value floors are hard gates rather than score inputs: a known positive value below the applicable floor is Excluded, while zero, null, and missing values are treated as unknown and retained for fit scoring. Every retained event starts from an inclusive baseline of 2; DAI-Fit language adds 2 points, Miss-Fit language subtracts 2 points, and the Addressable threshold is 2. The default is therefore Marked unless an event has unopposed Miss-Fit evidence. Structured hard exclusions remain Source-specific.
+Every Source and Client uses the shared scoring contract documented in [CONTEXT.md](CONTEXT.md#addressability-scoring-contract). A known due date must be after the scan time; expired events are Excluded, while events without a due date remain eligible. Minimum value floors are hard gates rather than score inputs: a known positive value below the applicable floor is Excluded, while zero, null, and missing values are treated as unknown and retained for fit scoring. Every retained event starts from an inclusive baseline of 2; DAI-Fit language adds 2 points, Miss-Fit language subtracts 2 points, and the Addressable threshold is 2. The default is therefore Marked unless an event has unopposed Miss-Fit evidence. Structured hard exclusions remain Source-specific.
 
 ## Source Inventory
 

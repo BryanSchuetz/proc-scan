@@ -36,6 +36,7 @@ scoring_rules:
 
 const context = {
   scanRunId: "scan-test",
+  now: new Date("2026-08-26T10:00:00.000Z"),
   taxonomy,
   technicalClassification,
   addressability: activeAddressability,
@@ -81,6 +82,27 @@ describe("candidate processing pipeline", () => {
     if (result.status !== "excluded") return;
     expect(result.assessment.exclusionRuleId).toBe("blocked-client");
     expect(result).not.toHaveProperty("event");
+  });
+
+  it("excludes known deadlines that are not after the scan time", async () => {
+    const result = await processCandidate(
+      biddingEvent({ dueDate: context.now.toISOString() }),
+      context,
+    );
+
+    expect(result).toMatchObject({
+      status: "excluded",
+      assessment: { exclusionRuleId: "past-due-date" },
+    });
+  });
+
+  it("retains candidates with future or unknown deadlines", async () => {
+    await expect(processCandidate(
+      biddingEvent({ dueDate: "2026-08-26T10:00:00.001Z" }),
+      context,
+    )).resolves.toMatchObject({ status: "retained" });
+    await expect(processCandidate(biddingEvent({ dueDate: undefined }), context))
+      .resolves.toMatchObject({ status: "retained" });
   });
 
   it("produces stable identity, fingerprint, and row ID for a repeated candidate", async () => {
