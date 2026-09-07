@@ -32,6 +32,7 @@ const SEARCH_FIELDS = [
   "deadline-receipt-tender-time-lot",
   "deadline-receipt-request-date-lot",
   "deadline-receipt-request-time-lot",
+  "future-notice",
   "estimated-value-proc",
   "estimated-value-cur-proc",
   "estimated-value-lot",
@@ -93,6 +94,7 @@ const noticeSchema = z.object({
   "deadline-receipt-tender-time-lot": optionalTextArray,
   "deadline-receipt-request-date-lot": optionalTextArray,
   "deadline-receipt-request-time-lot": optionalTextArray,
+  "future-notice": optionalText,
   "estimated-value-proc": optionalAmount,
   "estimated-value-cur-proc": optionalText,
   "estimated-value-lot": z.array(amountSchema).nullish().transform((values) => values ?? []),
@@ -314,7 +316,14 @@ function earliestDeadline(notice: TedNotice): { value?: string; basis?: string }
     });
   }
   candidates.sort((a, b) => a.value.localeCompare(b.value));
-  return candidates[0] ?? {};
+  if (candidates[0]) return candidates[0];
+
+  const estimatedPublicationDate = notice["future-notice"]
+    ? normalizedTedDate(notice["future-notice"])
+    : undefined;
+  return estimatedPublicationDate
+    ? { value: estimatedPublicationDate, basis: "estimated-contract-notice-publication-date" }
+    : {};
 }
 
 function noticeVersionIdentifier(notice: TedNotice): string {
@@ -449,6 +458,7 @@ function candidateFromNotice(
       lotEstimatedValues: notice["estimated-value-lot"],
       lotEstimatedValueCurrencies: notice["estimated-value-cur-lot"],
       valueBasis: procedureValue === undefined ? undefined : "estimated-procedure-value",
+      futureNoticeDate: notice["future-notice"],
       deadlineBasis: deadline.basis,
       changeNoticeVersionIdentifier,
       changeDescription: preferredTexts(notice["change-description"]),

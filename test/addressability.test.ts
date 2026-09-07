@@ -483,6 +483,15 @@ describe("Addressability Assessment", () => {
     }
 
     const missFitTerms = [
+      "infrastructure",
+      "air conditioning",
+      "roof",
+      "bathroom",
+      "pipe",
+      "chiller",
+      "installation",
+      "renovation",
+      "kitchen",
       "goods",
       "supplies",
       "equipment",

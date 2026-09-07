@@ -1,4 +1,4 @@
-schema_version: 13
+schema_version: 14
 status: active
 threshold: 2
 hard_exclusions:
@@ -444,6 +444,15 @@ scoring_rules:
         - field: opportunityName
           operator: contains
           value:
+            - infrastructure
+            - air conditioning
+            - roof
+            - bathroom
+            - pipe
+            - chiller
+            - installation
+            - renovation
+            - kitchen
             - goods
             - supplies
             - equipment
@@ -500,6 +509,15 @@ scoring_rules:
         - field: description
           operator: contains
           value:
+            - infrastructure
+            - air conditioning
+            - roof
+            - bathroom
+            - pipe
+            - chiller
+            - installation
+            - renovation
+            - kitchen
             - goods
             - supplies
             - equipment

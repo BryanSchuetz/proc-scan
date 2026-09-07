@@ -209,6 +209,31 @@ describe("DEZNZ Jaggaer Source adapter", () => {
     expect(result.candidates.map(({ sourceEventId }) => sourceEventId)).toContain("60920");
   });
 
+  it("retains PSQs as well as ITTs", async () => {
+    const source = mockSource({
+      listResponse: htmlResponse(listFixture.replace(
+        "<td>Procurement Act – Open</td>",
+        "<td>PSQ</td>",
+      )),
+      detailOverrides: {
+        "60694": htmlResponse(detailFixture.replace(
+          '<div class="form_answer">Procurement Act – Open</div>',
+          '<div class="form_answer">PSQ</div>',
+        )),
+      },
+    });
+    const result = await createDeznzJaggaerAdapter({
+      fetch: source.fetcher,
+      requestDelayMs: 0,
+    }).scan(scanContext());
+
+    expect(result.candidates[0]).toMatchObject({
+      sourceEventId: "60694",
+      originalEventType: "PSQ",
+      sourceData: { procurementRoute: "PSQ" },
+    });
+  });
+
   it("requires a same-origin public visitor redirect with no persistent credentials", async () => {
     const missingRedirect = mockSource({ entryResponse: htmlResponse("<p>Login</p>") });
     await expect(createDeznzJaggaerAdapter({

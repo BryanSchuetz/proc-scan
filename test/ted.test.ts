@@ -65,6 +65,7 @@ describe("TED Source adapter", () => {
     expect(requests[0].fields).toEqual(expect.arrayContaining([
       "notice-title",
       "description-proc",
+      "future-notice",
       "estimated-value-proc",
       "estimated-value-cur-proc",
     ]));
@@ -87,6 +88,7 @@ describe("TED Source adapter", () => {
       opportunityName: "Climate resilience programme",
       description: "Advance notice of climate policy advisory services.",
       clientName: "European Commission, INTPA",
+      dueDate: "2026-09-30T00:00:00.000Z",
       value: { amount: 750_000, currency: "EUR" },
       placeOfPerformance: { description: "MMR", countryCode: "MMR" },
       sourceStatus: "active",
@@ -99,6 +101,8 @@ describe("TED Source adapter", () => {
         procedureEstimatedValue: 750_000,
         procedureEstimatedValueCurrency: "EUR",
         valueBasis: "estimated-procedure-value",
+        futureNoticeDate: "2026-09-30+06:30",
+        deadlineBasis: "estimated-contract-notice-publication-date",
         xmlUrl: "https://ted.europa.eu/en/notice/100001-2026/xml",
       },
     });
@@ -114,6 +118,7 @@ describe("TED Source adapter", () => {
       sourceData: {
         classificationCpv: ["72000000"],
         clientFilter: "DG IDEA",
+        futureNoticeDate: "2026-09-15Z",
         deadlineBasis: "tender-deadline",
       },
     });
