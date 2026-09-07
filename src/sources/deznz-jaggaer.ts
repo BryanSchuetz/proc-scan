@@ -457,16 +457,21 @@ function clientMappingBasis(detail: DetailRecord): string | undefined {
 }
 
 function assertListDetailConsistency(list: ListRecord, detail: DetailRecord): void {
-  if (
-    detail.projectTitle !== list.projectTitle ||
-    detail.workCategory !== list.workCategory ||
-    detail.procurementRoute !== list.procurementRoute ||
-    detail.listingDeadline !== list.listingDeadline ||
-    detail.buyerOrganisation !== list.buyerOrganisation
-  ) {
+  const mismatches = [
+    ["Project Title", list.projectTitle, detail.projectTitle],
+    ["Work Category", list.workCategory, detail.workCategory],
+    ["Procurement Route", list.procurementRoute, detail.procurementRoute],
+    ["Listing Deadline", list.listingDeadline, detail.listingDeadline],
+  ].filter(([, listValue, detailValue]) => listValue !== detailValue);
+  if (mismatches.length > 0) {
+    const diagnostics = mismatches
+      .map(([field, listValue, detailValue]) =>
+        `${field} (list=${JSON.stringify(listValue)}, detail=${JSON.stringify(detailValue)})`
+      )
+      .join("; ");
     throw new SourceScanError(
       "invalid_record",
-      `DEZNZ Jaggaer opportunity ${list.opportunityId} has inconsistent list and detail fields.`,
+      `DEZNZ Jaggaer opportunity ${list.opportunityId} has inconsistent fields: ${diagnostics}.`,
       true,
     );
   }

@@ -102,9 +102,19 @@ interface SourceFailure {
   message: string;
 }
 
+const RETRYABLE_SOURCE_FAILURE_PREFIX = "retryable_source_failure:";
+
 function safeSourceFailure(error: unknown): SourceFailure {
   if (error instanceof SourceScanError) {
     return { code: error.code, message: error.message };
+  }
+  if (error instanceof Error && error.message.startsWith(RETRYABLE_SOURCE_FAILURE_PREFIX)) {
+    try {
+      const failure = JSON.parse(error.message.slice(RETRYABLE_SOURCE_FAILURE_PREFIX.length));
+      if (typeof failure.code === "string" && typeof failure.message === "string") return failure;
+    } catch {
+      // Fall through to the generic failure without reflecting malformed error content.
+    }
   }
   return {
     code: "unexpected_source_failure",
@@ -191,8 +201,13 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
               }),
             };
           } catch (error) {
-            if (error instanceof SourceScanError && !error.retryable) {
-              return { ok: false as const, failure: safeSourceFailure(error) };
+            if (error instanceof SourceScanError) {
+              if (!error.retryable) {
+                return { ok: false as const, failure: safeSourceFailure(error) };
+              }
+              throw new Error(
+                `${RETRYABLE_SOURCE_FAILURE_PREFIX}${JSON.stringify(safeSourceFailure(error))}`,
+              );
             }
             throw error;
           }

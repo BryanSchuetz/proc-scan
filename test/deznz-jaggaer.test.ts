@@ -86,7 +86,7 @@ const details: Record<string, string> = {
     projectDescription: "A DSIT commercial vehicle for technology transfer services.",
     procurementRoute: "Dynamic Purchasing System (DPS)",
     listingDeadline: "31/03/2027 23:59",
-    buyerOrganisation: "DESNZ &amp; DSIT Group Commercial",
+    buyerOrganisation: "Department for Business, Energy &amp; Industrial Strategy",
     estimatedValue: "£10,000,000",
   }),
 };
@@ -194,6 +194,21 @@ describe("DEZNZ Jaggaer Source adapter", () => {
     expect(JSON.stringify(result)).not.toContain("55805");
   });
 
+  it("uses the detail buyer for Client scope when the listing buyer differs", async () => {
+    const source = mockSource({
+      listResponse: htmlResponse(listFixture.replace(
+        "<td>Department for Energy Security and Net Zero</td>",
+        "<td>DESNZ &amp; DSIT Group Commercial</td>",
+      )),
+    });
+    const result = await createDeznzJaggaerAdapter({
+      fetch: source.fetcher,
+      requestDelayMs: 0,
+    }).scan(scanContext());
+
+    expect(result.candidates.map(({ sourceEventId }) => sourceEventId)).toContain("60920");
+  });
+
   it("requires a same-origin public visitor redirect with no persistent credentials", async () => {
     const missingRedirect = mockSource({ entryResponse: htmlResponse("<p>Login</p>") });
     await expect(createDeznzJaggaerAdapter({
@@ -249,7 +264,12 @@ describe("DEZNZ Jaggaer Source adapter", () => {
     await expect(createDeznzJaggaerAdapter({
       fetch: inconsistent.fetcher,
       requestDelayMs: 0,
-    }).scan(scanContext())).rejects.toMatchObject({ code: "invalid_record" });
+    }).scan(scanContext())).rejects.toMatchObject({
+      code: "invalid_record",
+      message: "DEZNZ Jaggaer opportunity 60694 has inconsistent fields: " +
+        "Project Title (list=\"Greenhouse Gas Inventory Improvement Programme 2\", " +
+        "detail=\"Unexpected project title\").",
+    });
   });
 
   it("rejects missing fields and invalid UK-local deadlines", async () => {
