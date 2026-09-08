@@ -20,6 +20,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import type { ApiBiddingEvent, EventsResponse } from "../api/types";
 import daiLogoUrl from "./assets/dai-logo.svg";
 import { fetchBiddingEvents } from "./api";
+import { paginationItems } from "./pagination";
 
 const columnHelper = createColumnHelper<ApiBiddingEvent>();
 const initialSorting: SortingState = [{ id: "discoveredAt", desc: true }];
@@ -574,8 +575,25 @@ export default function App() {
 
           {data && data.pagination.pageCount > 0 && (
             <nav className="pagination" aria-label="Registry pages">
-              <span>Page {data.pagination.page} of {data.pagination.pageCount}</span>
-              <div>
+              <div className="pagination__pages">
+                {paginationItems(data.pagination.page, data.pagination.pageCount).map((item, index) => (
+                  item === "ellipsis" ? (
+                    <span key={`ellipsis-${index}`} aria-hidden="true">...</span>
+                  ) : (
+                    <button
+                      key={item}
+                      type="button"
+                      aria-label={item === data.pagination.page ? `Page ${item}, current page` : `Go to page ${item}`}
+                      aria-current={item === data.pagination.page ? "page" : undefined}
+                      disabled={loading}
+                      onClick={() => setPage(item)}
+                    >
+                      {item}
+                    </button>
+                  )
+                ))}
+              </div>
+              <div className="pagination__controls">
                 <button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => value - 1)}>
                   <CaretLeftIcon aria-hidden="true" size={16} /> Previous
                 </button>
