@@ -1,9 +1,9 @@
-schema_version: 14
+schema_version: 15
 status: active
 threshold: 2
 hard_exclusions:
-  - id: sam-goods-product-code
-    description: SAM.gov opportunity has a numeric Product and Service Code for goods or supplies.
+  - id: sam-non-r-product-service-code
+    description: SAM.gov opportunity has a known Product and Service Code outside the R Professional, Administrative and Management Support Services category.
     conditions:
       all:
         - field: sourceId
@@ -12,7 +12,7 @@ hard_exclusions:
       any:
         - field: sourceData.classificationCode
           operator: startsWith
-          value: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+          value: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "S", "T", "U", "V", "W", "X", "Y", "Z"]
   - id: sam-manufacturing-naics
     description: SAM.gov opportunity is assigned to a manufacturing NAICS sector.
     conditions:

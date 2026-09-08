@@ -84,7 +84,7 @@ EIB Procurement has EIB as its Client and a €500,000 Minimum Value Floor for k
 
 Assessment proceeds in this order:
 
-1. Apply hard exclusions. A known positive value below the applicable Minimum Value Floor is Excluded without fit scoring. Zero, null, and missing values are treated as unknown, so they do not trigger the value exclusion. Source-specific structured evidence may also exclude an event, such as a SAM.gov product PSC or manufacturing NAICS code.
+1. Apply hard exclusions. A known positive value below the applicable Minimum Value Floor is Excluded without fit scoring. Zero, null, and missing values are treated as unknown, so they do not trigger the value exclusion. Source-specific structured evidence may also exclude an event. For SAM.gov, a known PSC outside the `R` Professional, Administrative and Management Support Services category or a manufacturing NAICS code is excluded; a missing PSC remains eligible.
 2. If the event is not excluded, score each evidence category at most once:
 
 | Evidence | Score |

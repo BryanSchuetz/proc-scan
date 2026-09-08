@@ -639,14 +639,30 @@ describe("Addressability Assessment", () => {
     }
   });
 
-  it("hard-excludes clear goods, supplies, and manufacturing opportunities", () => {
-    expect(assessAddressability(federalEvent({
-      amount: 1_000_000,
-      classificationCode: "7010",
-    }), configuredRules)).toMatchObject({
-      status: "excluded",
-      exclusionRuleId: "sam-goods-product-code",
-    });
+  it("hard-excludes SAM.gov opportunities with a known PSC outside category R", () => {
+    for (const classificationCode of ["7010", "Z1AA"]) {
+      expect(assessAddressability(federalEvent({
+        amount: 1_000_000,
+        classificationCode,
+      }), configuredRules)).toMatchObject({
+        status: "excluded",
+        exclusionRuleId: "sam-non-r-product-service-code",
+      });
+    }
+
+    for (const classificationCode of ["R408", "r499"]) {
+      expect(assessAddressability(federalEvent({
+        amount: 1_000_000,
+        classificationCode,
+      }), configuredRules)).toMatchObject({ status: "addressable" });
+    }
+    expect(assessAddressability(biddingEvent({
+      sourceId: "sam-gov",
+      sourceData: { federalOrganizationCode: "019", naicsCode: "541611" },
+    }), configuredRules)).toMatchObject({ status: "addressable" });
+  });
+
+  it("hard-excludes SAM.gov manufacturing opportunities even with an R PSC", () => {
     expect(assessAddressability(federalEvent({
       amount: 1_000_000,
       naicsCode: "332999",
