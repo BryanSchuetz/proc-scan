@@ -28,8 +28,14 @@ export interface PreparedDigest {
   scanRunId: string;
   status: DigestStatus;
   scheduledFor: string;
+  completedAt: string;
   events: DigestEvent[];
   sourceRuns: DigestSourceRun[];
+}
+
+export interface DigestInclusionWindow {
+  from: string;
+  before: string;
 }
 
 interface DigestEventRow {
@@ -65,12 +71,18 @@ function digestEvent(row: DigestEventRow): DigestEvent {
 }
 
 async function loadPreparedDigest(db: D1Database, digestId: string): Promise<PreparedDigest> {
-  const digest = await db.prepare(`SELECT d.id, d.scan_run_id, d.status, r.scheduled_for
+  const digest = await db.prepare(`SELECT d.id, d.scan_run_id, d.status, r.scheduled_for, r.completed_at
     FROM digests d
     JOIN scan_runs r ON r.id = d.scan_run_id
     WHERE d.id = ?`)
     .bind(digestId)
-    .first<{ id: string; scan_run_id: string; status: DigestStatus; scheduled_for: string }>();
+    .first<{
+      id: string;
+      scan_run_id: string;
+      status: DigestStatus;
+      scheduled_for: string;
+      completed_at: string | null;
+    }>();
   if (!digest) throw new Error(`Digest ${digestId} was not found after preparation.`);
 
   const [eventRows, sourceRows] = await Promise.all([
@@ -98,6 +110,7 @@ async function loadPreparedDigest(db: D1Database, digestId: string): Promise<Pre
     scanRunId: digest.scan_run_id,
     status: digest.status,
     scheduledFor: digest.scheduled_for,
+    completedAt: digest.completed_at ?? digest.scheduled_for,
     events: eventRows.results.map(digestEvent),
     sourceRuns: sourceRows.results.map((row) => ({
       sourceName: row.source_name,
@@ -107,7 +120,11 @@ async function loadPreparedDigest(db: D1Database, digestId: string): Promise<Pre
   };
 }
 
-export async function prepareDigest(db: D1Database, scanRunId: string): Promise<PreparedDigest> {
+export async function prepareDigest(
+  db: D1Database,
+  scanRunId: string,
+  inclusionWindow?: DigestInclusionWindow,
+): Promise<PreparedDigest> {
   const digestId = `digest_${scanRunId}`;
   const existing = await db.prepare("SELECT id FROM digests WHERE scan_run_id = ?")
     .bind(scanRunId)
@@ -121,20 +138,31 @@ export async function prepareDigest(db: D1Database, scanRunId: string): Promise<
         SELECT scheduled_for FROM scan_runs WHERE id = ?
       ))
       AND (
-        e.scan_run_id = ?
-        OR EXISTS (
-          SELECT 1 FROM digest_items failed_item
-          JOIN digests failed_digest ON failed_digest.id = failed_item.digest_id
-          WHERE failed_item.bidding_event_id = e.id AND failed_digest.status = 'failed'
+        (
+          (
+            e.scan_run_id = ?
+            OR EXISTS (
+              SELECT 1 FROM digest_items failed_item
+              JOIN digests failed_digest ON failed_digest.id = failed_item.digest_id
+              WHERE failed_item.bidding_event_id = e.id AND failed_digest.status = 'failed'
+            )
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM digest_items sent_item
+            JOIN digests sent_digest ON sent_digest.id = sent_item.digest_id
+            WHERE sent_item.bidding_event_id = e.id AND sent_digest.status = 'sent'
+          )
         )
-      )
-      AND NOT EXISTS (
-        SELECT 1 FROM digest_items sent_item
-        JOIN digests sent_digest ON sent_digest.id = sent_item.digest_id
-        WHERE sent_item.bidding_event_id = e.id AND sent_digest.status = 'sent'
+        OR (? IS NOT NULL AND e.discovered_at >= ? AND e.discovered_at < ?)
       )
     ORDER BY e.id`)
-    .bind(scanRunId, scanRunId)
+    .bind(
+      scanRunId,
+      scanRunId,
+      inclusionWindow?.from ?? null,
+      inclusionWindow?.from ?? null,
+      inclusionWindow?.before ?? null,
+    )
     .all<{ id: string; content_fingerprint: string }>();
   const fingerprint = await sha256Hex(
     rows.results.map((row) => `${row.id}:${row.content_fingerprint}`).join("\n"),

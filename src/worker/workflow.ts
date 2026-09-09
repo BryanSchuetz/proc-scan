@@ -63,6 +63,8 @@ validateEuFundingTendersClientScope(euFundingTenders, ted.clients);
 
 export interface ScanWorkflowParams {
   requestedAt?: string;
+  includeDiscoveredFrom?: string;
+  includeDiscoveredBefore?: string;
 }
 
 export interface LocalScanCycle {
@@ -95,6 +97,20 @@ export function localScanCycleForInstant(instant: Date): LocalScanCycle | undefi
 
 function scanRunId(cycleKey: string): string {
   return `scan_${cycleKey.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+}
+
+function digestInclusionWindow(params: ScanWorkflowParams) {
+  const from = params.includeDiscoveredFrom;
+  const before = params.includeDiscoveredBefore;
+  if (from === undefined && before === undefined) return undefined;
+  if (
+    !from || !before ||
+    Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(before)) ||
+    new Date(from).getTime() >= new Date(before).getTime()
+  ) {
+    throw new NonRetryableError("A valid digest discovery window requires ordered from and before timestamps");
+  }
+  return { from, before };
 }
 
 interface SourceFailure {
@@ -145,6 +161,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       ? new Date(event.payload.requestedAt)
       : new Date(event.schedule?.scheduledTime ?? event.timestamp.getTime());
     if (Number.isNaN(instant.getTime())) throw new NonRetryableError("Invalid requestedAt timestamp");
+    const inclusionWindow = digestInclusionWindow(event.payload ?? {});
 
     const cycle = await step.do("resolve New York scan cycle", async () =>
       localScanCycleForInstant(instant),
@@ -237,7 +254,9 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       };
     }
 
-    const digest = await step.do("prepare digest", async () => prepareDigest(this.env.DB, id));
+    const digest = await step.do("prepare digest", async () =>
+      prepareDigest(this.env.DB, id, inclusionWindow),
+    );
     if (digest.status === "skipped_empty" || digest.status === "sent") {
       return {
         ...completion,

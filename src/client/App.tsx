@@ -492,6 +492,9 @@ export default function App() {
               <strong>
                 {data.latestScan.successfulSources.length} of {data.latestScan.sourceCount} sources completed
               </strong>
+            </div>
+            <div className="scan-notice__sources">
+              <span>Completed sources</span>
               <span>{data.latestScan.successfulSources.map((source) => source.name).join(", ") || "None"}</span>
             </div>
           </div>

@@ -77,6 +77,26 @@ describe("digest preparation", () => {
     });
   });
 
+  it("can include already-sent Addressable events from an explicit discovery window", async () => {
+    const prior = await prepareDigest(env.DB, "scan_fixture_2026_08_26_am");
+    await recordDigestSent(env.DB, prior.id, "message-before-manual-window");
+    await env.DB.prepare(`INSERT INTO scan_runs (
+      id, cycle_key, scheduled_for, started_at, completed_at, status
+    ) VALUES ('scan_digest_manual_window', 'digest:manual-window', '2026-08-30T22:00:00.000Z',
+      '2026-08-30T22:00:00.000Z', '2026-08-30T22:01:00.000Z', 'completed')`).run();
+
+    const digest = await prepareDigest(env.DB, "scan_digest_manual_window", {
+      from: "2026-08-26T00:00:00.000Z",
+      before: "2026-08-27T00:00:00.000Z",
+    });
+
+    expect(digest.status).toBe("pending");
+    expect(digest.events).toHaveLength(4);
+    expect(digest.events.map((event) => event.id)).toEqual(
+      expect.arrayContaining(prior.events.map((event) => event.id)),
+    );
+  });
+
   it("records an empty scan without sending", async () => {
     await env.DB.prepare(`INSERT INTO scan_runs (
       id, cycle_key, scheduled_for, started_at, completed_at, status
@@ -94,6 +114,7 @@ describe("digest rendering", () => {
       scanRunId: "scan-fixture",
       status: "pending",
       scheduledFor: "2026-09-05T10:00:00.000Z",
+      completedAt: "2026-09-05T10:06:00.000Z",
       sourceRuns: [
         { sourceName: "Grants.gov", status: "completed" },
         { sourceName: "SAM.gov", status: "failed" },
@@ -116,10 +137,16 @@ describe("digest rendering", () => {
     const message = renderDigest(digest, "https://registry.example.test");
     expect(message.subject).toBe("1 new procurement opportunity | Sep 5, 2026");
     expect(message.html).toContain("Department of State");
+    expect(message.html).toContain("1 of 2 sources completed");
+    expect(message.html).toContain("Completed sources");
+    expect(message.html).toContain("Grants.gov");
     expect(message.html).toContain("Partial coverage:");
     expect(message.html).toContain("Water &amp; &lt;Governance&gt;");
     expect(message.html).not.toContain("Water & <Governance>");
-    expect(message.text).toContain("Failed Sources: SAM.gov");
+    expect(message.text).toContain("Last scan: Sep 5, 2026, 6:06 AM EDT");
+    expect(message.text).toContain("Scan coverage: 1 of 2 sources completed");
+    expect(message.text).toContain("Completed sources: Grants.gov");
+    expect(message.text).toContain("Failed sources: SAM.gov");
     expect(message.text).toContain("$2,500,000");
     expect(message.html).not.toContain("TENDERS · 1");
     expect(message.html).toContain("border-left:4px solid #9BCE36");
