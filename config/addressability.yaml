@@ -1,4 +1,4 @@
-schema_version: 15
+schema_version: 17
 status: active
 threshold: 2
 hard_exclusions:
@@ -348,6 +348,63 @@ hard_exclusions:
         - field: value.currency
           operator: equals
           value: GBP
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 250000
+  - id: fcdo-jaggaer-public-below-minimum-gbp-value
+    description: Public FCDO Jaggaer opportunities with a known GBP value must have a value of at least £250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: fcdo-jaggaer-public
+        - field: clientName
+          operator: equals
+          value: FCDO
+        - field: value.currency
+          operator: equals
+          value: GBP
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 250000
+  - id: ecepp-below-minimum-eur-value
+    description: EBRD ECEPP opportunities with a known EUR value must have a value of at least €250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: ecepp
+        - field: clientName
+          operator: equals
+          value: EBRD
+        - field: value.currency
+          operator: equals
+          value: EUR
+        - field: value.amount
+          operator: gt
+          value: 0
+        - field: value.amount
+          operator: lt
+          value: 250000
+  - id: ecepp-below-minimum-usd-value
+    description: EBRD ECEPP opportunities with a known USD value must have a value of at least $250,000.
+    conditions:
+      all:
+        - field: sourceId
+          operator: equals
+          value: ecepp
+        - field: clientName
+          operator: equals
+          value: EBRD
+        - field: value.currency
+          operator: equals
+          value: USD
         - field: value.amount
           operator: gt
           value: 0

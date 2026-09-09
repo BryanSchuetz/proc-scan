@@ -164,6 +164,28 @@ function deznzJaggaerEvent(
   });
 }
 
+function fcdoJaggaerPublicEvent(amount?: number, currency = "GBP") {
+  return biddingEvent({
+    sourceId: "fcdo-jaggaer-public",
+    clientName: "FCDO",
+    opportunityName: "Technical assistance opportunity",
+    description: "Capacity building and advisory services",
+    value: amount === undefined ? undefined : { amount, currency },
+    sourceData: {},
+  });
+}
+
+function eceppEvent(amount?: number, currency = "EUR") {
+  return biddingEvent({
+    sourceId: "ecepp",
+    clientName: "EBRD",
+    opportunityName: "Advisory services opportunity",
+    description: "Consultancy and capacity building services",
+    value: amount === undefined ? undefined : { amount, currency },
+    sourceData: {},
+  });
+}
+
 describe("Addressability Assessment", () => {
   it("applies hard exclusions before scoring", () => {
     const result = assessAddressability(biddingEvent({ clientName: "Blocked Agency" }), activeConfig);
@@ -426,6 +448,42 @@ describe("Addressability Assessment", () => {
       deznzJaggaerEvent(500_000, "GBP", "Supply of computers and equipment"),
       configuredRules,
     )).toMatchObject({ status: "addressable", score: 2 });
+  });
+
+  it("applies public FCDO Jaggaer's £250,000 floor before shared fit scoring", () => {
+    expect(assessAddressability(fcdoJaggaerPublicEvent(249_999), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "fcdo-jaggaer-public-below-minimum-gbp-value",
+    });
+    for (const event of [
+      fcdoJaggaerPublicEvent(250_000),
+      fcdoJaggaerPublicEvent(0),
+      fcdoJaggaerPublicEvent(),
+      fcdoJaggaerPublicEvent(249_999, "EUR"),
+    ]) {
+      expect(assessAddressability(event, configuredRules))
+        .toMatchObject({ status: "addressable", score: 4 });
+    }
+  });
+
+  it("applies ECEPP's €/$250,000 floors before shared fit scoring", () => {
+    expect(assessAddressability(eceppEvent(249_999), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "ecepp-below-minimum-eur-value",
+    });
+    expect(assessAddressability(eceppEvent(249_999, "USD"), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "ecepp-below-minimum-usd-value",
+    });
+    for (const event of [
+      eceppEvent(250_000),
+      eceppEvent(250_000, "USD"),
+      eceppEvent(),
+      eceppEvent(249_999, "GBP"),
+    ]) {
+      expect(assessAddressability(event, configuredRules))
+        .toMatchObject({ status: "addressable", score: 4 });
+    }
   });
 
   it("scores every configured DAI-fit term positively and every miss-fit term negatively", () => {

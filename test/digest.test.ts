@@ -165,7 +165,7 @@ describe("Campaign Monitor delivery", () => {
     apiKey: "fixture-api-key",
     clientId: "fixture-client",
     from: "DAI Procurement <procurement@dai.example>",
-    recipient: "opportunities@dai.example",
+    recipient: "opportunities@dai.example, reviewer@dai.example",
   };
   const message = { subject: "Digest", html: "<p>Digest</p>", text: "Digest" };
 
@@ -177,7 +177,7 @@ describe("Campaign Monitor delivery", () => {
       );
       expect(JSON.parse(String(init?.body))).toMatchObject({
         Subject: "Digest",
-        To: ["opportunities@dai.example"],
+        To: ["opportunities@dai.example", "reviewer@dai.example"],
         TrackOpens: false,
         TrackClicks: false,
         Group: "Procurement Opportunity Digest",

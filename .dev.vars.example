@@ -13,5 +13,6 @@ CAMP_MONTR_KEY=
 CAMP_MONTR_CLIENT_ID=
 DIGEST_FROM=
 DIGEST_REPLY_TO=
+# One address or multiple comma-separated addresses.
 DIGEST_RECIPIENT=
 REGISTRY_URL=

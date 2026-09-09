@@ -7,12 +7,17 @@ import {
 } from "./deznz-jaggaer";
 import { createDgMarketAdapter, dgMarketSourceDefinition } from "./dg-market";
 import type { DgMarketConfig } from "./dg-market";
+import { createEceppAdapter, eceppSourceDefinition } from "./ecepp";
 import { createEibAdapter, eibSourceDefinition } from "./eib";
 import {
   createEuFundingTendersAdapter,
   euFundingTendersSourceDefinition,
 } from "./eu-funding-tenders";
 import type { EuFundingTendersConfig } from "./eu-funding-tenders";
+import {
+  createFcdoJaggaerPublicAdapter,
+  fcdoJaggaerPublicSourceDefinition,
+} from "./fcdo-jaggaer-public";
 import { createFmoAdapter, fmoSourceDefinition } from "./fmo";
 import { createGrantsGovAdapter, grantsGovSourceDefinition } from "./grants-gov";
 import type { GrantsGovConfig } from "./grants-gov";
@@ -45,10 +50,14 @@ export function createRegisteredSourceAdapter(
       return createDeznzJaggaerAdapter();
     case dgMarketSourceDefinition.id:
       return createDgMarketAdapter({ config: configurations.dgMarket });
+    case eceppSourceDefinition.id:
+      return createEceppAdapter();
     case eibSourceDefinition.id:
       return createEibAdapter();
     case euFundingTendersSourceDefinition.id:
       return createEuFundingTendersAdapter({ config: configurations.euFundingTenders });
+    case fcdoJaggaerPublicSourceDefinition.id:
+      return createFcdoJaggaerPublicAdapter();
     case fmoSourceDefinition.id:
       return createFmoAdapter();
     case grantsGovSourceDefinition.id:

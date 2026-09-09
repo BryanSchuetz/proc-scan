@@ -5,19 +5,34 @@
 # Credential fields contain secret-binding references only. Never store credential
 # values, session material, or two-factor codes in this file.
 
-- site: Jaggaer Portal for FCDO
+- site: Jaggaer Portal for FCDO — Public
+  clients:
+    - FCDO
+  actual_link: https://fcdo.bravosolution.co.uk/esop/guest/go/public/opportunity/current
+  additional_links: null
+  filters_narrative: "£250k minimum for public technical-assistance opportunities and early market engagement; excludes goods, frameworks, and call-downs"
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: "Read the complete public Current Opportunities list; retain FCDO Services competitions and early-market-engagement activities; label market engagement explicitly; exclude framework and call-down language so authenticated framework coverage remains separate; apply the £250k floor only to known positive GBP values"
+  result_set: public
+  authentication: "Public discovery requires no login, but Jaggaer establishes an ephemeral visitor session. Permission for programmatic access to the public pages was confirmed by the owner on September 7, 2026. Framework call-downs are invitation-only and are not represented by this Source."
+  source_module: fcdo-jaggaer-public
+  access_method: html
+
+- site: Jaggaer Portal for FCDO — Framework Opportunities
   clients:
     - FCDO
     - framework buyers
   actual_link: https://fcdo.bravosolution.co.uk/web/login.html
   additional_links: null
-  filters_narrative: "£250k minimum for all full and open; limited to technical assistance (i.e., excludes goods); no minimum threshold for framework tenders"
+  filters_narrative: "No minimum threshold for technical-assistance framework opportunities; excludes goods"
   requires_login: true
   username: secret:FCDO_ESOURCING_USERNAME
   password: secret:FCDO_ESOURCING_PASSWORD
-  filters_automation_rules: null
+  filters_automation_rules: "Retain technical-assistance framework opportunities addressed to FCDO or an approved framework buyer; do not apply a Minimum Value Floor"
   result_set: login 2factor
-  authentication: null
+  authentication: "Username and password are configured as project secrets; login additionally requires a Google Authenticator OTP. Build only after an approved session-handoff design is established."
   source_module: null
   access_method: null
 
@@ -204,17 +219,17 @@
 - site: ECEPP
   clients:
     - EBRD
-  actual_link: "https://ecepp.ebrd.com/delta/mainMenu.html?login=true"
+  actual_link: "https://ecepp.ebrd.com/delta/noticeSearchResults.html"
   additional_links: null
   filters_narrative: '€/$250k minimum; "consultancy" or "advisory"-related'
-  requires_login: true
-  username: secret:ECEPP_USERNAME
-  password: secret:ECEPP_PASSWORD
-  filters_automation_rules: null
-  result_set: login
-  authentication: null
-  source_module: null
-  access_method: null
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: "Read the complete public notice catalogue; require a known closing date after the scan time; retain procurement notices whose structured procurement type is Consultancy or whose title/description is advisory-related; map Client to EBRD and preserve the named borrower as procuring entity; apply the €/$250k floors only to known positive EUR or USD values"
+  result_set: public
+  authentication: "Public notice discovery and details require no login; procurement documents and responses require login plus emailed MFA and are outside the unattended scan"
+  source_module: ecepp
+  access_method: html
 
 - site: EIB procurement page
   clients:

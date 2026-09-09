@@ -30,7 +30,8 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 
 | Source | Added? | Production state | Access | Current scope |
 |---|---|---|---|---|
-| FCDO Jaggaer | No | Not implemented | Login + two-factor | FCDO and framework-buyer technical-assistance opportunities |
+| FCDO Jaggaer Public | Yes | Enabled; live scan completed | Public HTML | Current FCDO service competitions and early-market-engagement activities with a £250,000 floor for known GBP values; frameworks excluded |
+| FCDO Jaggaer Frameworks | No | Not implemented | Login + Google Authenticator | FCDO and framework-buyer technical-assistance framework opportunities with no value floor |
 | DEFRA Atamis | Yes | Enabled; live scan completed | Public CSV | Active DEFRA-family catalogue opportunities with a £250,000 floor for known GBP values |
 | DEZNZ Jaggaer | Yes | Enabled; first live scan pending | Public HTML | Current DEZNZ service opportunities with a £250,000 floor for known GBP values |
 | TED | Yes | Enabled; live scans completed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
@@ -40,14 +41,14 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | Grants.gov | Yes | Enabled; live scans completed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
 | GSA eBuy | No | Not implemented | To be confirmed | Approved U.S.-client technical-assistance opportunities |
 | SIMAP | No | Not implemented | Login + two-factor | Swiss SDC/SECO opportunities with a CHF 1 million floor |
-| EBRD ECEPP | No | Not implemented | Login | EBRD consultancy and advisory opportunities |
+| EBRD ECEPP | Yes | Enabled; live scan completed | Public HTML | Future-dated EBRD consultancy and advisory opportunities with €/$250,000 floors |
 | EIB Procurement | Yes | Enabled; live scan completed | Public JSON + TED API | Open EIB TA Operations with a €500,000 floor and shared addressability scoring |
 | FMO Open Tenders | Yes | Enabled; live scans completed | Public HTML | FMO tender listings with a €500,000 floor and shared addressability scoring |
 
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The remaining backlog currently includes:
 
-- **Login or unattended-authentication sources:** EBRD ECEPP and GSA eBuy.
-- **Interactive two-factor sources:** FCDO eSourcing Portal and SIMAP.
+- **Login or unattended-authentication sources:** GSA eBuy.
+- **Interactive two-factor sources:** FCDO framework opportunities and SIMAP.
 
 Backlog order is not committed. Each Source still needs API/feed discovery, access and automation review, field-coverage validation, approved Client scope, and a Source-specific Minimum Value Floor before implementation.
 
@@ -61,7 +62,7 @@ Configure production delivery with these Worker secrets or variables:
 
 - `CAMP_MONTR_KEY` (required secret)
 - `DIGEST_FROM` (required authenticated DAI sender, including an optional display name)
-- `DIGEST_RECIPIENT` (required distribution-list address)
+- `DIGEST_RECIPIENT` (required address or comma-separated addresses)
 - `CAMP_MONTR_CLIENT_ID` (required only for an account-level API key)
 - `DIGEST_REPLY_TO` (optional)
 - `REGISTRY_URL` (optional link shown in the digest)
@@ -78,7 +79,7 @@ The adapter collects pre-solicitations, Sources Sought, Special Notices, solicit
 
 SAM.gov returns each description as a separate authenticated URL rather than inline search data. The adapter preserves a credential-free description URL in structured Source data but does not spend one API request per notice to download descriptions. Opportunity titles and the other search metadata are therefore available for the initial deterministic classification pass; bulk description ingestion or selective enrichment remains a follow-up decision after measuring the account's request quota.
 
-Addressability configuration version 15 applies the shared scoring contract with Source-specific Minimum Value Floors. For SAM.gov, DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, known PSCs outside the `R` Professional, Administrative and Management Support Services category, and manufacturing NAICS sectors are hard exclusions. A missing PSC remains eligible. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
+Addressability configuration version 17 applies the shared scoring contract with Source-specific Minimum Value Floors. For SAM.gov, DOS, MCC, and DFC use $500,000; USTDA and notices owned by a country Millennium Challenge Account use $250,000. Known positive values below the applicable floor, known PSCs outside the `R` Professional, Administrative and Management Support Services category, and manufacturing NAICS sectors are hard exclusions. A missing PSC remains eligible. The public pre-award search response does not expose an estimated opportunity value—only award amounts on Award Notices, which are not pursuit candidates—so most live notices are retained with unknown value and scored on DAI-Fit/Miss-Fit evidence. Value extraction remains necessary to exclude notices known to be below the applicable floor.
 
 ## Grants.gov Source
 
@@ -146,6 +147,14 @@ Addressability configuration version 14 keeps the £250,000 Minimum Value Floor 
 
 The first production scan completed on August 31, 2026. It discovered and retained 16 current listings: 15 Addressable and one Uncertain. All 16 have unknown value because the public catalogue does not publish an estimate.
 
+## FCDO Jaggaer Public Source
+
+The public FCDO adapter reads the complete public [Current Opportunities](https://fcdo.bravosolution.co.uk/esop/guest/go/public/opportunity/current) list and its public detail pages. Supplier credentials are not used. Each scan establishes a fresh ephemeral Jaggaer visitor session, forwards only allowlisted session cookies in memory, validates the displayed total, and retrieves service details sequentially with a request delay. The numeric Jaggaer opportunity ID identifies the Bidding Event, and the project code identifies the Source Opportunity.
+
+This Source covers FCDO `Services` competitions and early-market-engagement activities, including records explicitly marked as not a call to competition. Market engagement is labelled in `sourceStatus` and structured Source data so it remains distinguishable from a competition. Goods and framework or call-down language remain excluded. Framework opportunities are intentionally reserved for a separate authenticated Source because invitation-only call-downs appear under `My ITTs`, not reliably in the public list. The configured credentials are therefore not needed or sent by this adapter; authenticated coverage still requires an approved Google Authenticator session-handoff design.
+
+Addressability version 17 applies the public £250,000 Minimum Value Floor to known positive GBP contract estimates. Missing, zero, and non-GBP values remain eligible for shared fit scoring. Permission for programmatic access to the public pages was confirmed on September 7, 2026.
+
 ## DEZNZ Jaggaer Source
 
 The DEZNZ Jaggaer adapter reads the portal's public [Current Opportunities](https://beisgroup.ukp.app.jaggaer.com/esop/guest/go/public/opportunity/current) list and public detail pages; supplier login is not required for discovery. It establishes a new ephemeral public visitor session for each scan, never persists the visitor identifier, validates that the single displayed list is complete, and retrieves detail pages sequentially with a request delay. The numeric Jaggaer opportunity ID identifies the Bidding Event, the project code identifies the Source Opportunity, and the stable public list remains the canonical URL because detail URLs require ephemeral visitor state.
@@ -155,6 +164,14 @@ The adapter retains only `Services` records. The portal is shared by DESNZ and D
 The adapter normalizes explicitly labelled GBP estimates and sums multiple amounts only when each is identified as a separate lot. Unlabelled or ambiguous numbers remain unknown instead of inferring a currency. Addressability version 14 applies the £250,000 Minimum Value Floor as a hard gate for known positive GBP values before the shared DAI-Fit/Miss-Fit scoring.
 
 Migration `0012_deznz_jaggaer_source.sql` deployed and enabled the adapter following the owner's confirmation of permission for programmatic access on September 3, 2026. The configured supplier credentials are not read by this public-discovery adapter. Its first production scan is pending.
+
+## EBRD ECEPP Source
+
+The ECEPP adapter reads the complete public [Search Opportunities](https://ecepp.ebrd.com/delta/noticeSearchResults.html) catalogue and enriches only records with a known closing date after the scan time that the portal identifies as Consultancy or whose title or description is advisory-related. It excludes missing or expired closing dates, closed notices, and post-award notices before detail enrichment. The display notice ID identifies each Bidding Event; the ECEPP exercise ID links related notices and addenda, which are mapped as explicit Modifications. Public details supply the description, publication and closing dates, country, procurement method, sector, and named borrower. The configured Client is EBRD, while the portal's Client Name is preserved as the procuring entity.
+
+Each scan is a complete snapshot because ECEPP does not publish a safe update cursor. The public catalogue and notice details do not require supplier credentials. Accessing procurement documents or responding redirects to login and emailed MFA, so authenticated content is deliberately outside the unattended scan and credentials are never sent or stored by the adapter.
+
+Addressability version 17 applies the catalogued €/$250,000 Minimum Value Floors separately to known positive Opportunity values in EUR and USD. Public General Procurement Notices sometimes publish an estimated total project value, but that may cover several goods, works, and consultancy exercises; the adapter retains it only in structured Source data and does not treat it as the individual Opportunity value. Public pre-award exercise notices generally expose no estimate, so most ECEPP values remain unknown and cannot trigger the floor. Migration `0014_ecepp_source.sql` registered the adapter disabled; a bounded Cloudflare Worker probe then confirmed public access and migration `0016_enable_ecepp_source.sql` enabled it. Its first successful production scan retained eight future-dated events: five Addressable and three Uncertain.
 
 ## Checks
 

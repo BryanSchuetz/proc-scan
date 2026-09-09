@@ -82,6 +82,10 @@ FMO Open Tenders has FMO as its Client and a €500,000 Minimum Value Floor for 
 
 EIB Procurement has EIB as its Client and a €500,000 Minimum Value Floor for known positive EUR values enriched from linked official TED notices. The procedure estimate is authoritative; same-currency lot estimates are summed only when the procedure estimate is absent. Missing, zero, and non-EUR values remain eligible for the same shared fit scoring as every other Source.
 
+EBRD ECEPP has EBRD as its Client; the EBRD-financed borrower named by the portal is the procuring entity. Only records with a known closing date after the scan time and structured Consultancy or explicit advisory-related title or description evidence are in scope. Known positive EUR and USD values each have a 250,000 Minimum Value Floor. Missing, zero, and other-currency values remain eligible for shared fit scoring.
+
+FCDO Jaggaer is split into two Sources. The public Source covers FCDO Services competitions and early-market-engagement activities and has a £250,000 Minimum Value Floor for known positive GBP values. Market engagement is labelled explicitly even when it is not a call to competition. The Source excludes goods, frameworks, and call-downs. The future authenticated Source covers technical-assistance framework opportunities addressed to FCDO or approved framework buyers and has no Minimum Value Floor; invitation-only records require login and Google Authenticator and are not inferred from public pages.
+
 Assessment proceeds in this order:
 
 1. Apply hard exclusions. A known positive value below the applicable Minimum Value Floor is Excluded without fit scoring. Zero, null, and missing values are treated as unknown, so they do not trigger the value exclusion. Source-specific structured evidence may also exclude an event. For SAM.gov, a known PSC outside the `R` Professional, Administrative and Management Support Services category or a manufacturing NAICS code is excluded; a missing PSC remains eligible.

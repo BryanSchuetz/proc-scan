@@ -46,7 +46,7 @@ export async function sendCampaignMonitorDigest(
         Subject: message.subject,
         From: config.from,
         ...(config.replyTo ? { ReplyTo: config.replyTo } : {}),
-        To: [config.recipient],
+        To: config.recipient.split(",").map((recipient) => recipient.trim()).filter(Boolean),
         Html: message.html,
         Text: message.text,
         TrackOpens: false,
