@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${CLOUDFLARE_API_TOKEN:-}" && -z "${CLOUDFLARE_WORKERS_TOKEN:-}" ]]; then
+  echo "proc-scan: Cloudflare credentials were not injected into this orb. Personal secrets are configured; refresh orb processes before Cloudflare operations." >&2
+fi

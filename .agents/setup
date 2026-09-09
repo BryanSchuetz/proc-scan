@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+echo "Installing Node.js dependencies..."
+npm ci --prefix "$repo_root"
+
+# Amp injects the owner's personal Cloudflare token as CLOUDFLARE_WORKERS_TOKEN,
+# while Wrangler recognizes CLOUDFLARE_API_TOKEN. Keep the value in the runtime
+# environment; persist only the name mapping for future login shells.
+profile_marker="# proc-scan Cloudflare credential compatibility"
+if ! grep -Fqx "$profile_marker" "$HOME/.bash_profile" 2>/dev/null; then
+  cat >> "$HOME/.bash_profile" <<'EOF'
+
+# proc-scan Cloudflare credential compatibility
+if [[ -z "${CLOUDFLARE_API_TOKEN:-}" && -n "${CLOUDFLARE_WORKERS_TOKEN:-}" ]]; then
+  export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_WORKERS_TOKEN"
+fi
+EOF
+fi
+
+echo "Orb setup complete."

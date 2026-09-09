@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${CLOUDFLARE_API_TOKEN:-}" && -n "${CLOUDFLARE_WORKERS_TOKEN:-}" ]]; then
+  export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_WORKERS_TOKEN"
+fi
+
+if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+  echo "Cloudflare credentials are unavailable. Run 'amp orb restart-processes' to refresh personal secret injection." >&2
+  exit 1
+fi
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "$repo_root/node_modules/.bin/wrangler" "$@"
