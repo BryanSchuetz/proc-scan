@@ -474,16 +474,11 @@ export default function App() {
               <div>
                 <MagnifyingGlassIcon aria-hidden="true" size={18} />
                 <input
-                  type="search"
+                  type="text"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search opportunities"
                 />
-                {search && (
-                  <button type="button" onClick={() => setSearch("")} aria-label="Clear search">
-                    <XIcon aria-hidden="true" size={16} />
-                  </button>
-                )}
               </div>
             </label>
             {hasFilters && (
