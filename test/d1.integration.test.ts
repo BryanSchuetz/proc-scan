@@ -47,6 +47,41 @@ describe("D1 registry integration", () => {
     expect(body.items[0].discoveredAt >= body.items[1].discoveredAt).toBe(true);
     expect(body.facets.fixtureData).toBe(true);
     expect(body.facets.technicalAreas.map((area) => area.id)).toContain("digital");
+    expect(body.latestScan).toEqual({
+      completedAt: "2026-08-26T10:02:14.000Z",
+      successfulSources: [
+        { id: "grants-gov", name: "Grants.gov" },
+        { id: "ted", name: "TED" },
+      ],
+      sourceCount: 2,
+    });
+  });
+
+  it("reports successful Sources from a partial latest scan", async () => {
+    await env.DB.prepare(`INSERT INTO scan_runs (
+      id, cycle_key, scheduled_for, started_at, completed_at, status
+    ) VALUES ('scan_summary_partial', '2099-01-01:AM', '2099-01-01T10:00:00.000Z',
+      '2099-01-01T10:00:00.000Z', '2099-01-01T10:05:00.000Z', 'partial')`).run();
+    await env.DB.prepare(`INSERT INTO source_runs (
+      id, scan_run_id, source_id, started_at, completed_at, status
+    ) VALUES
+      ('source_summary_grants', 'scan_summary_partial', 'grants-gov',
+        '2099-01-01T10:00:00.000Z', '2099-01-01T10:02:00.000Z', 'completed'),
+      ('source_summary_ted', 'scan_summary_partial', 'ted',
+        '2099-01-01T10:00:00.000Z', '2099-01-01T10:05:00.000Z', 'failed')`).run();
+
+    try {
+      const response = await SELF.fetch("http://localhost/api/opportunities");
+      const body = await response.json<EventsResponse>();
+      expect(body.latestScan).toEqual({
+        completedAt: "2099-01-01T10:05:00.000Z",
+        successfulSources: [{ id: "grants-gov", name: "Grants.gov" }],
+        sourceCount: 2,
+      });
+    } finally {
+      await env.DB.prepare("DELETE FROM source_runs WHERE scan_run_id = 'scan_summary_partial'").run();
+      await env.DB.prepare("DELETE FROM scan_runs WHERE id = 'scan_summary_partial'").run();
+    }
   });
 
   it("hides expired events without deleting their history", async () => {

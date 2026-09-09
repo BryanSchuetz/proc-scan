@@ -176,6 +176,37 @@ main {
 
 .fixture-notice strong { color: var(--gray-600); }
 
+.scan-notice {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: minmax(190px, auto) minmax(0, 1fr);
+  gap: 14px 26px;
+  background: var(--light-blue);
+  border-left: 3px solid var(--teal);
+  color: var(--gray-600);
+  font-size: 13px;
+}
+
+.scan-notice > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scan-notice > div > span:first-child {
+  flex: 0 0 auto;
+  color: var(--gray-400);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.scan-notice strong { flex: 0 0 auto; color: var(--gray-600); }
+.scan-notice > div > span:last-child { min-width: 0; color: var(--gray-400); }
+
 .registry-panel {
   flex: 1 1 auto;
   min-height: 0;
@@ -482,6 +513,9 @@ td:nth-child(8) { width: 190px; }
   .registry-heading h2 { font-size: 30px; }
   .record-count { min-width: 100px; }
   .fixture-notice { flex-direction: column; gap: 3px; }
+  .scan-notice { grid-template-columns: 1fr; gap: 9px; }
+  .scan-notice > div { align-items: flex-start; flex-wrap: wrap; gap: 3px 7px; }
+  .scan-notice > div > span:first-child { width: 100%; }
   .toolbar { align-items: stretch; flex-direction: column; padding: 14px; }
   .search-field { width: 100%; }
   .clear-filters { align-self: flex-start; }

@@ -4,6 +4,11 @@ import { fetchBiddingEvents } from "../src/client/api";
 
 const response: EventsResponse = {
   items: [],
+  latestScan: {
+    completedAt: "2026-09-09T10:02:00.000Z",
+    successfulSources: [{ id: "grants-gov", name: "Grants.gov" }],
+    sourceCount: 1,
+  },
   pagination: { page: 1, pageSize: 25, total: 128, pageCount: 6 },
   facets: {
     clients: ["U.S. Mission to Albania"],

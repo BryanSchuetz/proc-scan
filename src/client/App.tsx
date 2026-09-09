@@ -39,6 +39,18 @@ function formatDate(value: string | undefined): string {
   }).format(new Date(value));
 }
 
+function formatScanTime(value: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(value));
+}
+
 function formatMoney(amount: number | undefined, currency: string | undefined): string {
   if (amount === undefined) return "Not provided";
   const number = new Intl.NumberFormat("en-US", {
@@ -464,6 +476,24 @@ export default function App() {
           <div className="fixture-notice" role="status">
             <strong>Foundation preview</strong>
             <span>These records are local fixtures, not live procurement opportunities.</span>
+          </div>
+        )}
+
+        {data?.latestScan && (
+          <div className="scan-notice" role="status">
+            <div>
+              <span>Last scan</span>
+              <strong>
+                <time dateTime={data.latestScan.completedAt}>{formatScanTime(data.latestScan.completedAt)}</time>
+              </strong>
+            </div>
+            <div>
+              <span>Scan coverage</span>
+              <strong>
+                {data.latestScan.successfulSources.length} of {data.latestScan.sourceCount} sources completed
+              </strong>
+              <span>{data.latestScan.successfulSources.map((source) => source.name).join(", ") || "None"}</span>
+            </div>
           </div>
         )}
 

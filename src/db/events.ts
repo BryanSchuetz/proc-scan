@@ -1,4 +1,4 @@
-import type { EventsFacets, EventsResponse } from "../api/types";
+import type { ApiScanSummary, EventsFacets, EventsResponse } from "../api/types";
 import { addressabilityStatuses, biddingEventTypes } from "../domain/types";
 import type { RetainedBiddingEvent } from "../domain/types";
 import type { PriorBiddingEvent } from "../domain/inheritance";
@@ -330,6 +330,36 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
   };
 }
 
+async function loadLatestScan(db: D1Database): Promise<ApiScanSummary | undefined> {
+  const row = await db.prepare(`SELECT
+      scan.completed_at,
+      (SELECT COUNT(*) FROM source_runs WHERE scan_run_id = scan.id) AS source_count,
+      (SELECT COALESCE(json_group_array(json_object('id', successful.source_id, 'name', successful.name)), '[]')
+        FROM (
+          SELECT source_run.source_id, source.display_name AS name
+          FROM source_runs source_run
+          JOIN sources source ON source.id = source_run.source_id
+          WHERE source_run.scan_run_id = scan.id AND source_run.status = 'completed'
+          ORDER BY source.display_name
+        ) successful) AS successful_sources_json
+    FROM scan_runs scan
+    WHERE scan.completed_at IS NOT NULL
+    ORDER BY scan.completed_at DESC
+    LIMIT 1`)
+    .first<{
+      completed_at: string;
+      source_count: number;
+      successful_sources_json: string;
+    }>();
+  if (!row) return undefined;
+
+  return {
+    completedAt: row.completed_at,
+    successfulSources: JSON.parse(row.successful_sources_json),
+    sourceCount: Number(row.source_count),
+  };
+}
+
 export async function listBiddingEvents(db: D1Database, query: EventsQuery): Promise<EventsResponse> {
   const where = buildWhere(query);
   const from = `FROM bidding_events e
@@ -352,10 +382,11 @@ export async function listBiddingEvents(db: D1Database, query: EventsQuery): Pro
   LIMIT ? OFFSET ?`;
   const offset = (query.page - 1) * query.pageSize;
 
-  const [countResult, itemResult, facets] = await Promise.all([
+  const [countResult, itemResult, facets, latestScan] = await Promise.all([
     db.prepare(`SELECT COUNT(*) AS total ${from}`).bind(...where.values).first<{ total: number }>(),
     db.prepare(select).bind(...where.values, query.pageSize, offset).all<EventRow>(),
     loadFacets(db),
+    loadLatestScan(db),
   ]);
 
   const total = Number(countResult?.total ?? 0);
@@ -380,6 +411,7 @@ export async function listBiddingEvents(db: D1Database, query: EventsQuery): Pro
       addressabilityStatus: row.addressability_status,
       technicalAreas: JSON.parse(row.technical_areas_json),
     })),
+    latestScan,
     pagination: {
       page: query.page,
       pageSize: query.pageSize,

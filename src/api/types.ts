@@ -34,8 +34,15 @@ export interface EventsFacets {
   fixtureData: boolean;
 }
 
+export interface ApiScanSummary {
+  completedAt: string;
+  successfulSources: Array<{ id: string; name: string }>;
+  sourceCount: number;
+}
+
 export interface EventsResponse {
   items: ApiBiddingEvent[];
+  latestScan?: ApiScanSummary;
   pagination: {
     page: number;
     pageSize: number;
