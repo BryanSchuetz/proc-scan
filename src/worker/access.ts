@@ -38,7 +38,8 @@ export function isLoopbackRequest(request: Request): boolean {
 }
 
 export function isDevelopmentPreviewRequest(request: Request): boolean {
-  return import.meta.env.DEV && new URL(request.url).hostname.endsWith(".onamp.dev");
+  const isDevelopmentBuild = import.meta.env.DEV || import.meta.env.MODE === "development";
+  return isDevelopmentBuild && new URL(request.url).hostname.endsWith(".onamp.dev");
 }
 
 export interface AuthorizedUser {

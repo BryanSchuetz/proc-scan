@@ -6,6 +6,7 @@ import {
   CaretUpDownIcon,
   CaretUpIcon,
   CheckIcon,
+  InfoIcon,
   MagnifyingGlassIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -20,14 +21,17 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import type { ApiBiddingEvent, EventsResponse } from "../api/types";
 import daiLogoUrl from "./assets/dai-logo.svg";
 import { fetchBiddingEvents } from "./api";
+import HowItWorks from "./HowItWorks";
 import { paginationItems } from "./pagination";
 
 const columnHelper = createColumnHelper<ApiBiddingEvent>();
 const initialSorting: SortingState = [{ id: "discoveredAt", desc: true }];
-type RegistryPath = "/" | "/unmarked";
+type RegistryPath = "/" | "/unmarked" | "/how-it-works";
 
 function getRegistryPath(): RegistryPath {
-  return window.location.pathname.replace(/\/+$/, "") === "/unmarked" ? "/unmarked" : "/";
+  const path = window.location.pathname.replace(/\/+$/, "");
+  if (path === "/unmarked" || path === "/how-it-works") return path;
+  return "/";
 }
 
 function formatDate(value: string | undefined): string {
@@ -209,6 +213,7 @@ function LoadingRows() {
 export default function App() {
   const [pathname, setPathname] = useState<RegistryPath>(getRegistryPath);
   const isUnmarkedPage = pathname === "/unmarked";
+  const isHowPage = pathname === "/how-it-works";
   const status = isUnmarkedPage ? "uncertain" : "addressable";
   const [data, setData] = useState<EventsResponse>();
   const [loading, setLoading] = useState(true);
@@ -255,11 +260,13 @@ export default function App() {
   }, [applyRoute]);
 
   useEffect(() => {
-    document.title = `${isUnmarkedPage ? "Unmarked" : "Marked"} Opportunities | Procurement Opportunity Registry`;
-  }, [isUnmarkedPage]);
+    const pageTitle = isHowPage ? "How It Works" : `${isUnmarkedPage ? "Unmarked" : "Marked"} Opportunities`;
+    document.title = `${pageTitle} | Procurement Opportunity Registry`;
+  }, [isHowPage, isUnmarkedPage]);
 
   const sort = sorting[0] ?? initialSorting[0];
   useEffect(() => {
+    if (isHowPage) return;
     const controller = new AbortController();
     setLoading(true);
     setError(undefined);
@@ -287,7 +294,7 @@ export default function App() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [client, debouncedSearch, eventType, page, reload, sort.desc, sort.id, source, status, technicalArea]);
+  }, [client, debouncedSearch, eventType, isHowPage, page, reload, sort.desc, sort.id, source, status, technicalArea]);
 
   useEffect(() => setPage(1), [client, debouncedSearch, eventType, source, technicalArea]);
 
@@ -451,7 +458,7 @@ export default function App() {
         </div>
       </header>
 
-      <main>
+      {isHowPage ? <HowItWorks onNavigate={navigate} /> : <main>
         <section className="registry-heading" aria-labelledby="registry-title">
           <div>
             <p className="section-kicker">Bidding Events</p>
@@ -464,6 +471,10 @@ export default function App() {
             <nav className="view-tabs" aria-label="Opportunity views">
               <a href="/" aria-current={isUnmarkedPage ? undefined : "page"} onClick={(event) => navigate(event, "/")}>Marked</a>
               <a href="/unmarked" aria-current={isUnmarkedPage ? "page" : undefined} onClick={(event) => navigate(event, "/unmarked")}>Unmarked</a>
+              <a className="view-tabs__info" href="/how-it-works" onClick={(event) => navigate(event, "/how-it-works")}>
+                How it works
+                <InfoIcon aria-hidden="true" size={16} weight="bold" />
+              </a>
             </nav>
           </div>
           <div className="record-count" aria-live="polite">
@@ -632,7 +643,7 @@ export default function App() {
             </nav>
           )}
         </section>
-      </main>
+      </main>}
     </div>
   );
 }

@@ -7,4 +7,7 @@ export default defineConfig({
   server: {
     allowedHosts: [".onamp.dev"],
   },
+  preview: {
+    allowedHosts: [".onamp.dev"],
+  },
 });

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --mode development && vite preview",
+    "dev:modules": "vite",
     "build": "npm run validate:config && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
