@@ -42,7 +42,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | SAM.gov | Yes | Enabled; currently quota-constrained | API key | Pre-award notices from MCC, DFC, USTDA, and Department of State |
 | Grants.gov | Yes | Enabled; live scans completed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
 | GSA eBuy | No | Not implemented | To be confirmed | Approved U.S.-client technical-assistance opportunities |
-| SIMAP | No | Not implemented | Login + two-factor | Swiss SDC/SECO opportunities with a CHF 1 million floor |
+| SIMAP | Yes | Implemented; disabled pending production validation | Public API | Swiss SDC/SECO service tenders with a CHF 1 million floor for known CHF values |
 | EBRD ECEPP | Yes | Enabled; live scan completed | Public HTML | Future-dated EBRD consultancy and advisory opportunities with €/$250,000 floors |
 | EIB Procurement | Yes | Enabled; live scan completed | Public JSON + TED API | Open EIB TA Operations with a €500,000 floor and shared addressability scoring |
 | FMO Open Tenders | Yes | Enabled; live scans completed | Public HTML | FMO tender listings with a €500,000 floor and shared addressability scoring |
@@ -50,7 +50,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The remaining backlog currently includes:
 
 - **Login or unattended-authentication sources:** GSA eBuy.
-- **Interactive two-factor sources:** FCDO framework opportunities and SIMAP.
+- **Interactive two-factor sources:** FCDO framework opportunities.
 
 Backlog order is not committed. Each Source still needs API/feed discovery, access and automation review, field-coverage validation, approved Client scope, and a Source-specific Minimum Value Floor before implementation.
 
@@ -166,6 +166,12 @@ The adapter retains only `Services` records. The portal is shared by DESNZ and D
 The adapter normalizes explicitly labelled GBP estimates and sums multiple amounts only when each is identified as a separate lot. Unlabelled or ambiguous numbers remain unknown instead of inferring a currency. Addressability version 14 applies the £250,000 Minimum Value Floor as a hard gate for known positive GBP values before the shared DAI-Fit/Miss-Fit scoring.
 
 Migration `0012_deznz_jaggaer_source.sql` deployed and enabled the adapter following the owner's confirmation of permission for programmatic access on September 3, 2026. The configured supplier credentials are not read by this public-discovery adapter. Its first production scan is pending.
+
+## SIMAP Source
+
+The SIMAP adapter uses the platform's official unauthenticated publication-search and publication-detail APIs. It searches service tenders separately for `SDC` and `SECO` across all publication languages, then requires the procurement-office name to identify Swiss SDC or SECO so keyword mentions from unrelated buyers are not retained. Login, two-factor authentication, tender-document downloads, and supplier actions are outside this Source; the configured account credentials are not used.
+
+SIMAP rolling pagination uses a 365-day initial publication window and a two-day overlap around the saved scan cursor. Publication and project UUIDs provide stable Bidding Event and Source Opportunity identities. Details supply multilingual titles and descriptions, exact submission deadlines, procurement offices, places, process types, and CPV codes. Corrected tenders are explicit Modifications. The public pre-award response does not expose an estimated contract value, so values remain unknown; Addressability version 18 applies the CHF 1,000,000 floor if a future authoritative enrichment supplies a known positive CHF value. Migration `0017_simap_source.sql` registers the adapter disabled pending production validation.
 
 ## EBRD ECEPP Source
 

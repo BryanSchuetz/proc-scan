@@ -50,6 +50,12 @@ const sources = [
     scope: "Forecasted and posted opportunities from the approved organizations. Closed and archived opportunities are excluded.",
   },
   {
+    name: "SIMAP",
+    clients: "Swiss SDC and SECO",
+    value: "CHF 1 million",
+    scope: "Service tenders published through the public API. Unrelated keyword matches and opportunities with past deadlines are excluded.",
+  },
+  {
     name: "EBRD ECEPP",
     clients: "EBRD",
     value: "€250,000 or $250,000",

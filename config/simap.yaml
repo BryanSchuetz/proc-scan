@@ -1,0 +1,21 @@
+schema_version: 1
+client: Swiss-SDC/SECO
+project_subtype: service
+publication_type: tender
+initial_lookback_days: 365
+cursor_lookback_days: 2
+organizations:
+  - id: sdc
+    search: SDC
+    office_name_terms:
+      - Swiss Agency for Development and Cooperation
+      - Federal Department of Foreign Affairs - SDC
+      - FDFA / SDC
+      - Direktion für Entwicklung und Zusammenarbeit
+      - EDA / DEZA
+  - id: seco
+    search: SECO
+    office_name_terms:
+      - State Secretariat for Economic Affairs SECO
+      - Staatssekretariat für Wirtschaft SECO
+      - Secrétariat d'Etat à l'économie SECO

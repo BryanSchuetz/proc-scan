@@ -1,0 +1,132 @@
+{
+  "search": {
+    "sdc": [
+      {
+        "projects": [
+          {
+            "id": "b920f3fc-4621-4cb8-9ef8-facf82419c32",
+            "title": { "de": null, "en": "Inclusive economic development programme", "fr": null, "it": null },
+            "projectNumber": "39933",
+            "projectType": "tender",
+            "projectSubType": "service",
+            "processType": "open",
+            "lotsType": "without",
+            "publicationId": "e747ebb9-729c-4899-8a96-cc051c507ceb",
+            "publicationDate": "2026-07-03",
+            "publicationNumber": "39933-01",
+            "pubType": "tender",
+            "corrected": false,
+            "procOfficeName": { "de": null, "en": "Federal Department of Foreign Affairs FDFA / Swiss Agency for Development and Cooperation SDC", "fr": null, "it": null },
+            "lots": []
+          },
+          {
+            "id": "96bd7606-925a-442b-b12b-97b1b385dcfe",
+            "title": { "de": null, "en": "Consultant mentioning SDC", "fr": null, "it": null },
+            "projectNumber": "44004",
+            "projectType": "tender",
+            "projectSubType": "service",
+            "processType": "open",
+            "lotsType": "without",
+            "publicationId": "0a3d8810-28c1-4eef-859d-eac3b1d5219b",
+            "publicationDate": "2026-09-14",
+            "publicationNumber": "44004-01",
+            "pubType": "tender",
+            "corrected": false,
+            "procOfficeName": { "de": null, "en": "Unrelated procurement office", "fr": null, "it": null },
+            "lots": []
+          }
+        ],
+        "pagination": { "lastItem": "20260703|39933", "itemsPerPage": 2 }
+      },
+      {
+        "projects": [],
+        "pagination": { "lastItem": "", "itemsPerPage": 2 }
+      }
+    ],
+    "seco": [
+      {
+        "projects": [
+          {
+            "id": "6c52190e-d536-47e7-9680-85c0f71b5fe2",
+            "title": { "de": "Beratung für nachhaltigen Handel", "en": null, "fr": null, "it": null },
+            "projectNumber": "33836",
+            "projectType": "tender",
+            "projectSubType": "service",
+            "processType": "open",
+            "lotsType": "without",
+            "publicationId": "1328fe7f-a2f0-4a3c-9a57-13cdde61dfc0",
+            "publicationDate": "2026-08-15",
+            "publicationNumber": "33836-02",
+            "pubType": "tender",
+            "corrected": true,
+            "procOfficeName": { "de": "Staatssekretariat für Wirtschaft SECO", "en": "State Secretariat for Economic Affairs SECO", "fr": null, "it": null },
+            "lots": []
+          }
+        ],
+        "pagination": { "lastItem": "20260815|33836", "itemsPerPage": 20 }
+      }
+    ]
+  },
+  "details": {
+    "e747ebb9-729c-4899-8a96-cc051c507ceb": {
+      "type": "tender",
+      "id": "e747ebb9-729c-4899-8a96-cc051c507ceb",
+      "base": {
+        "id": "e747ebb9-729c-4899-8a96-cc051c507ceb",
+        "title": { "de": null, "en": "Inclusive economic development programme", "fr": null, "it": null },
+        "projectId": "b920f3fc-4621-4cb8-9ef8-facf82419c32",
+        "projectNumber": "39933",
+        "publicationNumber": "39933-01",
+        "publicationDate": "2026-07-03",
+        "procOfficeId": "4c12deb8-9db7-45e5-8fb0-0974a800c0a6",
+        "corrected": false
+      },
+      "project-info": {
+        "procOfficeAddress": {
+          "name": { "de": null, "en": "Swiss Agency for Development and Cooperation SDC", "fr": null, "it": null },
+          "countryId": "CH",
+          "city": { "de": "Bern", "en": "Bern", "fr": "Berne", "it": null }
+        }
+      },
+      "procurement": {
+        "orderDescription": { "de": null, "en": "<p>Technical assistance for inclusive markets &amp; private-sector development.</p>", "fr": null, "it": null },
+        "processType": "open",
+        "orderType": "service",
+        "cpvCode": { "code": "75211200" },
+        "orderAddressDescription": { "de": null, "en": "Global", "fr": null, "it": null },
+        "orderAddress": { "countryId": null, "city": { "de": null, "en": null, "fr": null, "it": null } }
+      },
+      "dates": { "offerDeadline": "2026-10-24T23:30:00+02:00" }
+    },
+    "1328fe7f-a2f0-4a3c-9a57-13cdde61dfc0": {
+      "type": "tender",
+      "id": "1328fe7f-a2f0-4a3c-9a57-13cdde61dfc0",
+      "base": {
+        "id": "1328fe7f-a2f0-4a3c-9a57-13cdde61dfc0",
+        "title": { "de": "Beratung für nachhaltigen Handel", "en": null, "fr": null, "it": null },
+        "projectId": "6c52190e-d536-47e7-9680-85c0f71b5fe2",
+        "projectNumber": "33836",
+        "publicationNumber": "33836-02",
+        "publicationDate": "2026-08-15",
+        "procOfficeId": "6817402b-27fe-48c1-b577-1805e1de1437",
+        "corrected": true
+      },
+      "project-info": {
+        "procOfficeAddress": {
+          "name": { "de": "Staatssekretariat für Wirtschaft SECO", "en": "State Secretariat for Economic Affairs SECO", "fr": null, "it": null },
+          "countryId": "CH",
+          "city": { "de": "Bern", "en": "Bern", "fr": null, "it": null }
+        }
+      },
+      "procurement": {
+        "orderDescription": { "de": "Beratung und Analyse.", "en": null, "fr": null, "it": null },
+        "processType": "open",
+        "orderType": "service",
+        "cpvCode": { "code": "79411100" },
+        "orderAddressDescription": null,
+        "orderAddress": { "countryId": "RS", "city": { "de": "Belgrad", "en": "Belgrade", "fr": null, "it": null } }
+      },
+      "dates": { "offerDeadline": "2026-11-01T12:00:00+01:00" }
+    }
+  }
+}

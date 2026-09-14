@@ -8,6 +8,7 @@ import dgMarketRaw from "../../config/dg-market.yaml?raw";
 import euFundingTendersRaw from "../../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../../config/grants-gov.yaml?raw";
 import samGovRaw from "../../config/sam-gov.yaml?raw";
+import simapRaw from "../../config/simap.yaml?raw";
 import tedRaw from "../../config/ted.yaml?raw";
 import { parseAddressabilityYaml } from "../classification/addressability";
 import {
@@ -45,6 +46,7 @@ import {
 } from "../sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../sources/grants-gov";
 import { parseSamGovConfig } from "../sources/sam-gov";
+import { parseSimapConfig } from "../sources/simap";
 import { parseTedConfig } from "../sources/ted";
 import type { AppEnv } from "./index";
 
@@ -57,6 +59,7 @@ const dgMarket = parseDgMarketConfig(dgMarketRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const grantsGov = parseGrantsGovConfig(grantsGovRaw);
 const ted = parseTedConfig(tedRaw);
+const simap = parseSimapConfig(simapRaw);
 const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
 validateGrantsGovScope(grantsGov, samGov.organizations);
 validateEuFundingTendersClientScope(euFundingTenders, ted.clients);
@@ -198,6 +201,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
           euFundingTenders,
           grantsGov,
           samGov,
+          simap,
           ted,
         });
         const outcome = await step.do(`scan and process ${source.id}`, async () => {

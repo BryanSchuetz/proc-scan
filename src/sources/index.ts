@@ -23,6 +23,8 @@ import { createGrantsGovAdapter, grantsGovSourceDefinition } from "./grants-gov"
 import type { GrantsGovConfig } from "./grants-gov";
 import { createSamGovAdapter, samGovSourceDefinition } from "./sam-gov";
 import type { SamGovConfig } from "./sam-gov";
+import { createSimapAdapter, simapSourceDefinition } from "./simap";
+import type { SimapConfig } from "./simap";
 import { createTedAdapter, tedSourceDefinition } from "./ted";
 import type { TedConfig } from "./ted";
 
@@ -35,6 +37,7 @@ export interface SourceConfigurations {
   euFundingTenders: EuFundingTendersConfig;
   grantsGov: GrantsGovConfig;
   samGov: SamGovConfig;
+  simap: SimapConfig;
   ted: TedConfig;
 }
 
@@ -69,6 +72,8 @@ export function createRegisteredSourceAdapter(
         apiKey: secrets.SAM_API_KEY ?? "",
         organizations: configurations.samGov.organizations,
       });
+    case simapSourceDefinition.id:
+      return createSimapAdapter({ config: configurations.simap });
     case tedSourceDefinition.id:
       return createTedAdapter({ config: configurations.ted });
     default:

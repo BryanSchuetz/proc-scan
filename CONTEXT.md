@@ -84,6 +84,8 @@ EIB Procurement has EIB as its Client and a €500,000 Minimum Value Floor for k
 
 EBRD ECEPP has EBRD as its Client; the EBRD-financed borrower named by the portal is the procuring entity. Only records with a known closing date after the scan time and structured Consultancy or explicit advisory-related title or description evidence are in scope. Known positive EUR and USD values each have a 250,000 Minimum Value Floor. Missing, zero, and other-currency values remain eligible for shared fit scoring.
 
+SIMAP has Swiss-SDC/SECO as its Client and covers service tenders returned by the public publication API whose procurement-office names establish SDC or SECO ownership. Known positive CHF values have a CHF 1,000,000 Minimum Value Floor. The public pre-award API does not currently expose an estimated contract value, so missing values remain eligible for shared fit scoring.
+
 FCDO Jaggaer is split into two Sources. The public Source covers FCDO Services competitions and early-market-engagement activities and has a £250,000 Minimum Value Floor for known positive GBP values. Market engagement is labelled explicitly even when it is not a call to competition. The Source excludes goods, frameworks, and call-downs. The future authenticated Source covers technical-assistance framework opportunities addressed to FCDO or approved framework buyers and has no Minimum Value Floor; invitation-only records require login and Google Authenticator and are not inferred from public pages.
 
 Assessment proceeds in this order:

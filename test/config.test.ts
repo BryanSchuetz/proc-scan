@@ -5,6 +5,7 @@ import dgMarketRaw from "../config/dg-market.yaml?raw";
 import euFundingTendersRaw from "../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
+import simapRaw from "../config/simap.yaml?raw";
 import tedRaw from "../config/ted.yaml?raw";
 import {
   classifyTechnicalAreas,
@@ -20,6 +21,7 @@ import {
 } from "../src/sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
+import { parseSimapConfig } from "../src/sources/simap";
 import { parseTedConfig } from "../src/sources/ted";
 
 const taxonomy = parseTaxonomyYaml(taxonomyRaw);
@@ -188,6 +190,23 @@ page_size: 100
     const portal = parseEuFundingTendersConfig(euFundingTendersRaw);
     expect(() => validateEuFundingTendersClientScope(portal, ["DG INTPA"])).toThrow(
       "EU Funding & Tenders clients must match the approved TED client scope",
+    );
+  });
+});
+
+describe("SIMAP configuration", () => {
+  it("loads public service-tender searches for SDC and SECO", () => {
+    const simap = parseSimapConfig(simapRaw);
+    expect(simap.client).toBe("Swiss-SDC/SECO");
+    expect(simap.organizations.map(({ id, search }) => ({ id, search }))).toEqual([
+      { id: "sdc", search: "SDC" },
+      { id: "seco", search: "SECO" },
+    ]);
+  });
+
+  it("rejects duplicate organization IDs", () => {
+    expect(() => parseSimapConfig(simapRaw.replace("id: seco", "id: sdc"))).toThrow(
+      "Duplicate SIMAP organization ID",
     );
   });
 });

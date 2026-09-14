@@ -205,16 +205,17 @@
   clients:
     - Swiss-SDC/SECO
   actual_link: https://www.simap.ch/en
-  additional_links: null
+  additional_links:
+    - https://www.simap.ch/api-doc
   filters_narrative: "CHF 1m minimum"
-  requires_login: true
-  username: secret:SIMAP_USERNAME
-  password: secret:SIMAP_PASSWORD
-  filters_automation_rules: null
-  result_set: login 2factor
-  authentication: null
-  source_module: null
-  access_method: null
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: "Search public service-tender publications separately for SDC and SECO across all publication languages; require an SDC/SECO procurement-office name; use a 365-day initial publication window and two-day cursor overlap; apply the CHF 1m floor only to known positive CHF values"
+  result_set: public
+  authentication: "SIMAP's official API documentation states that publication search and detail access are available without authentication. Login and two-factor authentication remain necessary for tender documents and supplier actions, which are outside this Source."
+  source_module: simap
+  access_method: api
 
 - site: ECEPP
   clients:

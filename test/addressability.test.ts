@@ -186,6 +186,17 @@ function eceppEvent(amount?: number, currency = "EUR") {
   });
 }
 
+function simapEvent(amount?: number, currency = "CHF") {
+  return biddingEvent({
+    sourceId: "simap",
+    clientName: "Swiss-SDC/SECO",
+    opportunityName: "Technical assistance opportunity",
+    description: "Consultancy and capacity building services",
+    value: amount === undefined ? undefined : { amount, currency },
+    sourceData: {},
+  });
+}
+
 describe("Addressability Assessment", () => {
   it("applies hard exclusions before scoring", () => {
     const result = assessAddressability(biddingEvent({ clientName: "Blocked Agency" }), activeConfig);
@@ -480,6 +491,22 @@ describe("Addressability Assessment", () => {
       eceppEvent(250_000, "USD"),
       eceppEvent(),
       eceppEvent(249_999, "GBP"),
+    ]) {
+      expect(assessAddressability(event, configuredRules))
+        .toMatchObject({ status: "addressable", score: 4 });
+    }
+  });
+
+  it("applies SIMAP's CHF 1,000,000 floor only to known CHF values", () => {
+    expect(assessAddressability(simapEvent(999_999), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "simap-below-minimum-chf-value",
+    });
+    for (const event of [
+      simapEvent(1_000_000),
+      simapEvent(0),
+      simapEvent(),
+      simapEvent(999_999, "EUR"),
     ]) {
       expect(assessAddressability(event, configuredRules))
         .toMatchObject({ status: "addressable", score: 4 });
