@@ -91,7 +91,6 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
       <section className="how-flow" aria-labelledby="flow-title">
         <div className="how-section-heading">
           <h3 id="flow-title">From source to registry</h3>
-          <p>Each event follows the same sequence. An event that fails a hard exclusion is not shown in either registry view.</p>
         </div>
         <ol className="flow-list">
           <li>
@@ -171,7 +170,7 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
           <p>These are the client and value boundaries used for sources currently represented in the registry.</p>
         </div>
         <div className="source-boundary-note">
-          Zero or unknown values are not excluded by the threshold. Past due dates are excluded for all sources.
+          Zero or unknown values are not excluded by the threshold. Opportunities with past due dates are excluded for all sources.
         </div>
         <div className="source-list" role="list">
           {sources.map((source) => (
