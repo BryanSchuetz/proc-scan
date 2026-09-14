@@ -20,6 +20,13 @@ beforeAll(async () => {
 });
 
 describe("D1 registry integration", () => {
+  it("registers SIMAP as an enabled Source", async () => {
+    const source = await env.DB.prepare(
+      "SELECT enabled FROM sources WHERE id = 'simap'",
+    ).first<{ enabled: number }>();
+    expect(source?.enabled).toBe(1);
+  });
+
   it("keeps a repeated fixture scan idempotent, including its FTS index", async () => {
     await applySeed();
     const events = await env.DB.prepare("SELECT COUNT(*) AS total FROM bidding_events").first<{ total: number }>();
