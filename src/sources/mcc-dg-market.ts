@@ -440,7 +440,7 @@ export function createMccDgMarketAdapter(options: MccDgMarketAdapterOptions): So
             await load(new URL(record.canonicalUrl), ".notice-title"),
             record.noticeId,
           );
-          if (detail.title !== record.title || detail.noticeType !== record.noticeType) {
+          if (detail.title !== record.title && detail.noticeType !== record.noticeType) {
             throw new SourceScanError(
               "invalid_record",
               `MCCDGMarket record ${record.noticeId} changed between its list and detail pages.`,
