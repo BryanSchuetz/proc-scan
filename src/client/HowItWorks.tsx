@@ -38,14 +38,20 @@ const sources = [
     scope: "Forthcoming and open calls for tenders. Grant topics are not included.",
   },
   {
+    name: "dgMarket",
+    clients: "MCC and MCA",
+    value: "$500,000",
+    scope: "Consultancy-category notices from matched MCC and MCA buyers. Only the configured procurement planning and pre-award notice types are included.",
+  },
+  {
     name: "SAM.gov",
-    clients: "DOS, MCC, DFC, and USTDA",
+    clients: "DOS, MCC (excluding MCAs), DFC, and USTDA",
     value: "$500,000 for DOS, MCC, and DFC; $250,000 for USTDA",
-    scope: "Pre-award opportunities only. Known product and service codes outside professional and management support, manufacturing sectors, awards, and surplus sales are excluded.",
+    scope: "Selected pre-award notice types only. Known product and service codes outside professional, administrative, and management support, plus manufacturing NAICS sectors, are excluded.",
   },
   {
     name: "Grants.gov",
-    clients: "DOS, MCC, DFC, and USTDA",
+    clients: "DOS, MCC (excluding MCAs), DFC, and USTDA",
     value: "$2 million for DOS; $500,000 for MCC and DFC; $250,000 for USTDA",
     scope: "Forecasted and posted opportunities from the approved organizations. Closed and archived opportunities are excluded.",
   },
@@ -71,7 +77,7 @@ const sources = [
     name: "FMO Open Tenders",
     clients: "FMO",
     value: "€500,000",
-    scope: "Open tender listings. Opportunities remain visible only while their deadline is current.",
+    scope: "Open tender listings. Known past deadlines are excluded; listings without a published deadline remain eligible.",
   },
 ];
 
@@ -176,7 +182,7 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
           <p>These are the client and value boundaries used for sources currently represented in the registry.</p>
         </div>
         <div className="source-boundary-note">
-          Zero or unknown values are not excluded by the threshold. Opportunities with past due dates are excluded for all sources.
+          Value floors apply only when a positive value is known in the listed currency. Opportunities with a known past due date are excluded; records without a due date remain eligible unless a source requires one.
         </div>
         <div className="source-list" role="list">
           {sources.map((source) => (
