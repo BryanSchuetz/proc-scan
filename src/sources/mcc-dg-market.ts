@@ -162,7 +162,7 @@ async function parseListPage(response: Response): Promise<ParsedListPage> {
     .on('#mainDivFlex a[href*="selPageNumber="]', {
       element(element) {
         const href = element.getAttribute("href");
-        if (href) pageUrls.push(new URL(href, BASE_URL));
+        if (href) pageUrls.push(new URL(href.replaceAll("&amp;", "&"), BASE_URL));
       },
     })
     .on("table#notice tbody tr", {
