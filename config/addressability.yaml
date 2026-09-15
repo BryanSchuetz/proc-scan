@@ -228,16 +228,24 @@ hard_exclusions:
         - field: value.amount
           operator: lt
           value: 1000000
-  - id: dg-market-mca-below-minimum-usd-value
-    description: dgMarket MCA opportunities with a known USD value must have a value of at least $500,000.
+  - id: dg-market-outside-mcc-mca-client-scope
+    description: dgMarket opportunities outside the MCC and MCA Client scope are excluded.
     conditions:
       all:
         - field: sourceId
           operator: equals
           value: dg-market
+      none:
         - field: sourceData.clientCohort
+          operator: in
+          value: [mcc, mca]
+  - id: dg-market-mcc-mca-below-minimum-usd-value
+    description: dgMarket MCC and MCA opportunities with a known USD value must have a value of at least $500,000.
+    conditions:
+      all:
+        - field: sourceId
           operator: equals
-          value: mca
+          value: dg-market
         - field: value.currency
           operator: equals
           value: USD
@@ -247,25 +255,6 @@ hard_exclusions:
         - field: value.amount
           operator: lt
           value: 500000
-  - id: dg-market-eu-government-below-minimum-eur-value
-    description: dgMarket EU member-state government opportunities with a known EUR value must have a value of at least €1,000,000.
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: dg-market
-        - field: sourceData.clientCohort
-          operator: equals
-          value: eu-member-state-government
-        - field: value.currency
-          operator: equals
-          value: EUR
-        - field: value.amount
-          operator: gt
-          value: 0
-        - field: value.amount
-          operator: lt
-          value: 1000000
   - id: fmo-below-minimum-eur-value
     description: FMO opportunities with a known EUR value must have a value of at least €500,000.
     conditions:

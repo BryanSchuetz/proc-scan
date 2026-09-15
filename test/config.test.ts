@@ -200,28 +200,19 @@ describe("SIMAP configuration", () => {
 });
 
 describe("dgMarket configuration", () => {
-  it("loads MCA and all 27 EU government-buyer scopes", () => {
+  it("loads the MCC and MCA client scope", () => {
     const dgMarket = parseDgMarketConfig(dgMarketRaw);
-    expect(dgMarket.mca).toEqual({
+    expect(dgMarket.clients).toEqual(["MCC", "MCA"]);
+    expect(dgMarket.funding_agency).toEqual({
       funding_agency_id: "1385098",
       funding_agency_name: "Millennium Challenge Corporation (MCC)",
     });
     expect(dgMarket.notice_category).toEqual({ code: "2", name: "Consultancy" });
-    expect(dgMarket.eu_member_states.buyer_type).toBe("GOVERNMENT");
-    expect(dgMarket.eu_member_states.countries).toHaveLength(27);
   });
 
-  it("rejects an incomplete or duplicate EU government-buyer scope", () => {
-    const config = parseDgMarketConfig(dgMarketRaw);
-    expect(() => parseDgMarketConfig(`
-${dgMarketRaw.replace(
-  /    - code: se\n      name: Sweden\n/,
-  "",
-)}`)).toThrow("dgMarket EU buyer scope must contain exactly the 27 EU member states");
-    expect(() => parseDgMarketConfig(`
-${dgMarketRaw.replace(
-  "    - code: se\n      name: Sweden\n",
-  `    - code: ${config.eu_member_states.countries[0].code}\n      name: Duplicate\n`,
-)}`)).toThrow("Duplicate dgMarket EU member-state code");
+  it("rejects a duplicate client", () => {
+    expect(() => parseDgMarketConfig(dgMarketRaw.replace("  - MCA", "  - MCC"))).toThrow(
+      "dgMarket client scope must contain MCC and MCA exactly once",
+    );
   });
 });

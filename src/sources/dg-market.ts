@@ -12,15 +12,6 @@ import { SourceScanError } from "./adapter";
 const BASE_URL = "https://www2.dgmarket.com";
 const SEARCH_PATH = "/NoticeList";
 const USER_AGENT = "proc-scan/1.0 (+https://github.com/BryanSchuetz/proc-scan)";
-const EU_MEMBER_STATE_CODES = [
-  "at", "be", "bg", "hr", "cy", "cz", "dk", "ee", "fi", "fr", "de", "gr", "hu", "ie",
-  "it", "lv", "lt", "lu", "mt", "nl", "pl", "pt", "ro", "sk", "si", "es", "se",
-] as const;
-
-const countrySchema = z.object({
-  code: z.string().regex(/^[a-z]{2}$/),
-  name: z.string().trim().min(1),
-});
 const dgMarketConfigSchema = z.object({
   schema_version: z.number().int().positive(),
   page_size: z.literal(25),
@@ -33,18 +24,14 @@ const dgMarketConfigSchema = z.object({
     name: z.literal("Consultancy"),
   }),
   pursuable_notice_types: z.array(z.string().trim().min(1)).min(1),
-  mca: z.object({
+  clients: z.array(z.enum(["MCC", "MCA"])).length(2),
+  funding_agency: z.object({
     funding_agency_id: z.string().regex(/^\d+$/),
     funding_agency_name: z.string().trim().min(1),
-  }),
-  eu_member_states: z.object({
-    buyer_type: z.literal("GOVERNMENT"),
-    countries: z.array(countrySchema).min(1),
   }),
 });
 
 export type DgMarketConfig = z.infer<typeof dgMarketConfigSchema>;
-type DgMarketCountry = DgMarketConfig["eu_member_states"]["countries"][number];
 
 interface DgMarketRecord {
   noticeId: string;
@@ -67,11 +54,6 @@ interface ParsedListPage {
   records: DgMarketRecord[];
 }
 
-interface SearchScope {
-  cohort: "mca" | "eu-member-state-government";
-  buyerContactCountry?: DgMarketCountry;
-}
-
 interface DateWindow {
   startDate: string;
   endDate: string;
@@ -82,7 +64,7 @@ export const dgMarketSourceDefinition: SourceDefinition = {
   name: "dgMarket",
   accessMode: "public",
   phase: 1,
-  adapterVersion: "1.0.0",
+  adapterVersion: "1.1.0",
 };
 
 export interface DgMarketAdapterOptions {
@@ -95,15 +77,8 @@ export interface DgMarketAdapterOptions {
 
 export function parseDgMarketConfig(raw: string): DgMarketConfig {
   const config = dgMarketConfigSchema.parse(parse(raw));
-  const codes = config.eu_member_states.countries.map(({ code }) => code);
-  if (new Set(codes).size !== codes.length) throw new Error("Duplicate dgMarket EU member-state code");
-  const configuredCodes = [...codes].sort();
-  const expectedCodes = [...EU_MEMBER_STATE_CODES].sort();
-  if (
-    configuredCodes.length !== expectedCodes.length ||
-    configuredCodes.some((code, index) => code !== expectedCodes[index])
-  ) {
-    throw new Error("dgMarket EU buyer scope must contain exactly the 27 EU member states");
+  if (new Set(config.clients).size !== config.clients.length) {
+    throw new Error("dgMarket client scope must contain MCC and MCA exactly once");
   }
   if (new Set(config.pursuable_notice_types.map((value) => value.toLocaleLowerCase())).size !==
     config.pursuable_notice_types.length) {
@@ -404,38 +379,25 @@ function dateWindow(context: SourceScanContext, config: DgMarketConfig): DateWin
   };
 }
 
-function searchUrl(config: DgMarketConfig, scope: SearchScope, window: DateWindow): URL {
+function searchUrl(config: DgMarketConfig, window: DateWindow): URL {
   const url = new URL(SEARCH_PATH, BASE_URL);
   url.searchParams.set("noticeCategory", config.notice_category.code);
   url.searchParams.set("startDate", window.startDate);
   url.searchParams.set("endDate", window.endDate);
-  if (scope.cohort === "mca") {
-    url.searchParams.set("fundingAgency", config.mca.funding_agency_id);
-  } else {
-    url.searchParams.set("noticeContactCountry", scope.buyerContactCountry?.code ?? "");
-    url.searchParams.set("buyerTypes", config.eu_member_states.buyer_type);
-  }
+  url.searchParams.set("fundingAgency", config.funding_agency.funding_agency_id);
   return url;
 }
 
-function expectedCriteria(config: DgMarketConfig, scope: SearchScope, window: DateWindow): string[] {
-  const common = [
+function expectedCriteria(config: DgMarketConfig, window: DateWindow): string[] {
+  return [
+    "Funding Agency:",
+    config.funding_agency.funding_agency_name,
     "Sectors:",
     config.notice_category.name,
     "Published from:",
     `${window.startDate} 00:00:00`,
     "Published till:",
     `${window.endDate} 00:00:00`,
-  ];
-  if (scope.cohort === "mca") {
-    return ["Funding Agency:", config.mca.funding_agency_name, ...common];
-  }
-  return [
-    "Buyer types:",
-    "Government Organization",
-    "Country of Notice Contact:",
-    scope.buyerContactCountry?.name ?? "",
-    ...common,
   ];
 }
 
@@ -454,12 +416,19 @@ function assertExpectedCriteria(page: ParsedListPage, criteria: readonly string[
 function recordCandidate(
   record: DgMarketRecord,
   config: DgMarketConfig,
-  scope: SearchScope,
   discoveredAt: string,
 ): SourceCandidate | undefined {
   if (!config.pursuable_notice_types.some((type) =>
     type.toLocaleLowerCase() === record.noticeType.toLocaleLowerCase()
   )) return undefined;
+
+  const client = /(?:\bMCA\b|Millennium\s+Challenge\s+Account)/i.test(record.buyer)
+    ? "MCA"
+    : /(?:\bMCC\b|Millennium\s+Challenge\s+Corporation)/i.test(record.buyer)
+      ? "MCC"
+      : undefined;
+  if (!client || !config.clients.includes(client)) return undefined;
+  const clientCohort = client.toLocaleLowerCase();
 
   const value = valueFromRecord(record);
   const place = record.countries?.replace(/^\[/, "").replace(/\]$/, "").trim();
@@ -478,7 +447,7 @@ function recordCandidate(
     discoveredAt,
     opportunityName: record.title,
     clientName: record.buyer,
-    funderNames: scope.cohort === "mca" ? [config.mca.funding_agency_name] : undefined,
+    funderNames: [config.funding_agency.funding_agency_name],
     value,
     dueDate,
     placeOfPerformance: place ? { description: place } : undefined,
@@ -490,14 +459,9 @@ function recordCandidate(
     }],
     sourceData: {
       noticeId: record.noticeId,
-      clientCohort: scope.cohort,
-      buyerContactCountryCode: scope.buyerContactCountry?.code,
-      buyerContactCountryName: scope.buyerContactCountry?.name,
-      buyerType: scope.cohort === "eu-member-state-government"
-        ? config.eu_member_states.buyer_type
-        : undefined,
-      fundingAgencyId: scope.cohort === "mca" ? config.mca.funding_agency_id : undefined,
-      fundingAgencyName: scope.cohort === "mca" ? config.mca.funding_agency_name : undefined,
+      clientCohort,
+      fundingAgencyId: config.funding_agency.funding_agency_id,
+      fundingAgencyName: config.funding_agency.funding_agency_name,
       noticeCategoryCode: config.notice_category.code,
       noticeCategoryName: config.notice_category.name,
       originalLanguage: record.originalLanguage,
@@ -526,7 +490,6 @@ export function createDgMarketAdapter(options: DgMarketAdapterOptions): SourceAd
     definition: dgMarketSourceDefinition,
     async scan(context: SourceScanContext): Promise<SourceScanResult> {
       const window = dateWindow(context, options.config);
-      const records = new Map<string, { record: DgMarketRecord; scope: SearchScope }>();
       let requestCount = 0;
 
       const request = async (url: URL, cookie?: string): Promise<Response> => {
@@ -561,76 +524,63 @@ export function createDgMarketAdapter(options: DgMarketAdapterOptions): SourceAd
         return response;
       };
 
-      const runSearch = async (scope: SearchScope): Promise<void> => {
-        const response = await request(searchUrl(options.config, scope, window));
-        const cookie = sessionCookie(response);
-        const firstPage = await parseListPage(response);
-        const criteria = expectedCriteria(options.config, scope, window);
-        assertExpectedCriteria(firstPage, criteria);
-        if (firstPage.pageSize !== pageSize) {
+      const response = await request(searchUrl(options.config, window));
+      const cookie = sessionCookie(response);
+      const firstPage = await parseListPage(response);
+      const criteria = expectedCriteria(options.config, window);
+      assertExpectedCriteria(firstPage, criteria);
+      if (firstPage.pageSize !== pageSize) {
+        throw new SourceScanError(
+          "invalid_pagination",
+          `dgMarket returned page size ${firstPage.pageSize}, expected ${pageSize}.`,
+          true,
+        );
+      }
+      const pageCount = Math.ceil(firstPage.total / pageSize) || 1;
+      if (pageCount > options.config.max_pages_per_search) {
+        throw new SourceScanError(
+          "result_set_too_large",
+          "dgMarket returned more notice pages than the configured scan limit.",
+          false,
+        );
+      }
+      if (pageCount > 1 && !cookie) {
+        throw new SourceScanError(
+          "invalid_session",
+          "dgMarket did not establish the session required for notice pagination.",
+          true,
+        );
+      }
+
+      const found = [...firstPage.records];
+      for (let pageNumber = 2; pageNumber <= pageCount; pageNumber += 1) {
+        const pageUrl = new URL(`${SEARCH_PATH}/gotoPage/${pageNumber}`, BASE_URL);
+        const page = await parseListPage(await request(pageUrl, cookie));
+        assertExpectedCriteria(page, criteria);
+        if (
+          page.total !== firstPage.total ||
+          page.pageSize !== pageSize ||
+          (page.currentPage !== undefined && page.currentPage !== pageNumber)
+        ) {
           throw new SourceScanError(
             "invalid_pagination",
-            `dgMarket returned page size ${firstPage.pageSize}, expected ${pageSize}.`,
+            "dgMarket returned inconsistent notice pagination metadata.",
             true,
           );
         }
-        const pageCount = Math.ceil(firstPage.total / pageSize) || 1;
-        if (pageCount > options.config.max_pages_per_search) {
-          throw new SourceScanError(
-            "result_set_too_large",
-            "dgMarket returned more notice pages than the configured scan limit.",
-            false,
-          );
-        }
-        if (pageCount > 1 && !cookie) {
-          throw new SourceScanError(
-            "invalid_session",
-            "dgMarket did not establish the session required for notice pagination.",
-            true,
-          );
-        }
-
-        const found = [...firstPage.records];
-        for (let pageNumber = 2; pageNumber <= pageCount; pageNumber += 1) {
-          const pageUrl = new URL(`${SEARCH_PATH}/gotoPage/${pageNumber}`, BASE_URL);
-          const page = await parseListPage(await request(pageUrl, cookie));
-          assertExpectedCriteria(page, criteria);
-          if (
-            page.total !== firstPage.total ||
-            page.pageSize !== pageSize ||
-            (page.currentPage !== undefined && page.currentPage !== pageNumber)
-          ) {
-            throw new SourceScanError(
-              "invalid_pagination",
-              "dgMarket returned inconsistent notice pagination metadata.",
-              true,
-            );
-          }
-          found.push(...page.records);
-        }
-        if (found.length !== firstPage.total) {
-          throw new SourceScanError(
-            "invalid_pagination",
-            `dgMarket returned ${found.length} records while reporting ${firstPage.total}.`,
-            true,
-          );
-        }
-        for (const record of found) {
-          if (!records.has(record.noticeId)) records.set(record.noticeId, { record, scope });
-        }
-      };
-
-      await runSearch({ cohort: "mca" });
-      for (const country of options.config.eu_member_states.countries) {
-        await runSearch({
-          cohort: "eu-member-state-government",
-          buyerContactCountry: country,
-        });
+        found.push(...page.records);
+      }
+      if (found.length !== firstPage.total) {
+        throw new SourceScanError(
+          "invalid_pagination",
+          `dgMarket returned ${found.length} records while reporting ${firstPage.total}.`,
+          true,
+        );
       }
 
       const discoveredAt = context.now.toISOString();
-      const candidates = [...records.values()]
-        .map(({ record, scope }) => recordCandidate(record, options.config, scope, discoveredAt))
+      const candidates = found
+        .map((record) => recordCandidate(record, options.config, discoveredAt))
         .filter((candidate): candidate is SourceCandidate => candidate !== undefined)
         .sort((a, b) =>
           (a.publishedAt ?? discoveredAt).localeCompare(b.publishedAt ?? discoveredAt) ||

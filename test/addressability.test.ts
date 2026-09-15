@@ -96,15 +96,17 @@ function euFundingTendersEvent(amount?: number, currency = "EUR") {
 }
 
 function dgMarketEvent(
-  clientCohort: "mca" | "eu-member-state-government",
+  clientCohort: "mcc" | "mca" | "eu-member-state-government",
   amount?: number,
-  currency = clientCohort === "mca" ? "USD" : "EUR",
+  currency = "USD",
 ) {
   return biddingEvent({
     sourceId: "dg-market",
-    clientName: clientCohort === "mca"
-      ? "Millennium Challenge Account Nepal"
-      : "Federal Ministry for Economic Cooperation and Development",
+    clientName: clientCohort === "mcc"
+      ? "Millennium Challenge Corporation"
+      : clientCohort === "mca"
+        ? "Millennium Challenge Account Nepal"
+        : "Federal Ministry for Economic Cooperation and Development",
     opportunityName: "Technical assistance opportunity",
     description: "Capacity building and advisory services",
     value: amount === undefined ? undefined : { amount, currency },
@@ -358,29 +360,32 @@ describe("Addressability Assessment", () => {
     }), configuredRules)).toMatchObject({ status: "uncertain", score: 0 });
   });
 
-  it("applies separate dgMarket MCA and EU government-buyer value floors", () => {
+  it("restricts dgMarket to MCC and MCA with a $500,000 USD floor", () => {
     expect(assessAddressability(dgMarketEvent("mca", 499_999), configuredRules)).toMatchObject({
       status: "excluded",
-      exclusionRuleId: "dg-market-mca-below-minimum-usd-value",
+      exclusionRuleId: "dg-market-mcc-mca-below-minimum-usd-value",
     });
     expect(assessAddressability(dgMarketEvent("mca", 500_000), configuredRules))
       .toMatchObject({ status: "addressable", score: 4 });
-    expect(assessAddressability(
-      dgMarketEvent("eu-member-state-government", 999_999),
-      configuredRules,
-    )).toMatchObject({
+    expect(assessAddressability(dgMarketEvent("mcc", 499_999), configuredRules)).toMatchObject({
       status: "excluded",
-      exclusionRuleId: "dg-market-eu-government-below-minimum-eur-value",
+      exclusionRuleId: "dg-market-mcc-mca-below-minimum-usd-value",
     });
+    expect(assessAddressability(dgMarketEvent("mcc", 500_000), configuredRules))
+      .toMatchObject({ status: "addressable", score: 4 });
     expect(assessAddressability(
-      dgMarketEvent("eu-member-state-government", 1_000_000),
+      dgMarketEvent("eu-member-state-government", 2_000_000, "EUR"),
       configuredRules,
-    )).toMatchObject({ status: "addressable", score: 4 });
+    ))
+      .toMatchObject({
+        status: "excluded",
+        exclusionRuleId: "dg-market-outside-mcc-mca-client-scope",
+      });
     for (const event of [
       dgMarketEvent("mca"),
       dgMarketEvent("mca", 499_999, "EUR"),
-      dgMarketEvent("eu-member-state-government"),
-      dgMarketEvent("eu-member-state-government", 999_999, "USD"),
+      dgMarketEvent("mcc"),
+      dgMarketEvent("mcc", 499_999, "EUR"),
     ]) {
       expect(assessAddressability(event, configuredRules))
         .toMatchObject({ status: "addressable", score: 4 });

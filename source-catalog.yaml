@@ -109,12 +109,12 @@
 
 - site: DGMARKET
   clients:
+    - MCC
     - MCA
-    - EU member-state government organizations
   actual_link: https://www2.dgmarket.com/advanced-search
   additional_links:
     - https://mcc.dgmarket.com/
-  filters_narrative: '$500k minimum for MCA; €1m for EU member-state opportunities; limited to "technical assistance"'
+  filters_narrative: '$500k minimum for MCC and MCA; limited to "technical assistance"'
   requires_login: false
   username: null
   password: null
@@ -122,11 +122,11 @@
     notice_category:
       code: "2"
       name: Consultancy
-    mca:
+    clients:
+      - MCC
+      - MCA
+    funding_agency:
       funding_agency_id: "1385098"
-    eu_member_states:
-      country_field: noticeContactCountry
-      buyer_type: GOVERNMENT
   result_set: public
   authentication: null
   source_module: dg-market
