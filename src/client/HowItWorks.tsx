@@ -107,7 +107,7 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
         <ol className="flow-list">
           <li>
             <strong>Sources are scanned twice daily</strong>
-            <span>New and changed notices are checked at 6:00 AM and 6:00 PM Eastern Time.</span>
+            <span>New and changed notices are checked at 6:00 AM and 6:00 PM UK time.</span>
           </li>
           <li>
             <strong>Source boundaries are applied</strong>

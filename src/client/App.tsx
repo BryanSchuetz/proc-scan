@@ -465,7 +465,7 @@ export default function App() {
         </div>
         <div className="header-meta">
           <span className="read-only-indicator">Read only</span>
-          <span>Scans at 6:00 AM &amp; 6:00 PM ET</span>
+          <span>Scans at 6:00 AM &amp; 6:00 PM UK time</span>
         </div>
       </header>
 
