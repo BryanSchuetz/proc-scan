@@ -89,7 +89,10 @@ export function parseMccDgMarketConfig(raw: string): MccDgMarketConfig {
 }
 
 function normalizedText(value: string | undefined): string | undefined {
-  const normalized = value?.replace(/\s+/g, " ").trim();
+  const normalized = value
+    ?.replace(/(?:&(?:amp;)?nbsp;|&(?:amp;)?#(?:160|xa0);)/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return normalized || undefined;
 }
 
