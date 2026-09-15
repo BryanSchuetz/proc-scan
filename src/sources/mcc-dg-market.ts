@@ -249,15 +249,15 @@ async function parseDetailPage(response: Response, noticeId: string): Promise<De
   const fields: Record<string, string> = {};
 
   const transformed = new HTMLRewriter()
-    .on("#main .notice-title h1", {
+    .on(".notice-title h1", {
       element() { titleParts = []; },
       text(text) { appendText(titleParts, text); },
     })
-    .on("#main .notice-title h4", {
+    .on(".notice-title h4", {
       element() { typeParts = []; },
       text(text) { appendText(typeParts, text); },
     })
-    .on('#main form[name="form1"] > table > tbody > tr', {
+    .on('form[name="form1"] > table > tbody > tr', {
       element(element) {
         rowParts = [];
         element.onEndTag(() => {
@@ -274,7 +274,7 @@ async function parseDetailPage(response: Response, noticeId: string): Promise<De
       },
       text(text) { appendText(rowParts, text); },
     })
-    .on("#main .fixwhitespace-wrapper", {
+    .on(".fixwhitespace-wrapper", {
       element() { descriptionParts = []; },
       text(text) { appendText(descriptionParts, text); },
     })
