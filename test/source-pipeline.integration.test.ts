@@ -275,6 +275,7 @@ beforeAll(async () => {
     'scan_grants_fixture_reclass_first', 'scan_grants_fixture_reclass_second',
     'scan_grants_fixture_cancel_tender', 'scan_grants_fixture_cancelled',
     'scan_grants_fixture_award_tender', 'scan_grants_fixture_awarded',
+    'scan_grants_fixture_result_before_awards', 'scan_grants_fixture_result_after_awards',
     'scan_sam_fixture_first', 'scan_sam_fixture_second',
     'scan_ted_fixture_first', 'scan_ted_fixture_second',
     'scan_eu_funding_tenders_fixture_first', 'scan_eu_funding_tenders_fixture_second'
@@ -690,5 +691,46 @@ describe("Source processing integration", () => {
       ORDER BY published_at`)
       .all<{ event_type: string }>();
     expect(events.results.map(({ event_type }) => event_type)).toEqual(["tender", "award"]);
+  });
+
+  it("reclassifies an existing result notice as an Award in place", async () => {
+    const result: SourceCandidate = {
+      sourceId: "grants-gov",
+      sourceEventId: "result-before-awards-fixture",
+      sourceOpportunityId: "result-before-awards-fixture",
+      canonicalUrl: "https://grants.gov/search-results-detail/result-before-awards-fixture",
+      originalEventType: "contract-award-notice",
+      eventType: "tender",
+      publishedAt: "2026-08-30T10:00:00.000Z",
+      opportunityName: "Result published before Award support",
+      value: { amount: 750_000, currency: "USD" },
+      sourceData: { formType: "result" },
+    };
+    await processSingleCandidateScan(
+      "scan_grants_fixture_result_before_awards",
+      "grants-fixture:result-before-awards",
+      new Date("2026-08-30T10:00:00.000Z"),
+      result,
+    );
+    const first = await env.DB.prepare(`SELECT id, event_type, content_fingerprint
+      FROM bidding_events WHERE source_id = 'grants-gov' AND source_event_id = ?`)
+      .bind(result.sourceEventId)
+      .first<{ id: string; event_type: string; content_fingerprint: string }>();
+
+    await processSingleCandidateScan(
+      "scan_grants_fixture_result_after_awards",
+      "grants-fixture:result-after-awards",
+      new Date("2026-08-30T22:00:00.000Z"),
+      { ...result, eventType: "award" },
+    );
+
+    const events = await env.DB.prepare(`SELECT id, event_type, content_fingerprint,
+      json_extract(ocds_release_json, '$.tag[0]') AS ocds_tag
+      FROM bidding_events WHERE source_id = 'grants-gov' AND source_event_id = ?`)
+      .bind(result.sourceEventId)
+      .all<{ id: string; event_type: string; content_fingerprint: string; ocds_tag: string }>();
+    expect(events.results).toHaveLength(1);
+    expect(events.results[0]).toMatchObject({ id: first?.id, event_type: "award", ocds_tag: "award" });
+    expect(events.results[0].content_fingerprint).not.toBe(first?.content_fingerprint);
   });
 });
