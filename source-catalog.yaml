@@ -94,26 +94,14 @@
   access_method: api
 
 - site: EU Funding & Tenders Portal
-  clients:
-    - DG AGRI
-    - DG CLIMA
-    - DG ECHO
-    - DG CINEA
-    - DG GROW
-    - DG IDEA
-    - DG REA
-    - DG INTPA
-    - DG DEV
-    - DG ENEST
-    - DG MENA
-    - DG TRADE
+  clients: null
   actual_link: https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/home
   additional_links: null
   filters_narrative: "€1m; service tender"
   requires_login: false
   username: null
   password: null
-  filters_automation_rules: null
+  filters_automation_rules: "Retain forthcoming and open calls for tenders from all clients; apply the €1m floor only to known positive EUR values"
   result_set: public
   authentication: calls for proposals and tenders
   source_module: eu-funding-tenders

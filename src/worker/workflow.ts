@@ -40,10 +40,7 @@ import { runSourceAdapter } from "../pipeline/run-source";
 import { SourceScanError } from "../sources/adapter";
 import { createRegisteredSourceAdapter } from "../sources";
 import { parseDgMarketConfig } from "../sources/dg-market";
-import {
-  parseEuFundingTendersConfig,
-  validateEuFundingTendersClientScope,
-} from "../sources/eu-funding-tenders";
+import { parseEuFundingTendersConfig } from "../sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../sources/grants-gov";
 import { parseSamGovConfig } from "../sources/sam-gov";
 import { parseSimapConfig } from "../sources/simap";
@@ -62,7 +59,6 @@ const ted = parseTedConfig(tedRaw);
 const simap = parseSimapConfig(simapRaw);
 const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
 validateGrantsGovScope(grantsGov, samGov.organizations);
-validateEuFundingTendersClientScope(euFundingTenders, ted.clients);
 
 export interface ScanWorkflowParams {
   requestedAt?: string;

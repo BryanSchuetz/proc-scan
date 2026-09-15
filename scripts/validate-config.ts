@@ -8,10 +8,7 @@ import {
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
 import { parseDgMarketConfig } from "../src/sources/dg-market";
-import {
-  parseEuFundingTendersConfig,
-  validateEuFundingTendersClientScope,
-} from "../src/sources/eu-funding-tenders";
+import { parseEuFundingTendersConfig } from "../src/sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
 import { parseSimapConfig } from "../src/sources/simap";
@@ -51,7 +48,6 @@ const simap = parseSimapConfig(simapRaw);
 const ted = parseTedConfig(tedRaw);
 const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
 validateGrantsGovScope(grantsGov, samGov.organizations);
-validateEuFundingTendersClientScope(euFundingTenders, ted.clients);
 
 console.log(
   `Configuration valid: ${flattenTaxonomy(taxonomy).length} Technical Areas; ` +
@@ -62,5 +58,5 @@ console.log(
     `${simap.organizations.length} SIMAP organizations; ` +
     `dgMarket MCA plus ${dgMarket.eu_member_states.countries.length} EU government-buyer countries; ` +
     `TED ${ted.scope.toLocaleLowerCase()} external-aid scope with ${ted.clients.length} clients; ` +
-    `EU Funding & Tenders ${euFundingTenders.opportunity_type} with ${euFundingTenders.clients.length} clients.`,
+    `EU Funding & Tenders ${euFundingTenders.opportunity_type} without a client filter.`,
 );

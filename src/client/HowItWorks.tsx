@@ -33,9 +33,9 @@ const sources = [
   },
   {
     name: "EU Funding & Tenders",
-    clients: euClients,
+    clients: "All clients",
     value: "€1 million",
-    scope: "Forthcoming and open calls for tenders. Grant topics are not included because the responsible Directorate-General cannot be confirmed reliably.",
+    scope: "Forthcoming and open calls for tenders. Grant topics are not included.",
   },
   {
     name: "SAM.gov",

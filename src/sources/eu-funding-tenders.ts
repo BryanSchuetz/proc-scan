@@ -127,7 +127,6 @@ const euFundingTendersConfigSchema = z.object({
   schema_version: z.number().int().positive(),
   opportunity_type: z.literal("calls-for-tenders"),
   pursuable_statuses: z.array(z.enum(["forthcoming", "open"])).min(1),
-  clients: z.array(z.string().regex(/^DG [A-Z][A-Z0-9-]*$/)).min(1),
   language: z.literal("en"),
   sort: z.literal("startDate DESC"),
   page_size: z.number().int().min(1).max(MAX_PAGE_SIZE),
@@ -153,24 +152,10 @@ export interface EuFundingTendersAdapterOptions {
 
 export function parseEuFundingTendersConfig(raw: string): EuFundingTendersConfig {
   const config = euFundingTendersConfigSchema.parse(parse(raw));
-  if (new Set(config.clients).size !== config.clients.length) {
-    throw new Error("Duplicate EU Funding & Tenders client");
-  }
   if (new Set(config.pursuable_statuses).size !== config.pursuable_statuses.length) {
     throw new Error("Duplicate EU Funding & Tenders pursuable status");
   }
   return config;
-}
-
-export function validateEuFundingTendersClientScope(
-  config: EuFundingTendersConfig,
-  tedClients: readonly string[],
-): void {
-  const configured = [...config.clients].sort();
-  const expected = [...tedClients].sort();
-  if (configured.length !== expected.length || configured.some((client, index) => client !== expected[index])) {
-    throw new Error("EU Funding & Tenders clients must match the approved TED client scope");
-  }
 }
 
 function sourceErrorForStatus(status: number): SourceScanError {
@@ -318,22 +303,6 @@ function leadAuthorities(record: SearchResult): LeadAuthority[] {
   );
 }
 
-function clientCode(client: string): string {
-  return client.slice("DG ".length);
-}
-
-function matchedClient(
-  authorities: readonly LeadAuthority[],
-  clients: readonly string[],
-): { filter: string; authority: LeadAuthority } | undefined {
-  for (const client of clients) {
-    const codePattern = new RegExp(`(^|[^A-Z0-9])${clientCode(client)}([^A-Z0-9]|$)`, "i");
-    const authority = authorities.find(({ name }) => codePattern.test(name));
-    if (authority) return { filter: client, authority };
-  }
-  return undefined;
-}
-
 function corrigenda(record: SearchResult): CorrigendumNotice[] {
   const notices: CorrigendumNotice[] = [];
   for (const encoded of record.metadata.cftCorrigendaList) {
@@ -457,7 +426,6 @@ function sourceOpportunityId(record: SearchResult): string {
 function candidateFromResult(
   record: SearchResult,
   authorities: readonly LeadAuthority[],
-  client: { filter: string; authority: LeadAuthority },
   status: keyof typeof STATUS_CODES,
   discoveredAt: string,
 ): SourceCandidate {
@@ -498,7 +466,7 @@ function candidateFromResult(
     discoveredAt,
     opportunityName,
     description: uniqueTexts(record.metadata.description).join("\n") || undefined,
-    clientName: client.authority.name,
+    clientName: authorities[0]?.name,
     value,
     dueDate: due.value,
     sourceStatus: status,
@@ -518,7 +486,6 @@ function candidateFromResult(
       statusCode: STATUS_CODES[status],
       status,
       noticeKind: kind,
-      clientFilter: client.filter,
       leadContractingAuthorities: authorities,
       partyLegalEntityIds: [...new Set(record.metadata.cftPartyLegalEntityId)].sort(),
       procedureTypeCodes: [...new Set(record.metadata.procedureType)].sort(),
@@ -631,12 +598,10 @@ export function createEuFundingTendersAdapter(
       const discoveredAt = context.now.toISOString();
       const candidates = [...records.values()].flatMap((record) => {
         const authorities = leadAuthorities(record);
-        const client = matchedClient(authorities, options.config.clients);
-        if (!client) return [];
         const statusCode = record.metadata.status[0];
         const status = configuredStatusCodes.get(statusCode);
         if (!status) return [];
-        return [candidateFromResult(record, authorities, client, status, discoveredAt)];
+        return [candidateFromResult(record, authorities, status, discoveredAt)];
       }).sort((a, b) =>
         (a.publishedAt ?? discoveredAt).localeCompare(b.publishedAt ?? discoveredAt) ||
         (a.sourceEventId ?? "").localeCompare(b.sourceEventId ?? ""),

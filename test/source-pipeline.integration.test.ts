@@ -501,8 +501,8 @@ describe("Source processing integration", () => {
       new Date("2026-08-29T10:00:00.000Z"),
     );
     expect(first).toMatchObject({
-      discoveredCount: 3,
-      retainedCount: 2,
+      discoveredCount: 5,
+      retainedCount: 4,
       excludedCount: 1,
       duplicateCount: 0,
     });
@@ -524,10 +524,22 @@ describe("Source processing integration", () => {
         value_amount: 1_000_000,
       },
       {
+        source_event_id: "33333333-3333-4333-8333-333333333333-EXA",
+        event_type: "tender",
+        addressability_status: "uncertain",
+        value_amount: 2_000_000,
+      },
+      {
         source_event_id: "44444444-4444-4444-8444-444444444444-CN",
         event_type: "tender",
         addressability_status: "addressable",
         value_amount: 3_000_000,
+      },
+      {
+        source_event_id: "55555555-5555-4555-8555-555555555555-CN",
+        event_type: "tender",
+        addressability_status: "addressable",
+        value_amount: 4_000_000,
       },
     ]);
 
@@ -537,10 +549,10 @@ describe("Source processing integration", () => {
       new Date("2026-08-29T22:00:00.000Z"),
     );
     expect(second).toMatchObject({
-      discoveredCount: 3,
+      discoveredCount: 5,
       retainedCount: 0,
       excludedCount: 1,
-      duplicateCount: 2,
+      duplicateCount: 4,
     });
     const source = await env.DB.prepare(
       "SELECT cursor_json FROM sources WHERE id = 'eu-funding-tenders'",

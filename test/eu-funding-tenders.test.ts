@@ -34,7 +34,7 @@ function fixtureFetcher(requests: Array<{ url: URL; body: FormData }> = []) {
 }
 
 describe("EU Funding & Tenders Source adapter", () => {
-  it("paginates open tender calls and maps only approved lead authorities", async () => {
+  it("paginates open tender calls without filtering lead authorities", async () => {
     const requests: Array<{ url: URL; body: FormData }> = [];
     const adapter = createEuFundingTendersAdapter({
       config,
@@ -72,13 +72,11 @@ describe("EU Funding & Tenders Source adapter", () => {
     );
 
     expect(result.nextCursor).toEqual({ value: now.toISOString() });
-    expect(result.candidates.map(({ sourceEventId }) => sourceEventId)).toEqual([
-      "11111111-1111-4111-8111-111111111111-PIN",
-      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-      "44444444-4444-4444-8444-444444444444-CN",
-    ]);
-    expect(result.candidates.map(({ opportunityName }) => opportunityName)).not.toContain("Laboratory supplies");
-    expect(result.candidates.map(({ opportunityName }) => opportunityName)).not.toContain("Development research services");
+    expect(result.candidates).toHaveLength(5);
+    expect(result.candidates.map(({ opportunityName }) => opportunityName)).toEqual(expect.arrayContaining([
+      "Laboratory supplies",
+      "Development research services",
+    ]));
 
     expect(result.candidates[0]).toMatchObject({
       sourceId: "eu-funding-tenders",
@@ -95,7 +93,6 @@ describe("EU Funding & Tenders Source adapter", () => {
       sourceStatus: "forthcoming",
       sourceData: {
         callIdentifier: "CINEA/2026/OP/0042-PIN",
-        clientFilter: "DG CINEA",
         noticeKind: "prior-information-notice",
         statusCode: "31094501",
         valueBasis: "estimated-total-procedure-value",
@@ -114,20 +111,20 @@ describe("EU Funding & Tenders Source adapter", () => {
       value: { amount: 1_000_000, currency: "EUR" },
       dueDate: "2026-10-01T16:00:59.000Z",
       sourceData: {
-        clientFilter: "DG GROW",
         deadlineBasis: "deadline-date",
         publicationDateBasis: "corrigendum-publication-date",
         portalReference: "22222222-2222-4222-8222-222222222222-CN",
       },
     });
-    expect(result.candidates[2]).toMatchObject({
+    expect(result.candidates.find(({ sourceEventId }) =>
+      sourceEventId === "44444444-4444-4444-8444-444444444444-CN"
+    )).toMatchObject({
       clientName: "Commission européenne, INTPA - International Partnerships",
       description: "Technical assistance, training and implementation support for public digital services.",
       value: { amount: 3_000_000, currency: "EUR" },
       dueDate: "2026-10-15T14:00:59.000Z",
       sourceStatus: "open",
       sourceData: {
-        clientFilter: "DG INTPA",
         deadlineBasis: "two-stage-deadline",
       },
     });

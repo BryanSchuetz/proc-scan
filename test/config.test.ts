@@ -15,10 +15,7 @@ import {
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
 import { parseDgMarketConfig } from "../src/sources/dg-market";
-import {
-  parseEuFundingTendersConfig,
-  validateEuFundingTendersClientScope,
-} from "../src/sources/eu-funding-tenders";
+import { parseEuFundingTendersConfig } from "../src/sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
 import { parseSimapConfig } from "../src/sources/simap";
@@ -160,37 +157,28 @@ page_size: 250
 });
 
 describe("EU Funding & Tenders configuration", () => {
-  it("loads open tender calls with the same approved clients as TED", () => {
+  it("loads open tender calls without a client filter", () => {
     const portal = parseEuFundingTendersConfig(euFundingTendersRaw);
-    const ted = parseTedConfig(tedRaw);
 
-    expect(() => validateEuFundingTendersClientScope(portal, ted.clients)).not.toThrow();
     expect(portal).toEqual({
       schema_version: 1,
       opportunity_type: "calls-for-tenders",
       pursuable_statuses: ["forthcoming", "open"],
-      clients: ted.clients,
       language: "en",
       sort: "startDate DESC",
       page_size: 100,
     });
   });
 
-  it("rejects duplicate clients and a client scope that drifts from TED", () => {
+  it("rejects duplicate pursuable statuses", () => {
     expect(() => parseEuFundingTendersConfig(`
 schema_version: 1
 opportunity_type: calls-for-tenders
-pursuable_statuses: [open]
-clients: [DG INTPA, DG INTPA]
+pursuable_statuses: [open, open]
 language: en
 sort: startDate DESC
 page_size: 100
-`)).toThrow("Duplicate EU Funding & Tenders client");
-
-    const portal = parseEuFundingTendersConfig(euFundingTendersRaw);
-    expect(() => validateEuFundingTendersClientScope(portal, ["DG INTPA"])).toThrow(
-      "EU Funding & Tenders clients must match the approved TED client scope",
-    );
+`)).toThrow("Duplicate EU Funding & Tenders pursuable status");
   });
 });
 
