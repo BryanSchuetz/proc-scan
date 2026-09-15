@@ -1,4 +1,4 @@
-PRAGMA foreign_keys = OFF;
+PRAGMA defer_foreign_keys = ON;
 
 DROP TRIGGER bidding_events_fts_insert;
 DROP TRIGGER bidding_events_fts_delete;
@@ -91,4 +91,4 @@ END;
 
 INSERT INTO bidding_events_fts(bidding_events_fts) VALUES('rebuild');
 
-PRAGMA foreign_keys = ON;
+PRAGMA defer_foreign_keys = OFF;
