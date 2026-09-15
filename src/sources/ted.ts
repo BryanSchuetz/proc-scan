@@ -39,6 +39,7 @@ const SEARCH_FIELDS = [
   "estimated-value-cur-lot",
   "notice-type",
   "form-type",
+  "contract-nature",
   "classification-cpv",
   "funding",
   "change-notice-version-identifier",
@@ -101,6 +102,7 @@ const noticeSchema = z.object({
   "estimated-value-cur-lot": optionalTextArray,
   "notice-type": z.string().trim().min(1),
   "form-type": z.string().trim().min(1),
+  "contract-nature": optionalTextArray,
   "classification-cpv": optionalTextArray,
   funding: z.array(z.string().trim().min(1)),
   "change-notice-version-identifier": optionalText,
@@ -116,11 +118,11 @@ const responseSchema = z.object({
 const tedConfigSchema = z.object({
   schema_version: z.number().int().positive(),
   funding: z.literal(EXTERNAL_AID_FUNDING),
-  clients: z.array(z.string().regex(/^DG [A-Z][A-Z0-9-]*$/)).min(1),
+  contract_nature: z.literal("services"),
   sort: z.literal("publication-number DESC"),
   scope: z.enum(["LATEST", "ACTIVE", "ALL"]),
   only_latest_versions: z.boolean(),
-  pursuable_form_types: z.array(z.enum(["planning", "competition"])).min(1),
+  pursuable_form_types: z.array(z.enum(["result", "competition", "planning"])).min(1),
   page_size: z.number().int().min(1).max(MAX_PAGE_SIZE),
 });
 
@@ -143,22 +145,15 @@ export interface TedAdapterOptions {
 
 export function parseTedConfig(raw: string): TedConfig {
   const config = tedConfigSchema.parse(parse(raw));
-  if (new Set(config.clients).size !== config.clients.length) {
-    throw new Error("Duplicate TED client");
-  }
   if (new Set(config.pursuable_form_types).size !== config.pursuable_form_types.length) {
     throw new Error("Duplicate TED pursuable form type");
   }
   return config;
 }
 
-function clientCode(client: string): string {
-  return client.slice("DG ".length);
-}
-
 function expertQuery(config: TedConfig): string {
-  const clients = config.clients.map(clientCode).join(" ");
-  return `(funding IN (${config.funding})) AND (buyer-name IN (${clients})) SORT BY ${config.sort}`;
+  const formTypes = config.pursuable_form_types.join(" ");
+  return `(funding IN (${config.funding})) AND (contract-nature IN (${config.contract_nature})) AND (form-type IN (${formTypes})) SORT BY ${config.sort}`;
 }
 
 function sourceErrorForStatus(status: number): SourceScanError {
@@ -264,22 +259,6 @@ function preferredTexts(values: Record<string, string[]> | undefined): string[] 
     : [];
 }
 
-function allTexts(values: Record<string, string[]> | undefined): string[] {
-  if (!values) return [];
-  return [...new Set(Object.keys(values).sort().flatMap((language) =>
-    values[language].map((value) => normalizedText(value)).filter((value): value is string => !!value)
-  ))];
-}
-
-function matchedClient(notice: TedNotice, clients: readonly string[]): string | undefined {
-  const buyerNames = allTexts(notice["buyer-name"]);
-  return clients.find((client) => {
-    const code = clientCode(client);
-    const codePattern = new RegExp(`(^|[^A-Z0-9])${code}([^A-Z0-9]|$)`, "i");
-    return buyerNames.some((buyerName) => codePattern.test(buyerName));
-  });
-}
-
 function normalizedTedDate(value: string): string | undefined {
   const match = /^(\d{4})-(\d{2})-(\d{2})(?:Z|[+-]\d{2}:\d{2})?$/.exec(value);
   if (!match) return undefined;
@@ -376,7 +355,6 @@ function candidateFromNotice(
   notice: TedNotice,
   noticesByIdentifier: ReadonlyMap<string, TedNotice>,
   discoveredAt: string,
-  clientFilter: string,
 ): SourceCandidate {
   const publicationNumber = notice["publication-number"];
   const canonicalUrl = `https://ted.europa.eu/en/notice/-/detail/${encodeURIComponent(publicationNumber)}`;
@@ -447,9 +425,9 @@ function candidateFromNotice(
       procedureIdentifier: notice["procedure-identifier"],
       formType: notice["form-type"],
       noticeType: notice["notice-type"],
+      contractNature: [...new Set(notice["contract-nature"])].sort(),
       funding: [...new Set(notice.funding)].sort(),
       classificationCpv: [...new Set(notice["classification-cpv"])].sort(),
-      clientFilter,
       buyerNames,
       buyerCountries: [...new Set(notice["buyer-country"])].sort(),
       placeOfPerformance: [...new Set(notice["place-of-performance"])].sort(),
@@ -473,8 +451,6 @@ export function createTedAdapter(options: TedAdapterOptions): SourceAdapter {
   if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
     throw new Error(`TED pageSize must be between 1 and ${MAX_PAGE_SIZE}`);
   }
-  const pursuableFormTypes = new Set(options.config.pursuable_form_types);
-
   return {
     definition: tedSourceDefinition,
     async scan(context: SourceScanContext): Promise<SourceScanResult> {
@@ -532,6 +508,22 @@ export function createTedAdapter(options: TedAdapterOptions): SourceAdapter {
             true,
           );
         }
+        if (!parsed.data["contract-nature"].includes(options.config.contract_nature)) {
+          throw new SourceScanError(
+            "unexpected_scope",
+            `TED returned notice ${parsed.data["publication-number"]} outside the services scope.`,
+            true,
+          );
+        }
+        if (!options.config.pursuable_form_types.includes(
+          parsed.data["form-type"] as TedConfig["pursuable_form_types"][number],
+        )) {
+          throw new SourceScanError(
+            "unexpected_scope",
+            `TED returned notice ${parsed.data["publication-number"]} outside the configured business-opportunity scope.`,
+            true,
+          );
+        }
         return parsed.data;
       });
       const noticesByIdentifier = new Map(
@@ -539,12 +531,7 @@ export function createTedAdapter(options: TedAdapterOptions): SourceAdapter {
       );
       const discoveredAt = context.now.toISOString();
       const candidates = notices
-        .filter((notice) => pursuableFormTypes.has(notice["form-type"] as "planning" | "competition"))
-        .map((notice) => {
-          const client = matchedClient(notice, options.config.clients);
-          return client ? candidateFromNotice(notice, noticesByIdentifier, discoveredAt, client) : undefined;
-        })
-        .filter((candidate): candidate is SourceCandidate => candidate !== undefined)
+        .map((notice) => candidateFromNotice(notice, noticesByIdentifier, discoveredAt))
         .sort((a, b) =>
           (a.publishedAt ?? discoveredAt).localeCompare(b.publishedAt ?? discoveredAt) ||
           (a.sourceEventId ?? "").localeCompare(b.sourceEventId ?? ""),

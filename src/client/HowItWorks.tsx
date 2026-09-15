@@ -27,9 +27,9 @@ const sources = [
   },
   {
     name: "TED",
-    clients: euClients,
+    clients: "All external-aid buyers",
     value: "€1 million",
-    scope: "Active external-aid planning and competition notices. Results and post-award notices are excluded.",
+    scope: "Active external-aid service notices for planning, competition, and results.",
   },
   {
     name: "EU Funding & Tenders",

@@ -459,8 +459,8 @@ describe("Source processing integration", () => {
       new Date("2026-08-28T10:00:00.000Z"),
     );
     expect(first).toMatchObject({
-      discoveredCount: 4,
-      retainedCount: 3,
+      discoveredCount: 5,
+      retainedCount: 4,
       excludedCount: 1,
       duplicateCount: 0,
     });
@@ -474,8 +474,9 @@ describe("Source processing integration", () => {
       }>();
     expect(rows.results).toEqual([
       { source_event_id: "original-notice-01", event_type: "tender", addressability_status: "addressable" },
+      { source_event_id: "result-notice-01", event_type: "tender", addressability_status: "addressable" },
       { source_event_id: "change-notice-01", event_type: "modification", addressability_status: "addressable" },
-      { source_event_id: "goods-notice-02", event_type: "tender", addressability_status: "uncertain" },
+      { source_event_id: "other-buyer-notice-02", event_type: "tender", addressability_status: "addressable" },
     ]);
 
     const second = await processTedScan(
@@ -484,14 +485,14 @@ describe("Source processing integration", () => {
       new Date("2026-08-28T22:00:00.000Z"),
     );
     expect(second).toMatchObject({
-      discoveredCount: 4,
+      discoveredCount: 5,
       retainedCount: 0,
       excludedCount: 1,
-      duplicateCount: 3,
+      duplicateCount: 4,
     });
     const stored = await env.DB.prepare("SELECT COUNT(*) AS total FROM bidding_events WHERE source_id = 'ted'")
       .first<{ total: number }>();
-    expect(stored?.total).toBe(3);
+    expect(stored?.total).toBe(4);
   });
 
   it("applies the EU Funding & Tenders floor, shared scoring, and snapshot idempotency", async () => {

@@ -37,7 +37,7 @@ function fixtureFetcher(requests: Record<string, unknown>[] = []) {
 }
 
 describe("TED Source adapter", () => {
-  it("iterates the active external-aid snapshot and maps pursuable notices", async () => {
+  it("iterates active external-aid service notices without filtering buyers", async () => {
     const requests: Record<string, unknown>[] = [];
     const adapter = createTedAdapter({
       config,
@@ -55,7 +55,7 @@ describe("TED Source adapter", () => {
       "ted-finished",
     ]);
     expect(requests[0]).toMatchObject({
-      query: "(funding IN (external-aid-program)) AND (buyer-name IN (AGRI CLIMA ECHO CINEA GROW IDEA REA INTPA DEV ENEST MENA TRADE)) SORT BY publication-number DESC",
+      query: "(funding IN (external-aid-program)) AND (contract-nature IN (services)) AND (form-type IN (result competition planning)) SORT BY publication-number DESC",
       limit: 2,
       scope: "ACTIVE",
       checkQuerySyntax: false,
@@ -68,15 +68,16 @@ describe("TED Source adapter", () => {
       "future-notice",
       "estimated-value-proc",
       "estimated-value-cur-proc",
+      "contract-nature",
     ]));
     expect(result.nextCursor).toEqual({ value: now.toISOString() });
     expect(result.candidates.map((candidate) => candidate.sourceEventId)).toEqual([
       "planning-notice-01",
       "original-notice-01",
+      "result-notice-01",
       "change-notice-01",
-      "goods-notice-02",
+      "other-buyer-notice-02",
     ]);
-    expect(result.candidates.map((candidate) => candidate.sourceEventId)).not.toContain("result-notice-01");
 
     expect(result.candidates[0]).toMatchObject({
       sourceId: "ted",
@@ -96,8 +97,8 @@ describe("TED Source adapter", () => {
         publicationNumber: "100001-2026",
         noticeVersionIdentifier: "planning-notice-01",
         funding: ["external-aid-program"],
+        contractNature: ["services"],
         classificationCpv: ["79410000"],
-        clientFilter: "DG INTPA",
         procedureEstimatedValue: 750_000,
         procedureEstimatedValueCurrency: "EUR",
         valueBasis: "estimated-procedure-value",
@@ -117,12 +118,16 @@ describe("TED Source adapter", () => {
       dueDate: "2026-10-08T12:30:59.000Z",
       sourceData: {
         classificationCpv: ["72000000"],
-        clientFilter: "DG IDEA",
         futureNoticeDate: "2026-09-15Z",
         deadlineBasis: "tender-deadline",
       },
     });
     expect(result.candidates[2]).toMatchObject({
+      sourceEventId: "result-notice-01",
+      opportunityName: "Public financial management technical assistance",
+      clientName: "European Commission, TRADE - Trade and Economic Security",
+    });
+    expect(result.candidates[3]).toMatchObject({
       sourceOpportunityId: "procedure-digital",
       eventType: "modification",
       isFormalAmendment: true,
@@ -133,15 +138,16 @@ describe("TED Source adapter", () => {
         deadlineBasis: "request-deadline",
       },
     });
-    expect(result.candidates[3]).toMatchObject({
+    expect(result.candidates[4]).toMatchObject({
       eventType: "tender",
-      opportunityName: "Supply of computers and equipment",
+      opportunityName: "Public administration reform advisory services",
+      clientName: "International Development Agency",
       value: undefined,
       dueDate: "2026-10-20T16:00:59.000Z",
     });
   });
 
-  it("filters buyers that do not identify an approved DG client", async () => {
+  it("retains buyers outside the former DG allowlist", async () => {
     const notice = {
       ...page0.notices[1],
       "buyer-name": {
@@ -157,10 +163,9 @@ describe("TED Source adapter", () => {
       })) as typeof fetch,
     });
 
-    await expect(adapter.scan(scanContext())).resolves.toEqual({
-      candidates: [],
-      nextCursor: { value: now.toISOString() },
-    });
+    const result = await adapter.scan(scanContext());
+    expect(result.candidates).toHaveLength(1);
+    expect(result.candidates[0].clientName).toBe("International Development Agency");
   });
 
   it("returns an empty full snapshot", async () => {

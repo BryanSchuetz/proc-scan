@@ -5,21 +5,21 @@
   "notices": [
     {
       "publication-number": "100005-2026",
-      "notice-identifier": "goods-notice",
+      "notice-identifier": "other-buyer-notice",
       "notice-version": 2,
-      "procedure-identifier": "procedure-goods",
+      "procedure-identifier": "procedure-governance",
       "publication-date": "2026-08-24Z",
       "notice-title": {
-        "eng": "Bosnia and Herzegovina – Equipment – Supply of computers"
+        "eng": "Bosnia and Herzegovina – Services – Public administration reform"
       },
       "title-proc": {
-        "eng": "Supply of computers and equipment"
+        "eng": "Public administration reform advisory services"
       },
       "description-lot": {
-        "eng": ["Delivery of computer hardware and office equipment."]
+        "eng": ["Technical assistance for institutional strengthening."]
       },
       "buyer-name": {
-        "eng": ["European Commission, ENEST"]
+        "eng": ["International Development Agency"]
       },
       "buyer-country": ["BIH"],
       "place-of-performance": ["BIH", "anyw"],
@@ -28,7 +28,8 @@
       "deadline-receipt-tender-time-lot": ["16:00:59Z"],
       "notice-type": "cn-standard",
       "form-type": "competition",
-      "classification-cpv": ["30200000"],
+      "contract-nature": ["services"],
+      "classification-cpv": ["79410000"],
       "funding": ["external-aid-program"]
     },
     {
@@ -61,6 +62,7 @@
       "estimated-value-cur-proc": "EUR",
       "notice-type": "cn-standard",
       "form-type": "competition",
+      "contract-nature": ["services"],
       "classification-cpv": ["72000000"],
       "funding": ["external-aid-program"],
       "change-notice-version-identifier": "original-notice-01",

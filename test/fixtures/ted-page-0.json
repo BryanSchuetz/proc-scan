@@ -10,10 +10,10 @@
       "procedure-identifier": "procedure-awarded",
       "publication-date": "2026-08-22+02:00",
       "notice-title": {
-        "eng": "Award result for equipment"
+        "eng": "Award result for advisory services"
       },
       "title-proc": {
-        "eng": "Supply of equipment"
+        "eng": "Public financial management technical assistance"
       },
       "buyer-name": {
         "eng": ["European Commission, TRADE - Trade and Economic Security"]
@@ -23,7 +23,8 @@
       "place-of-performance-country-proc": ["BIH"],
       "notice-type": "can-standard",
       "form-type": "result",
-      "classification-cpv": ["30000000"],
+      "contract-nature": ["services"],
+      "classification-cpv": ["79410000"],
       "funding": ["external-aid-program"],
       "links": {
         "xml": {
@@ -67,6 +68,7 @@
       "estimated-value-cur-lot": ["EUR"],
       "notice-type": "cn-standard",
       "form-type": "competition",
+      "contract-nature": ["services"],
       "classification-cpv": ["72000000", "72000000"],
       "funding": ["external-aid-program"],
       "links": {
@@ -100,6 +102,7 @@
       "estimated-value-cur-proc": "EUR",
       "notice-type": "pin-only",
       "form-type": "planning",
+      "contract-nature": ["services"],
       "classification-cpv": ["79410000"],
       "funding": ["external-aid-program"],
       "links": {

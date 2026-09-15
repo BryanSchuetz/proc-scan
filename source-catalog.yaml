@@ -68,28 +68,16 @@
   access_method: html
 
 - site: TED
-  clients:
-    - DG AGRI
-    - DG CLIMA
-    - DG ECHO
-    - DG CINEA
-    - DG GROW
-    - DG IDEA
-    - DG REA
-    - DG INTPA
-    - DG DEV
-    - DG ENEST
-    - DG MENA
-    - DG TRADE
-  actual_link: "https://ted.europa.eu/en/search/result?query=%28funding+IN+%28external-aid-program%29%29+AND+%28buyer-name+IN+%28AGRI+CLIMA+ECHO+CINEA+GROW+IDEA+REA+INTPA+DEV+ENEST+MENA+TRADE%29%29+SORT+BY+publication-number+DESC&scope=ACTIVE&onlyLatestVersions=false&sortColumn=publication-number&sortOrder=DESC&page=1"
+  clients: null
+  actual_link: "https://ted.europa.eu/en/search/result?query=%28funding+IN+%28external-aid-program%29%29+AND+%28contract-nature+IN+%28services%29%29+AND+%28form-type+IN+%28result+competition+planning%29%29+SORT+BY+publication-number+DESC&scope=ACTIVE&onlyLatestVersions=false&sortColumn=publication-number&sortOrder=DESC&page=1"
   additional_links: null
-  filters_narrative: "€1m; service tender"
+  filters_narrative: "€1m; external-aid services; result, competition, and planning business opportunities"
   requires_login: false
   username: null
   password: null
-  filters_automation_rules: null
+  filters_automation_rules: "Search active external-aid notices for service contracts across all buyers; include result, competition, and planning form types; apply the €1m floor only to known positive EUR values"
   result_set: public
-  authentication: filter by services
+  authentication: null
   source_module: ted
   access_method: api
 

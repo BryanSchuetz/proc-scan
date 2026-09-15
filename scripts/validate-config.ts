@@ -57,6 +57,6 @@ console.log(
     `${samGov.organizations.length} SAM.gov organizations; ` +
     `${simap.organizations.length} SIMAP organizations; ` +
     `dgMarket ${dgMarket.clients.join(" and ")} clients; ` +
-    `TED ${ted.scope.toLocaleLowerCase()} external-aid scope with ${ted.clients.length} clients; ` +
+    `TED ${ted.scope.toLocaleLowerCase()} external-aid ${ted.contract_nature} for ${ted.pursuable_form_types.join(", ")}; ` +
     `EU Funding & Tenders ${euFundingTenders.opportunity_type} without a client filter.`,
 );

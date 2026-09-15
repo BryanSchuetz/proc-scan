@@ -103,50 +103,24 @@ describe("Grants.gov configuration", () => {
 });
 
 describe("TED configuration", () => {
-  it("loads the active external-aid search with the approved DG clients", () => {
+  it("loads the active external-aid services search for the selected business opportunities", () => {
     expect(parseTedConfig(tedRaw)).toEqual({
       schema_version: 1,
       funding: "external-aid-program",
-      clients: [
-        "DG AGRI",
-        "DG CLIMA",
-        "DG ECHO",
-        "DG CINEA",
-        "DG GROW",
-        "DG IDEA",
-        "DG REA",
-        "DG INTPA",
-        "DG DEV",
-        "DG ENEST",
-        "DG MENA",
-        "DG TRADE",
-      ],
+      contract_nature: "services",
       sort: "publication-number DESC",
       scope: "ACTIVE",
       only_latest_versions: false,
-      pursuable_form_types: ["planning", "competition"],
+      pursuable_form_types: ["result", "competition", "planning"],
       page_size: 250,
     });
-  });
-
-  it("rejects duplicate clients", () => {
-    expect(() => parseTedConfig(`
-schema_version: 1
-funding: external-aid-program
-clients: [DG INTPA, DG INTPA]
-sort: publication-number DESC
-scope: ACTIVE
-only_latest_versions: false
-pursuable_form_types: [competition]
-page_size: 250
-`)).toThrow("Duplicate TED client");
   });
 
   it("rejects duplicate pursuable form types", () => {
     expect(() => parseTedConfig(`
 schema_version: 1
 funding: external-aid-program
-clients: [DG INTPA]
+contract_nature: services
 sort: publication-number DESC
 scope: ACTIVE
 only_latest_versions: false
