@@ -460,8 +460,8 @@ export function createMccDgMarketAdapter(options: MccDgMarketAdapterOptions): So
                   : undefined;
           if (!clientCohort) continue;
           if (!options.config.clients.includes(clientCohort === "mca" ? "MCA" : "MCC")) continue;
-          const publishedAt = parseSourceDate(detail.published ?? record.published, record.noticeId);
-          const deadline = detail.deadline ?? record.deadline;
+          const publishedAt = parseSourceDate(record.published, record.noticeId);
+          const deadline = record.deadline ?? detail.deadline;
           const eventType = cancellationTitle(record.title) ? "cancellation" : "tender";
           candidates.push({
             sourceId: mccDgMarketSourceDefinition.id,
