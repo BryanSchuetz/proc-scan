@@ -143,7 +143,7 @@ describe("digest rendering", () => {
     expect(message.html).toContain("Partial coverage:");
     expect(message.html).toContain("Water &amp; &lt;Governance&gt;");
     expect(message.html).not.toContain("Water & <Governance>");
-    expect(message.text).toContain("Last scan: Sep 5, 2026, 6:06 AM EDT");
+    expect(message.text).toContain("Last scan: Sep 5, 2026, 11:06 AM GMT+1");
     expect(message.text).toContain("Scan coverage: 1 of 2 sources completed");
     expect(message.text).toContain("Completed sources: Grants.gov");
     expect(message.text).toContain("Failed sources: SAM.gov");

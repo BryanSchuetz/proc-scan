@@ -47,7 +47,7 @@ import { parseSimapConfig } from "../sources/simap";
 import { parseTedConfig } from "../sources/ted";
 import type { AppEnv } from "./index";
 
-const TIME_ZONE = "America/New_York";
+const TIME_ZONE = "Europe/London";
 const taxonomy = parseTaxonomyYaml(taxonomyRaw);
 const technicalClassification = parseTechnicalClassificationYaml(classificationRaw);
 const taxonomyVersion = technicalClassification.schema_version;
@@ -162,7 +162,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
     if (Number.isNaN(instant.getTime())) throw new NonRetryableError("Invalid requestedAt timestamp");
     const inclusionWindow = digestInclusionWindow(event.payload ?? {});
 
-    const cycle = await step.do("resolve New York scan cycle", async () =>
+    const cycle = await step.do("resolve UK scan cycle", async () =>
       localScanCycleForInstant(instant),
     );
     if (!cycle) return { status: "skipped", reason: "not_a_local_scan_time" };

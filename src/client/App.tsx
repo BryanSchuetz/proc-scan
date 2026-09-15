@@ -50,7 +50,7 @@ function formatDate(value: string | undefined): string {
 
 function formatScanTime(value: string): string {
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
+    timeZone: "Europe/London",
     month: "short",
     day: "numeric",
     year: "numeric",

@@ -1,7 +1,7 @@
 import type { PreparedDigest, DigestEvent } from "../db/digests";
 import type { DigestMessage } from "./campaign-monitor";
 
-const TIME_ZONE = "America/New_York";
+const TIME_ZONE = "Europe/London";
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => ({
