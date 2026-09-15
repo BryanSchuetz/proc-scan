@@ -39,14 +39,14 @@ const sources = [
   },
   {
     name: "SAM.gov",
-    clients: "DOS, MCC, DFC, USTDA, and Millennium Challenge Accounts",
-    value: "$500,000 for DOS, MCC, and DFC; $250,000 for USTDA and country Millennium Challenge Accounts",
+    clients: "DOS, MCC, DFC, and USTDA",
+    value: "$500,000 for DOS, MCC, and DFC; $250,000 for USTDA",
     scope: "Pre-award opportunities only. Known product and service codes outside professional and management support, manufacturing sectors, awards, and surplus sales are excluded.",
   },
   {
     name: "Grants.gov",
-    clients: "DOS, MCC, DFC, USTDA, and Millennium Challenge Accounts",
-    value: "$2 million for DOS; $500,000 for MCC and DFC; $250,000 for USTDA and country Millennium Challenge Accounts",
+    clients: "DOS, MCC, DFC, and USTDA",
+    value: "$2 million for DOS; $500,000 for MCC and DFC; $250,000 for USTDA",
     scope: "Forecasted and posted opportunities from the approved organizations. Closed and archived opportunities are excluded.",
   },
   {

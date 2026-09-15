@@ -1,4 +1,4 @@
-schema_version: 18
+schema_version: 19
 status: active
 threshold: 2
 hard_exclusions:
@@ -56,8 +56,8 @@ hard_exclusions:
         - field: value.amount
           operator: lt
           value: 250000
-  - id: sam-mca-below-minimum-value
-    description: Millennium Challenge Account SAM.gov opportunities must have a known value of at least $250,000.
+  - id: sam-mca-client
+    description: Millennium Challenge Account opportunities are outside the approved SAM.gov client scope.
     conditions:
       all:
         - field: sourceId
@@ -66,12 +66,6 @@ hard_exclusions:
         - field: sourceData.federalOrganizationCode
           operator: equals
           value: "524"
-        - field: value.amount
-          operator: gt
-          value: 0
-        - field: value.amount
-          operator: lt
-          value: 250000
       any:
         - field: clientName
           operator: contains
@@ -156,8 +150,8 @@ hard_exclusions:
         - field: value.amount
           operator: lt
           value: 250000
-  - id: grants-mca-below-minimum-value
-    description: Millennium Challenge Account Grants.gov opportunities must have a known value of at least $250,000.
+  - id: grants-mca-client
+    description: Millennium Challenge Account opportunities are outside the approved Grants.gov client scope.
     conditions:
       all:
         - field: sourceId
@@ -166,12 +160,6 @@ hard_exclusions:
         - field: sourceData.federalOrganizationCode
           operator: equals
           value: "524"
-        - field: value.amount
-          operator: gt
-          value: 0
-        - field: value.amount
-          operator: lt
-          value: 250000
       any:
         - field: clientName
           operator: contains

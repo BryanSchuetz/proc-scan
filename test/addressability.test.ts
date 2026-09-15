@@ -237,20 +237,20 @@ describe("Addressability Assessment", () => {
     }), configuredRules).status).toBe("addressable");
   });
 
-  it("uses the lower MCA value band without lowering MCC's value band", () => {
+  it("excludes MCA from SAM.gov without excluding MCC", () => {
     expect(assessAddressability(federalEvent({
-      amount: 250_000,
+      amount: 1_000_000,
       clientName: "Millennium Challenge Account Nepal",
-      federalOrganizationCode: "524",
-    }), configuredRules).status).toBe("addressable");
-    expect(assessAddressability(federalEvent({
-      amount: 250_000,
-      clientName: "Millennium Challenge Corporation",
       federalOrganizationCode: "524",
     }), configuredRules)).toMatchObject({
       status: "excluded",
-      exclusionRuleId: "sam-mcc-below-minimum-value",
+      exclusionRuleId: "sam-mca-client",
     });
+    expect(assessAddressability(federalEvent({
+      amount: 500_000,
+      clientName: "Millennium Challenge Corporation",
+      federalOrganizationCode: "524",
+    }), configuredRules).status).toBe("addressable");
   });
 
   it("applies the configured Grants.gov value floors as hard exclusions only", () => {
@@ -277,7 +277,10 @@ describe("Addressability Assessment", () => {
       amount: 250_000,
       clientName: "Millennium Challenge Account Nepal",
       federalOrganizationCode: "524",
-    }), configuredRules).status).toBe("addressable");
+    }), configuredRules)).toMatchObject({
+      status: "excluded",
+      exclusionRuleId: "grants-mca-client",
+    });
     for (const [event, exclusionRuleId] of [
       [grantsEvent({ amount: 499_999, federalOrganizationCode: "077" }), "grants-dfc-below-minimum-value"],
       [grantsEvent({ amount: 249_999, federalOrganizationCode: "011" }), "grants-ustda-below-minimum-value"],
@@ -286,11 +289,6 @@ describe("Addressability Assessment", () => {
         clientName: "Millennium Challenge Corporation",
         federalOrganizationCode: "524",
       }), "grants-mcc-below-minimum-value"],
-      [grantsEvent({
-        amount: 249_999,
-        clientName: "Millennium Challenge Account Nepal",
-        federalOrganizationCode: "524",
-      }), "grants-mca-below-minimum-value"],
     ] as const) {
       expect(assessAddressability(event, configuredRules)).toMatchObject({
         status: "excluded",

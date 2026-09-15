@@ -147,13 +147,12 @@
 - site: sam.gov
   clients:
     - MCC
-    - MCA
     - DFC
     - USTDA
     - DOS
   actual_link: https://sam.gov/
   additional_links: null
-  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $500k minimum for DOS, MCC, and DFC; $250k minimum for USTDA and MCA"
+  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $500k minimum for DOS, MCC, and DFC; $250k minimum for USTDA"
   requires_login: api_key
   username: null
   password: null
@@ -166,13 +165,12 @@
 - site: grants.gov
   clients:
     - MCC
-    - MCA
     - DFC
     - USTDA
     - DOS
   actual_link: https://www.grants.gov/
   additional_links: null
-  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $2M minimum for DOS; $500k minimum for MCC and DFC; $250k minimum for USTDA and MCA"
+  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $2M minimum for DOS; $500k minimum for MCC and DFC; $250k minimum for USTDA"
   requires_login: false
   username: null
   password: null
