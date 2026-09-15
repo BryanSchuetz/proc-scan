@@ -455,10 +455,7 @@ export function createMccDgMarketAdapter(options: MccDgMarketAdapterOptions): So
               ? "mcc"
               : mcaPattern.test(detail.description ?? "")
                 ? "mca"
-                : mccPattern.test(detail.agency ?? "")
-                  ? "mcc"
-                  : undefined;
-          if (!clientCohort) continue;
+                : "mcc";
           if (!options.config.clients.includes(clientCohort === "mca" ? "MCA" : "MCC")) continue;
           const publishedAt = parseSourceDate(record.published, record.noticeId);
           const deadline = record.deadline ?? detail.deadline;
