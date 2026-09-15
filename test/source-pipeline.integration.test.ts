@@ -274,6 +274,7 @@ beforeAll(async () => {
     'scan_grants_fixture_amount',
     'scan_grants_fixture_reclass_first', 'scan_grants_fixture_reclass_second',
     'scan_grants_fixture_cancel_tender', 'scan_grants_fixture_cancelled',
+    'scan_grants_fixture_award_tender', 'scan_grants_fixture_awarded',
     'scan_sam_fixture_first', 'scan_sam_fixture_second',
     'scan_ted_fixture_first', 'scan_ted_fixture_second',
     'scan_eu_funding_tenders_fixture_first', 'scan_eu_funding_tenders_fixture_second'
@@ -474,7 +475,7 @@ describe("Source processing integration", () => {
       }>();
     expect(rows.results).toEqual([
       { source_event_id: "original-notice-01", event_type: "tender", addressability_status: "addressable" },
-      { source_event_id: "result-notice-01", event_type: "tender", addressability_status: "addressable" },
+      { source_event_id: "result-notice-01", event_type: "award", addressability_status: "addressable" },
       { source_event_id: "change-notice-01", event_type: "modification", addressability_status: "addressable" },
       { source_event_id: "other-buyer-notice-02", event_type: "tender", addressability_status: "addressable" },
     ]);
@@ -651,5 +652,43 @@ describe("Source processing integration", () => {
       ORDER BY discovered_at`)
       .all<{ event_type: string }>();
     expect(events.results.map(({ event_type }) => event_type)).toEqual(["tender", "cancellation"]);
+  });
+
+  it("preserves an explicit Award linked to an earlier Tender", async () => {
+    const tender: SourceCandidate = {
+      sourceId: "grants-gov",
+      sourceEventId: "award-fixture-tender",
+      sourceOpportunityId: "award-fixture",
+      canonicalUrl: "https://grants.gov/search-results-detail/award-fixture",
+      eventType: "tender",
+      publishedAt: "2026-08-30T10:00:00.000Z",
+      opportunityName: "Award fixture",
+      value: { amount: 750_000, currency: "USD" },
+      sourceData: {},
+    };
+    await processSingleCandidateScan(
+      "scan_grants_fixture_award_tender",
+      "grants-fixture:award-tender",
+      new Date("2026-08-30T10:00:00.000Z"),
+      tender,
+    );
+    await processSingleCandidateScan(
+      "scan_grants_fixture_awarded",
+      "grants-fixture:awarded",
+      new Date("2026-08-30T22:00:00.000Z"),
+      {
+        ...tender,
+        sourceEventId: "award-fixture-result",
+        eventType: "award",
+        publishedAt: "2026-08-30T22:00:00.000Z",
+        value: { amount: 800_000, currency: "USD" },
+      },
+    );
+
+    const events = await env.DB.prepare(`SELECT event_type
+      FROM bidding_events WHERE source_id = 'grants-gov' AND source_opportunity_id = 'award-fixture'
+      ORDER BY published_at`)
+      .all<{ event_type: string }>();
+    expect(events.results.map(({ event_type }) => event_type)).toEqual(["tender", "award"]);
   });
 });

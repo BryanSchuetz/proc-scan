@@ -94,6 +94,8 @@ export async function runSourceAdapter(
       } else if (prior.eventType === "cancellation") {
         event = { ...event, eventType: "cancellation" };
         eventToUpdate = prior;
+      } else if (event.eventType === "award") {
+        if (prior.eventType === "award") eventToUpdate = prior;
       } else if (trackedOpportunityChange(prior, event)) {
         event = { ...event, eventType: "modification" };
       } else {

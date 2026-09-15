@@ -1,6 +1,6 @@
 import type { ApiScanSummary, EventsFacets, EventsResponse } from "../api/types";
 import { addressabilityStatuses, biddingEventTypes } from "../domain/types";
-import type { RetainedBiddingEvent } from "../domain/types";
+import type { BiddingEventType, RetainedBiddingEvent } from "../domain/types";
 import type { PriorBiddingEvent } from "../domain/inheritance";
 
 const sortableColumns = {
@@ -48,7 +48,7 @@ export interface EventsQuery {
   direction: "asc" | "desc";
   search?: string;
   status?: "addressable" | "uncertain";
-  eventType?: "tender" | "modification" | "cancellation";
+  eventType?: BiddingEventType;
   client?: string;
   source?: string;
   technicalArea?: string;
@@ -69,7 +69,7 @@ interface EventRow {
   source_opportunity_id: string | null;
   source_url: string;
   source_event_type: string | null;
-  event_type: "tender" | "modification" | "cancellation";
+  event_type: BiddingEventType;
   opportunity_name: string;
   client_name: string | null;
   place_of_performance: string | null;
@@ -90,7 +90,7 @@ interface PriorEventRow {
   source_opportunity_id: string | null;
   source_url: string;
   source_event_type: string | null;
-  event_type: "tender" | "modification" | "cancellation";
+  event_type: BiddingEventType;
   published_at: string | null;
   discovered_at: string;
   opportunity_name: string;

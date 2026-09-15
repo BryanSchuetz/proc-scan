@@ -9,11 +9,11 @@ A procurement or grant opportunity that the organization may pursue and about wh
 _Avoid_: Listing, record, Bidding Event
 
 **Bidding Event**:
-A publication that creates, changes, or withdraws an Opportunity and is considered independently from other publications about that Opportunity.
+A publication that creates, changes, awards, or withdraws an Opportunity and is considered independently from other publications about that Opportunity.
 _Avoid_: Bidding type, notice type, Opportunity
 
 **Bidding Event Type**:
-The Tender, Modification, or Cancellation category assigned to a Bidding Event.
+The Tender, Modification, Award, or Cancellation category assigned to a Bidding Event.
 _Avoid_: Bidding type, notice type
 
 **Tender**:
@@ -23,6 +23,10 @@ _Avoid_: Initial Opportunity
 **Modification**:
 A Bidding Event that changes a previously known Opportunity deadline or amount.
 _Avoid_: Mod, update
+
+**Award**:
+A Bidding Event that announces the result of a procurement process.
+_Avoid_: Result
 
 **Cancellation**:
 A Bidding Event that withdraws a previously published Opportunity.

@@ -398,7 +398,9 @@ function candidateFromNotice(
     sourceOpportunityId,
     canonicalUrl,
     originalEventType: notice["notice-type"],
-    eventType: changeNoticeVersionIdentifier ? "modification" : "tender",
+    eventType: changeNoticeVersionIdentifier
+      ? "modification"
+      : notice["form-type"] === "result" ? "award" : "tender",
     isFormalAmendment: changeNoticeVersionIdentifier ? true : undefined,
     publishedAt,
     discoveredAt,

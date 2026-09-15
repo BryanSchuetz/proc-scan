@@ -61,10 +61,11 @@ describe("related Bidding Events", () => {
 });
 
 describe("OCDS-shaped releases", () => {
-  it("maps the three product event types to OCDS release tags", () => {
+  it("maps the product event types to OCDS release tags", () => {
     expect(ocdsTagFor({ eventType: "tender" })).toBe("tender");
     expect(ocdsTagFor({ eventType: "modification", isFormalAmendment: true })).toBe("tenderAmendment");
     expect(ocdsTagFor({ eventType: "modification" })).toBe("tenderUpdate");
+    expect(ocdsTagFor({ eventType: "award" })).toBe("award");
     expect(ocdsTagFor({ eventType: "cancellation" })).toBe("tenderCancellation");
   });
 

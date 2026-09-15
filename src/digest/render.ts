@@ -40,7 +40,9 @@ function formatValue(event: DigestEvent): string {
 }
 
 function eventTypeLabel(type: DigestEvent["eventType"]): string {
-  return type === "tender" ? "Tender" : type === "modification" ? "Modification" : "Cancellation";
+  return type === "tender"
+    ? "Tender"
+    : type === "modification" ? "Modification" : type === "award" ? "Award" : "Cancellation";
 }
 
 function eventHtml(event: DigestEvent): string {
@@ -49,6 +51,8 @@ function eventHtml(event: DigestEvent): string {
     : "Unclassified";
   const borderColor = event.eventType === "modification"
     ? "#F9CC73"
+    : event.eventType === "award"
+      ? "#7ABF66"
     : event.eventType === "cancellation"
       ? "#C93549"
       : "#9BCE36";

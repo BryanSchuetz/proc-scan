@@ -1,4 +1,4 @@
-export const biddingEventTypes = ["tender", "modification", "cancellation"] as const;
+export const biddingEventTypes = ["tender", "modification", "award", "cancellation"] as const;
 export type BiddingEventType = (typeof biddingEventTypes)[number];
 
 export const addressabilityStatuses = ["addressable", "uncertain", "excluded"] as const;
@@ -109,7 +109,7 @@ export interface OcdsRelease {
   ocid: string;
   id: string;
   date: string;
-  tag: Array<"tender" | "tenderAmendment" | "tenderUpdate" | "tenderCancellation">;
+  tag: Array<"tender" | "tenderAmendment" | "tenderUpdate" | "award" | "tenderCancellation">;
   initiationType: "tender";
   buyer?: OcdsOrganizationReference;
   parties?: Array<OcdsOrganizationReference & { roles: string[] }>;

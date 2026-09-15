@@ -124,6 +124,7 @@ describe("TED Source adapter", () => {
     });
     expect(result.candidates[2]).toMatchObject({
       sourceEventId: "result-notice-01",
+      eventType: "award",
       opportunityName: "Public financial management technical assistance",
       clientName: "European Commission, TRADE - Trade and Economic Security",
     });

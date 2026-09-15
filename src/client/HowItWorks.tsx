@@ -170,6 +170,10 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
             <dd>A later publication or detected change that revises a known deadline or amount.</dd>
           </div>
           <div>
+            <dt><span className="event-type event-type--award">Award</span></dt>
+            <dd>A result publication announcing the outcome of a procurement process.</dd>
+          </div>
+          <div>
             <dt><span className="event-type event-type--cancellation">Cancellation</span></dt>
             <dd>A publication that withdraws a previously published opportunity.</dd>
           </div>

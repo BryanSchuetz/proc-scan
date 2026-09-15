@@ -419,6 +419,7 @@ td:nth-child(8) { width: 190px; }
 }
 .event-type--tender { color: var(--dai-gray); background: var(--light-blue); }
 .event-type--modification { color: var(--gray-600); background: var(--dai-yellow); }
+.event-type--award { color: var(--gray-600); background: var(--light-green); }
 .event-type--cancellation { color: var(--red); background: var(--cream); }
 
 .area-list { display: flex; flex-wrap: wrap; gap: 5px; }

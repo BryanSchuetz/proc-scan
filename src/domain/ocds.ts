@@ -17,6 +17,8 @@ export function ocdsTagFor(event: Pick<NormalizedBiddingEvent, "eventType" | "is
       return "tender";
     case "modification":
       return event.isFormalAmendment ? "tenderAmendment" : "tenderUpdate";
+    case "award":
+      return "award";
     case "cancellation":
       return "tenderCancellation";
   }

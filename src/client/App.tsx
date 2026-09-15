@@ -415,6 +415,7 @@ export default function App() {
             { value: "", label: "All types" },
             { value: "tender", label: "Tender" },
             { value: "modification", label: "Modification" },
+            { value: "award", label: "Award" },
             { value: "cancellation", label: "Cancellation" },
           ],
         };
