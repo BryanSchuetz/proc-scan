@@ -7,6 +7,7 @@ import addressabilityRaw from "../../config/addressability.yaml?raw";
 import dgMarketRaw from "../../config/dg-market.yaml?raw";
 import euFundingTendersRaw from "../../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../../config/grants-gov.yaml?raw";
+import mccDgMarketRaw from "../../config/mcc-dg-market.yaml?raw";
 import samGovRaw from "../../config/sam-gov.yaml?raw";
 import simapRaw from "../../config/simap.yaml?raw";
 import tedRaw from "../../config/ted.yaml?raw";
@@ -42,6 +43,7 @@ import { createRegisteredSourceAdapter } from "../sources";
 import { parseDgMarketConfig } from "../sources/dg-market";
 import { parseEuFundingTendersConfig } from "../sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../sources/grants-gov";
+import { parseMccDgMarketConfig } from "../sources/mcc-dg-market";
 import { parseSamGovConfig } from "../sources/sam-gov";
 import { parseSimapConfig } from "../sources/simap";
 import { parseTedConfig } from "../sources/ted";
@@ -55,6 +57,7 @@ const addressability = parseAddressabilityYaml(addressabilityRaw);
 const dgMarket = parseDgMarketConfig(dgMarketRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const grantsGov = parseGrantsGovConfig(grantsGovRaw);
+const mccDgMarket = parseMccDgMarketConfig(mccDgMarketRaw);
 const ted = parseTedConfig(tedRaw);
 const simap = parseSimapConfig(simapRaw);
 const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
@@ -196,6 +199,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
           dgMarket,
           euFundingTenders,
           grantsGov,
+          mccDgMarket,
           samGov,
           simap,
           ted,

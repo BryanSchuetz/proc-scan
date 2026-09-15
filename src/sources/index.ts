@@ -7,6 +7,7 @@ import {
 } from "./deznz-jaggaer";
 import { createDgMarketAdapter, dgMarketSourceDefinition } from "./dg-market";
 import type { DgMarketConfig } from "./dg-market";
+import { createDgMarketFamilyAdapter } from "./dg-market-family";
 import { createEceppAdapter, eceppSourceDefinition } from "./ecepp";
 import { createEibAdapter, eibSourceDefinition } from "./eib";
 import {
@@ -21,6 +22,10 @@ import {
 import { createFmoAdapter, fmoSourceDefinition } from "./fmo";
 import { createGrantsGovAdapter, grantsGovSourceDefinition } from "./grants-gov";
 import type { GrantsGovConfig } from "./grants-gov";
+import {
+  createMccDgMarketAdapter,
+} from "./mcc-dg-market";
+import type { MccDgMarketConfig } from "./mcc-dg-market";
 import { createSamGovAdapter, samGovSourceDefinition } from "./sam-gov";
 import type { SamGovConfig } from "./sam-gov";
 import { createSimapAdapter, simapSourceDefinition } from "./simap";
@@ -30,12 +35,14 @@ import type { TedConfig } from "./ted";
 
 export interface SourceSecrets {
   SAM_API_KEY?: string;
+  BROWSER?: Fetcher;
 }
 
 export interface SourceConfigurations {
   dgMarket: DgMarketConfig;
   euFundingTenders: EuFundingTendersConfig;
   grantsGov: GrantsGovConfig;
+  mccDgMarket: MccDgMarketConfig;
   samGov: SamGovConfig;
   simap: SimapConfig;
   ted: TedConfig;
@@ -52,7 +59,16 @@ export function createRegisteredSourceAdapter(
     case deznzJaggaerSourceDefinition.id:
       return createDeznzJaggaerAdapter();
     case dgMarketSourceDefinition.id:
-      return createDgMarketAdapter({ config: configurations.dgMarket });
+      return createDgMarketFamilyAdapter({
+        dgMarket: createDgMarketAdapter({
+          config: configurations.dgMarket,
+          browser: secrets.BROWSER,
+        }),
+        mccDgMarket: createMccDgMarketAdapter({
+          config: configurations.mccDgMarket,
+          browser: secrets.BROWSER,
+        }),
+      });
     case eceppSourceDefinition.id:
       return createEceppAdapter();
     case eibSourceDefinition.id:

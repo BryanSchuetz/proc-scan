@@ -11,6 +11,7 @@ import { ScanWorkflow } from "./workflow";
 export interface AppEnv {
   DB: D1Database;
   ASSETS: Fetcher;
+  BROWSER: Fetcher;
   SCAN_WORKFLOW: Workflow;
   TEAM_DOMAIN?: string;
   POLICY_AUD?: string;

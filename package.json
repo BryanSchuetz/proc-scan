@@ -29,6 +29,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/puppeteer": "^1.1.0",
     "@cloudflare/vite-plugin": "^1.54.0",
     "@cloudflare/vitest-plugin": "^1.1.0",
     "@testing-library/react": "^16.3.2",

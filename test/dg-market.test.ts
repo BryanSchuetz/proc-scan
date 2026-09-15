@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import configRaw from "../config/dg-market.yaml?raw";
 import mcaPage1 from "./fixtures/dg-market-mca-page-1.html?raw";
 import mcaPage2 from "./fixtures/dg-market-mca-page-2.html?raw";
@@ -21,6 +21,29 @@ function htmlResponse(body: string, session?: string): Response {
 }
 
 describe("dgMarket Source adapter", () => {
+  it("uses and closes one browser session without requiring a response cookie", async () => {
+    const loaded: string[] = [];
+    const close = vi.fn(async () => undefined);
+    const adapter = createDgMarketAdapter({
+      config,
+      pageSize: 2,
+      requestDelayMs: 0,
+      browserSessionFactory: async () => ({
+        async load(url) {
+          loaded.push(url.toString());
+          return htmlResponse(url.pathname.endsWith("/gotoPage/2") ? mcaPage2 : mcaPage1);
+        },
+        close,
+      }),
+    });
+
+    const result = await adapter.scan({ signal: new AbortController().signal, now });
+
+    expect(result.candidates).toHaveLength(3);
+    expect(loaded).toHaveLength(2);
+    expect(close).toHaveBeenCalledOnce();
+  });
+
   it("uses session pagination and maps only MCC and MCA notices", async () => {
     const requests: Array<{ url: URL; headers: Headers }> = [];
     const adapter = createDgMarketAdapter({

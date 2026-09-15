@@ -8,6 +8,10 @@ import type {
   SourceScanResult,
 } from "./adapter";
 import { SourceScanError } from "./adapter";
+import {
+  createBrowserPageSessionFactory,
+  type BrowserPageSessionFactory,
+} from "./browser-page";
 
 const BASE_URL = "https://www2.dgmarket.com";
 const SEARCH_PATH = "/NoticeList";
@@ -64,11 +68,13 @@ export const dgMarketSourceDefinition: SourceDefinition = {
   name: "dgMarket",
   accessMode: "public",
   phase: 1,
-  adapterVersion: "1.1.0",
+  adapterVersion: "1.3.0",
 };
 
 export interface DgMarketAdapterOptions {
   config: DgMarketConfig;
+  browser?: Fetcher;
+  browserSessionFactory?: BrowserPageSessionFactory;
   fetch?: typeof fetch;
   pageSize?: number;
   requestDelayMs?: number;
@@ -476,6 +482,10 @@ function recordCandidate(
 
 export function createDgMarketAdapter(options: DgMarketAdapterOptions): SourceAdapter {
   const fetcher = options.fetch ?? fetch;
+  const browserSessionFactory = options.browserSessionFactory ??
+    (options.browser
+      ? createBrowserPageSessionFactory(options.browser, dgMarketSourceDefinition.name)
+      : undefined);
   const pageSize = options.pageSize ?? options.config.page_size;
   const requestDelayMs = options.requestDelayMs ?? options.config.request_delay_ms;
   const sleep = options.sleep ?? defaultSleep;
@@ -490,11 +500,15 @@ export function createDgMarketAdapter(options: DgMarketAdapterOptions): SourceAd
     definition: dgMarketSourceDefinition,
     async scan(context: SourceScanContext): Promise<SourceScanResult> {
       const window = dateWindow(context, options.config);
+      const browserSession = browserSessionFactory
+        ? await browserSessionFactory(context.signal)
+        : undefined;
       let requestCount = 0;
 
       const request = async (url: URL, cookie?: string): Promise<Response> => {
         if (requestCount > 0) await sleep(requestDelayMs, context.signal);
         requestCount += 1;
+        if (browserSession) return browserSession.load(url, "div#searchInfo");
         let response: Response;
         try {
           response = await fetcher(url, {
@@ -524,72 +538,76 @@ export function createDgMarketAdapter(options: DgMarketAdapterOptions): SourceAd
         return response;
       };
 
-      const response = await request(searchUrl(options.config, window));
-      const cookie = sessionCookie(response);
-      const firstPage = await parseListPage(response);
-      const criteria = expectedCriteria(options.config, window);
-      assertExpectedCriteria(firstPage, criteria);
-      if (firstPage.pageSize !== pageSize) {
-        throw new SourceScanError(
-          "invalid_pagination",
-          `dgMarket returned page size ${firstPage.pageSize}, expected ${pageSize}.`,
-          true,
-        );
-      }
-      const pageCount = Math.ceil(firstPage.total / pageSize) || 1;
-      if (pageCount > options.config.max_pages_per_search) {
-        throw new SourceScanError(
-          "result_set_too_large",
-          "dgMarket returned more notice pages than the configured scan limit.",
-          false,
-        );
-      }
-      if (pageCount > 1 && !cookie) {
-        throw new SourceScanError(
-          "invalid_session",
-          "dgMarket did not establish the session required for notice pagination.",
-          true,
-        );
-      }
-
-      const found = [...firstPage.records];
-      for (let pageNumber = 2; pageNumber <= pageCount; pageNumber += 1) {
-        const pageUrl = new URL(`${SEARCH_PATH}/gotoPage/${pageNumber}`, BASE_URL);
-        const page = await parseListPage(await request(pageUrl, cookie));
-        assertExpectedCriteria(page, criteria);
-        if (
-          page.total !== firstPage.total ||
-          page.pageSize !== pageSize ||
-          (page.currentPage !== undefined && page.currentPage !== pageNumber)
-        ) {
+      try {
+        const response = await request(searchUrl(options.config, window));
+        const cookie = sessionCookie(response);
+        const firstPage = await parseListPage(response);
+        const criteria = expectedCriteria(options.config, window);
+        assertExpectedCriteria(firstPage, criteria);
+        if (firstPage.pageSize !== pageSize) {
           throw new SourceScanError(
             "invalid_pagination",
-            "dgMarket returned inconsistent notice pagination metadata.",
+            `dgMarket returned page size ${firstPage.pageSize}, expected ${pageSize}.`,
             true,
           );
         }
-        found.push(...page.records);
-      }
-      if (found.length !== firstPage.total) {
-        throw new SourceScanError(
-          "invalid_pagination",
-          `dgMarket returned ${found.length} records while reporting ${firstPage.total}.`,
-          true,
-        );
-      }
+        const pageCount = Math.ceil(firstPage.total / pageSize) || 1;
+        if (pageCount > options.config.max_pages_per_search) {
+          throw new SourceScanError(
+            "result_set_too_large",
+            "dgMarket returned more notice pages than the configured scan limit.",
+            false,
+          );
+        }
+        if (pageCount > 1 && !cookie && !browserSession) {
+          throw new SourceScanError(
+            "invalid_session",
+            "dgMarket did not establish the session required for notice pagination.",
+            true,
+          );
+        }
 
-      const discoveredAt = context.now.toISOString();
-      const candidates = found
-        .map((record) => recordCandidate(record, options.config, discoveredAt))
-        .filter((candidate): candidate is SourceCandidate => candidate !== undefined)
-        .sort((a, b) =>
-          (a.publishedAt ?? discoveredAt).localeCompare(b.publishedAt ?? discoveredAt) ||
-          (a.sourceEventId ?? "").localeCompare(b.sourceEventId ?? ""),
-        );
-      return {
-        candidates,
-        nextCursor: { value: context.now.toISOString() },
-      };
+        const found = [...firstPage.records];
+        for (let pageNumber = 2; pageNumber <= pageCount; pageNumber += 1) {
+          const pageUrl = new URL(`${SEARCH_PATH}/gotoPage/${pageNumber}`, BASE_URL);
+          const page = await parseListPage(await request(pageUrl, cookie));
+          assertExpectedCriteria(page, criteria);
+          if (
+            page.total !== firstPage.total ||
+            page.pageSize !== pageSize ||
+            (page.currentPage !== undefined && page.currentPage !== pageNumber)
+          ) {
+            throw new SourceScanError(
+              "invalid_pagination",
+              "dgMarket returned inconsistent notice pagination metadata.",
+              true,
+            );
+          }
+          found.push(...page.records);
+        }
+        if (found.length !== firstPage.total) {
+          throw new SourceScanError(
+            "invalid_pagination",
+            `dgMarket returned ${found.length} records while reporting ${firstPage.total}.`,
+            true,
+          );
+        }
+
+        const discoveredAt = context.now.toISOString();
+        const candidates = found
+          .map((record) => recordCandidate(record, options.config, discoveredAt))
+          .filter((candidate): candidate is SourceCandidate => candidate !== undefined)
+          .sort((a, b) =>
+            (a.publishedAt ?? discoveredAt).localeCompare(b.publishedAt ?? discoveredAt) ||
+            (a.sourceEventId ?? "").localeCompare(b.sourceEventId ?? ""),
+          );
+        return {
+          candidates,
+          nextCursor: { value: context.now.toISOString() },
+        };
+      } finally {
+        await browserSession?.close();
+      }
     },
   };
 }

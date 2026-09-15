@@ -1,0 +1,11 @@
+schema_version: 1
+request_delay_ms: 250
+max_pages: 20
+clients:
+  - MCC
+  - MCA
+pursuable_notice_types:
+  - spn
+  - gpn
+  - rei
+  - pp

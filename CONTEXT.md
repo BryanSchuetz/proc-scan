@@ -80,7 +80,7 @@ TED Client scope is restricted to DG AGRI, DG CLIMA, DG ECHO, DG CINEA, DG GROW,
 
 TED and EU Funding & Tenders each have a Minimum Value Floor of €1,000,000. The floor applies when the Source publishes a known positive EUR procedure estimate. A missing value remains eligible for fit scoring, and a value published in another currency is not compared to the EUR floor without an authoritative conversion.
 
-dgMarket is restricted to MCC and country Millennium Challenge Account Clients. Notices are selected through dgMarket's Millennium Challenge Corporation funding-agency filter, then retained only when the buyer name identifies MCC or an MCA. Both Clients have a $500,000 Minimum Value Floor for known positive USD values.
+dgMarket is restricted to MCC and country Millennium Challenge Account Clients. It scans both the general dgMarket search and the MCC-branded MCCDGMarket portal, then merges exact matching dgMarket notice IDs before processing. Both Clients have a $500,000 Minimum Value Floor for known positive USD values. Missing, zero, and non-USD values remain eligible for fit scoring.
 
 FMO Open Tenders has FMO as its Client and a €500,000 Minimum Value Floor for known positive EUR maximum-budget values. Missing, zero, and non-EUR values remain eligible for the same shared fit scoring as every other Source.
 

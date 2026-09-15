@@ -116,9 +116,25 @@
     funding_agency:
       funding_agency_id: "1385098"
   result_set: public
-  authentication: null
+  authentication: "Public pages require no login, but direct HTTP requests currently receive a Cloudflare managed challenge. The registered adapter uses Cloudflare Browser Run and merges exact notice-ID overlaps across both portals."
   source_module: dg-market
-  access_method: html
+  access_method: browser
+
+- site: MCCDGMarket
+  clients:
+    - MCC
+    - MCA
+  actual_link: https://mcc.dgmarket.com/
+  additional_links: null
+  filters_narrative: "$500k minimum for MCC and MCA"
+  requires_login: false
+  username: null
+  password: null
+  filters_automation_rules: "Retain MCC and MCA opportunities; apply the $500k floor only to known positive USD values"
+  result_set: public
+  authentication: "Public pages require no login, but direct HTTP requests currently receive a Cloudflare managed challenge. This portal is a discovery channel of the registered dg-market Source so exact notice-ID overlaps are deduplicated before processing."
+  source_module: dg-market
+  access_method: browser
 
 - site: sam.gov
   clients:

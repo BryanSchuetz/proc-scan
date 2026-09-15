@@ -4,6 +4,7 @@ import classificationRaw from "../config/technical-classification.yaml?raw";
 import dgMarketRaw from "../config/dg-market.yaml?raw";
 import euFundingTendersRaw from "../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
+import mccDgMarketRaw from "../config/mcc-dg-market.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
 import simapRaw from "../config/simap.yaml?raw";
 import tedRaw from "../config/ted.yaml?raw";
@@ -17,6 +18,7 @@ import {
 import { parseDgMarketConfig } from "../src/sources/dg-market";
 import { parseEuFundingTendersConfig } from "../src/sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
+import { parseMccDgMarketConfig } from "../src/sources/mcc-dg-market";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
 import { parseSimapConfig } from "../src/sources/simap";
 import { parseTedConfig } from "../src/sources/ted";
@@ -187,6 +189,20 @@ describe("dgMarket configuration", () => {
   it("rejects a duplicate client", () => {
     expect(() => parseDgMarketConfig(dgMarketRaw.replace("  - MCA", "  - MCC"))).toThrow(
       "dgMarket client scope must contain MCC and MCA exactly once",
+    );
+  });
+});
+
+describe("MCCDGMarket configuration", () => {
+  it("loads the MCC and MCA client scope", () => {
+    const mccDgMarket = parseMccDgMarketConfig(mccDgMarketRaw);
+    expect(mccDgMarket.clients).toEqual(["MCC", "MCA"]);
+    expect(mccDgMarket.pursuable_notice_types).toEqual(["spn", "gpn", "rei", "pp"]);
+  });
+
+  it("rejects a duplicate client", () => {
+    expect(() => parseMccDgMarketConfig(mccDgMarketRaw.replace("  - MCA", "  - MCC"))).toThrow(
+      "MCCDGMarket client scope must contain MCC and MCA exactly once",
     );
   });
 });
