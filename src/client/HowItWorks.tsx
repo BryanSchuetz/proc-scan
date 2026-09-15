@@ -11,7 +11,7 @@ const sources = [
     name: "FCDO Jaggaer Public",
     clients: "FCDO",
     value: "£250,000",
-    scope: "Services competitions and early market engagement. Goods, frameworks, and call-downs are excluded.",
+    scope: "Services competitions and early market engagement. Framework opportunities will be cataloged in a separate process for the time being.",
   },
   {
     name: "DEFRA Atamis",
@@ -45,13 +45,13 @@ const sources = [
   },
   {
     name: "SAM.gov",
-    clients: "DOS, MCC (excluding MCAs), DFC, and USTDA",
+    clients: "DOS, MCC, DFC, and USTDA",
     value: "$500,000 for DOS, MCC, and DFC; $250,000 for USTDA",
-    scope: "Selected pre-award notice types only. Known product and service codes outside professional, administrative, and management support, plus manufacturing NAICS sectors, are excluded.",
+    scope: "All opportunity types. Restricted to “R”-related products and services, limiting the results to professional services.",
   },
   {
     name: "Grants.gov",
-    clients: "DOS, MCC (excluding MCAs), DFC, and USTDA",
+    clients: "DOS, MCC, DFC, and USTDA",
     value: "$2 million for DOS; $500,000 for MCC and DFC; $250,000 for USTDA",
     scope: "Forecasted and posted opportunities from the approved organizations. Closed and archived opportunities are excluded.",
   },
