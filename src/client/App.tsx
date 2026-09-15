@@ -23,6 +23,7 @@ import daiLogoUrl from "./assets/dai-logo.svg";
 import { fetchBiddingEvents } from "./api";
 import HowItWorks from "./HowItWorks";
 import { paginationItems } from "./pagination";
+import { sourceFilterFromUrl, urlWithSourceFilter } from "./url-filters";
 
 const columnHelper = createColumnHelper<ApiBiddingEvent>();
 const initialSorting: SortingState = [{ id: "discoveredAt", desc: true }];
@@ -32,6 +33,10 @@ function getRegistryPath(): RegistryPath {
   const path = window.location.pathname.replace(/\/+$/, "");
   if (path === "/unmarked" || path === "/how-it-works") return path;
   return "/";
+}
+
+function getSourceFilter(): string {
+  return sourceFilterFromUrl(new URL(window.location.href));
 }
 
 function formatDate(value: string | undefined): string {
@@ -224,9 +229,15 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [eventType, setEventType] = useState("");
   const [client, setClient] = useState("");
-  const [source, setSource] = useState("");
+  const [source, setSource] = useState(getSourceFilter);
   const [technicalArea, setTechnicalArea] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
+
+  const applySourceFilter = (nextSource: string) => {
+    setSource(nextSource);
+    const nextUrl = urlWithSourceFilter(new URL(window.location.href), nextSource);
+    window.history.replaceState(null, "", nextUrl);
+  };
 
   const applyRoute = useCallback((nextPath: RegistryPath) => {
     setPathname(nextPath);
@@ -238,7 +249,7 @@ export default function App() {
     setSearch("");
     setEventType("");
     setClient("");
-    setSource("");
+    setSource(getSourceFilter());
     setTechnicalArea("");
   }, []);
 
@@ -389,7 +400,7 @@ export default function App() {
     setSearch("");
     setEventType("");
     setClient("");
-    setSource("");
+    applySourceFilter("");
     setTechnicalArea("");
   };
 
@@ -421,7 +432,7 @@ export default function App() {
         return {
           accessibleLabel: "Source",
           filterValue: source,
-          onFilter: setSource,
+          onFilter: applySourceFilter,
           filterOptions: [
             { value: "", label: "All Sources" },
             ...(data?.facets.sources.map((item) => ({ value: item.id, label: item.name })) ?? []),
