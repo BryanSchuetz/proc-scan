@@ -403,7 +403,8 @@ td:nth-child(8) { width: 190px; }
 .empty-table-row .state-message { height: 100%; min-height: 350px; border-top: 0; }
 
 .opportunity-cell { display: flex; flex-direction: column; gap: 5px; }
-.opportunity-cell a { display: inline-flex; align-items: baseline; gap: 5px; color: var(--hyperlink); font-weight: 650; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.opportunity-cell a { color: var(--hyperlink); font-weight: 650; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.opportunity-cell a svg { width: 14px; height: 14px; margin-left: 5px; vertical-align: -0.1em; }
 .opportunity-cell a:hover { color: var(--pressed-link); }
 .opportunity-cell span { color: var(--gray-400); font-size: 11px; font-variant-numeric: tabular-nums; }
 
