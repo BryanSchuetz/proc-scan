@@ -71,18 +71,25 @@ export interface LocalScanCycle {
   scheduledFor: string;
 }
 
-export function scanInstantForEvent(
+export interface ScanTiming {
+  cycleInstant: Date;
+  scanInstant: Date;
+}
+
+export function scanTimingForEvent(
   params: ScanWorkflowParams,
   scheduledTime: number | string | undefined,
   triggeredAt: Date,
-): Date {
+): ScanTiming {
   const requestedAt = params.requestedAt ? new Date(params.requestedAt) : undefined;
-  const instant = requestedAt ?? new Date(scheduledTime ?? triggeredAt.getTime());
-  if (Number.isNaN(instant.getTime())) throw new NonRetryableError("Invalid scan timestamp");
+  const cycleInstant = requestedAt ?? new Date(scheduledTime ?? triggeredAt.getTime());
+  if (Number.isNaN(cycleInstant.getTime()) || Number.isNaN(triggeredAt.getTime())) {
+    throw new NonRetryableError("Invalid scan timestamp");
+  }
   if (requestedAt && requestedAt.getTime() > triggeredAt.getTime()) {
     throw new NonRetryableError("requestedAt cannot be in the future");
   }
-  return instant;
+  return { cycleInstant, scanInstant: triggeredAt };
 }
 
 export function localScanCycleForInstant(instant: Date): LocalScanCycle | undefined {
@@ -170,7 +177,7 @@ function campaignMonitorConfig(env: AppEnv): CampaignMonitorConfig | undefined {
 
 export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams> {
   async run(event: WorkflowEvent<ScanWorkflowParams>, step: WorkflowStep) {
-    const instant = scanInstantForEvent(
+    const { cycleInstant, scanInstant } = scanTimingForEvent(
       event.payload ?? {},
       event.schedule?.scheduledTime,
       event.timestamp,
@@ -178,7 +185,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
     const inclusionWindow = digestInclusionWindow(event.payload ?? {});
 
     const cycle = await step.do("resolve UK scan cycle", async () =>
-      localScanCycleForInstant(instant),
+      localScanCycleForInstant(cycleInstant),
     );
     if (!cycle) return { status: "skipped", reason: "not_a_local_scan_time" };
 
@@ -226,7 +233,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
                 scanRunId: id,
                 cursor: source.cursor,
                 signal: AbortSignal.timeout(4 * 60 * 1000),
-                now: instant,
+                now: scanInstant,
                 taxonomy,
                 technicalClassification,
                 addressability,
