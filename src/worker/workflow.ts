@@ -71,6 +71,20 @@ export interface LocalScanCycle {
   scheduledFor: string;
 }
 
+export function scanInstantForEvent(
+  params: ScanWorkflowParams,
+  scheduledTime: number | string | undefined,
+  triggeredAt: Date,
+): Date {
+  const requestedAt = params.requestedAt ? new Date(params.requestedAt) : undefined;
+  const instant = requestedAt ?? new Date(scheduledTime ?? triggeredAt.getTime());
+  if (Number.isNaN(instant.getTime())) throw new NonRetryableError("Invalid scan timestamp");
+  if (requestedAt && requestedAt.getTime() > triggeredAt.getTime()) {
+    throw new NonRetryableError("requestedAt cannot be in the future");
+  }
+  return instant;
+}
+
 export function localScanCycleForInstant(instant: Date): LocalScanCycle | undefined {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: TIME_ZONE,
@@ -156,10 +170,11 @@ function campaignMonitorConfig(env: AppEnv): CampaignMonitorConfig | undefined {
 
 export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams> {
   async run(event: WorkflowEvent<ScanWorkflowParams>, step: WorkflowStep) {
-    const instant = event.payload?.requestedAt
-      ? new Date(event.payload.requestedAt)
-      : new Date(event.schedule?.scheduledTime ?? event.timestamp.getTime());
-    if (Number.isNaN(instant.getTime())) throw new NonRetryableError("Invalid requestedAt timestamp");
+    const instant = scanInstantForEvent(
+      event.payload ?? {},
+      event.schedule?.scheduledTime,
+      event.timestamp,
+    );
     const inclusionWindow = digestInclusionWindow(event.payload ?? {});
 
     const cycle = await step.do("resolve UK scan cycle", async () =>
