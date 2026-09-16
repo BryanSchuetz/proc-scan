@@ -4,8 +4,6 @@ interface HowItWorksProps {
   onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, path: "/" | "/unmarked" | "/how-it-works") => void;
 }
 
-const euClients = "DG AGRI, DG CLIMA, DG ECHO, DG CINEA, DG GROW, DG IDEA, DG REA, DG INTPA, DG DEV, DG ENEST, DG MENA, and DG TRADE";
-
 const sources = [
   {
     name: "FCDO Jaggaer Public",
@@ -30,12 +28,6 @@ const sources = [
     clients: "All external-aid buyers",
     value: "€1 million",
     scope: "Active external-aid service notices for planning, competition, and results.",
-  },
-  {
-    name: "EU Funding & Tenders",
-    clients: "All clients",
-    value: "€1 million",
-    scope: "Forthcoming and open calls for tenders. Grant topics are not included.",
   },
   {
     name: "dgMarket",

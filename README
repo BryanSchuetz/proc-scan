@@ -37,7 +37,6 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | DEFRA Atamis | Yes | Enabled; live scan completed | Public CSV | Active DEFRA-family catalogue opportunities with a £250,000 floor for known GBP values |
 | DEZNZ Jaggaer | Yes | Enabled; first live scan pending | Public HTML | Current DEZNZ service opportunities with a £250,000 floor for known GBP values |
 | TED | Yes | Enabled; live scans completed | Public API | Active external-aid planning and competition notices from 12 approved EU Clients |
-| EU Funding & Tenders Portal | Yes | Enabled; live scans completed | Public API | Forthcoming and open tender calls from the same 12 approved EU Clients |
 | dgMarket + MCCDGMarket | Yes | Enabled; production scan completed | Public browser | Deduplicated MCC and MCA notices with a $500,000 floor for known USD values |
 | SAM.gov | Yes | Enabled; currently quota-constrained | API key | Pre-award notices from MCC, DFC, USTDA, and Department of State |
 | Grants.gov | Yes | Enabled; live scans completed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
@@ -104,16 +103,6 @@ TED notice identifier plus notice version is the stable Bidding Event identifier
 The adapter prefers English procedure titles and descriptions when TED provides them, falls back to another published language without inventing a translation, and retains buyer, place, CPV, funding, change, and notice metadata for provenance. It normalizes only the authoritative procedure-level estimated value; lot-level values remain structured Source data because the notice-based Search API does not expose reliable lot relationships.
 
 TED uses the shared DAI-Fit/Miss-Fit scoring and a €1 million Minimum Value Floor. A known positive EUR procedure estimate below €1 million is Excluded. Missing values remain eligible for fit scoring. Non-EUR values are not compared to the EUR floor because the Source does not provide an authoritative converted value.
-
-## EU Funding & Tenders Portal Source
-
-The EU Funding & Tenders adapter uses the European Commission's official anonymous `POST https://api.tech.ec.europa.eu/search-api/prod/rest/search` Search API and its public `SEDIA` API key. Migration `0005_eu_funding_tenders_source.sql` enables it. Each scan retrieves a complete English snapshot of forthcoming and open calls for tenders (type `0`), 100 records per page, then requires a configured Client code as a complete token in the structured lead contracting authority name. `config/eu-funding-tenders.yaml` is validated against the same 12-Client scope as TED so the two configurations cannot drift.
-
-The Source intentionally does not ingest Funding & Tenders grant topics. Grant-topic search records do not expose an authoritative responsible Directorate-General or lead contracting authority, so applying the requested Client filter would require an unsupported programme-to-DG inference. Calls for tenders expose the contracting authority and an estimated total procedure value directly.
-
-The portal reference is the stable Bidding Event identifier and its notice suffix is removed to link PIN, contract-notice, and ex-ante publications for the same Opportunity. When the portal exposes formal corrigenda, the latest corrigendum notice ID and publication date identify a Modification while the parent portal reference remains in structured Source data. The adapter normalizes publication and submission dates, titles, descriptions, Client, CPV and procedure codes, and the authoritative procedure estimate. It uses the same shared DAI-Fit/Miss-Fit scoring and €1 million rule as TED: a known positive EUR value below €1 million is Excluded, while missing, zero, and non-EUR values remain eligible for fit scoring.
-
-Some Commission tender calls are also published through TED. Registry identity remains Source-specific, so an Opportunity found through both Sources is retained once per Source; cross-Source reconciliation is not part of this adapter.
 
 ## dgMarket Source
 

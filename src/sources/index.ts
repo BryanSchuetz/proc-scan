@@ -11,11 +11,6 @@ import { createDgMarketFamilyAdapter } from "./dg-market-family";
 import { createEceppAdapter, eceppSourceDefinition } from "./ecepp";
 import { createEibAdapter, eibSourceDefinition } from "./eib";
 import {
-  createEuFundingTendersAdapter,
-  euFundingTendersSourceDefinition,
-} from "./eu-funding-tenders";
-import type { EuFundingTendersConfig } from "./eu-funding-tenders";
-import {
   createFcdoJaggaerPublicAdapter,
   fcdoJaggaerPublicSourceDefinition,
 } from "./fcdo-jaggaer-public";
@@ -40,7 +35,6 @@ export interface SourceSecrets {
 
 export interface SourceConfigurations {
   dgMarket: DgMarketConfig;
-  euFundingTenders: EuFundingTendersConfig;
   grantsGov: GrantsGovConfig;
   mccDgMarket: MccDgMarketConfig;
   samGov: SamGovConfig;
@@ -73,8 +67,6 @@ export function createRegisteredSourceAdapter(
       return createEceppAdapter();
     case eibSourceDefinition.id:
       return createEibAdapter();
-    case euFundingTendersSourceDefinition.id:
-      return createEuFundingTendersAdapter({ config: configurations.euFundingTenders });
     case fcdoJaggaerPublicSourceDefinition.id:
       return createFcdoJaggaerPublicAdapter();
     case fmoSourceDefinition.id:

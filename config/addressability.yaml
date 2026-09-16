@@ -212,22 +212,6 @@ hard_exclusions:
         - field: value.amount
           operator: lt
           value: 1000000
-  - id: eu-funding-tenders-below-minimum-eur-value
-    description: EU Funding & Tenders opportunities with a known EUR value must have a value of at least €1,000,000.
-    conditions:
-      all:
-        - field: sourceId
-          operator: equals
-          value: eu-funding-tenders
-        - field: value.currency
-          operator: equals
-          value: EUR
-        - field: value.amount
-          operator: gt
-          value: 0
-        - field: value.amount
-          operator: lt
-          value: 1000000
   - id: dg-market-outside-mcc-mca-client-scope
     description: dgMarket opportunities outside the MCC and MCA Client scope are excluded.
     conditions:

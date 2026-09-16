@@ -8,7 +8,6 @@ import {
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
 import { parseDgMarketConfig } from "../src/sources/dg-market";
-import { parseEuFundingTendersConfig } from "../src/sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
 import { parseMccDgMarketConfig } from "../src/sources/mcc-dg-market";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
@@ -21,7 +20,6 @@ const [
   classificationRaw,
   addressabilityRaw,
   dgMarketRaw,
-  euFundingTendersRaw,
   grantsGovRaw,
   mccDgMarketRaw,
   samGovRaw,
@@ -32,7 +30,6 @@ const [
   readFile(resolve(root, "config/technical-classification.yaml"), "utf8"),
   readFile(resolve(root, "config/addressability.yaml"), "utf8"),
   readFile(resolve(root, "config/dg-market.yaml"), "utf8"),
-  readFile(resolve(root, "config/eu-funding-tenders.yaml"), "utf8"),
   readFile(resolve(root, "config/grants-gov.yaml"), "utf8"),
   readFile(resolve(root, "config/mcc-dg-market.yaml"), "utf8"),
   readFile(resolve(root, "config/sam-gov.yaml"), "utf8"),
@@ -50,7 +47,6 @@ const mccDgMarket = parseMccDgMarketConfig(mccDgMarketRaw);
 const samGov = parseSamGovConfig(samGovRaw);
 const simap = parseSimapConfig(simapRaw);
 const ted = parseTedConfig(tedRaw);
-const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
 validateGrantsGovScope(grantsGov, samGov.organizations);
 
 console.log(
@@ -62,6 +58,5 @@ console.log(
     `${simap.organizations.length} SIMAP organizations; ` +
     `dgMarket ${dgMarket.clients.join(" and ")} clients; ` +
     `MCCDGMarket ${mccDgMarket.clients.join(" and ")} clients; ` +
-    `TED ${ted.scope.toLocaleLowerCase()} external-aid ${ted.contract_nature} for ${ted.pursuable_form_types.join(", ")}; ` +
-    `EU Funding & Tenders ${euFundingTenders.opportunity_type} without a client filter.`,
+    `TED ${ted.scope.toLocaleLowerCase()} external-aid ${ted.contract_nature} for ${ted.pursuable_form_types.join(", ")}.`,
 );

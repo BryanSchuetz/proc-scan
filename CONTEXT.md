@@ -76,9 +76,9 @@ _Avoid_: Bidding Event identifier, internal record identifier
 
 The same deterministic fit scoring applies to every Source and Client. Source- and Client-specific configuration may vary the Minimum Value Floor and add structured hard exclusions, but value is a gate and never contributes to the fit score. Before scoring, a Bidding Event with a known due date at or before the scan time is Excluded. Events without a known due date remain eligible. Expired historical events remain stored but are omitted from registry results, facets, and email digests.
 
-TED Client scope is restricted to DG AGRI, DG CLIMA, DG ECHO, DG CINEA, DG GROW, DG IDEA, DG REA, DG INTPA, DG DEV, DG ENEST, DG MENA, and DG TRADE. A TED notice is in scope only when at least one localized buyer name contains the configured Directorate-General code as a complete token. EU Funding & Tenders calls are not filtered by Client. Grant topics are not scanned.
+TED Client scope is restricted to DG AGRI, DG CLIMA, DG ECHO, DG CINEA, DG GROW, DG IDEA, DG REA, DG INTPA, DG DEV, DG ENEST, DG MENA, and DG TRADE. A TED notice is in scope only when at least one localized buyer name contains the configured Directorate-General code as a complete token.
 
-TED and EU Funding & Tenders each have a Minimum Value Floor of €1,000,000. The floor applies when the Source publishes a known positive EUR procedure estimate. A missing value remains eligible for fit scoring, and a value published in another currency is not compared to the EUR floor without an authoritative conversion.
+TED has a Minimum Value Floor of €1,000,000. The floor applies when the Source publishes a known positive EUR procedure estimate. A missing value remains eligible for fit scoring, and a value published in another currency is not compared to the EUR floor without an authoritative conversion.
 
 dgMarket is restricted to MCC and country Millennium Challenge Account Clients. It scans both the general dgMarket search and the MCC-branded MCCDGMarket portal, then merges exact matching dgMarket notice IDs before processing. Both Clients have a $500,000 Minimum Value Floor for known positive USD values. Missing, zero, and non-USD values remain eligible for fit scoring.
 

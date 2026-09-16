@@ -20,6 +20,13 @@ beforeAll(async () => {
 });
 
 describe("D1 registry integration", () => {
+  it("keeps the removed EU Funding & Tenders Source disabled", async () => {
+    const source = await env.DB.prepare(
+      "SELECT enabled FROM sources WHERE id = 'eu-funding-tenders'",
+    ).first<{ enabled: number }>();
+    expect(source?.enabled).toBe(0);
+  });
+
   it("registers SIMAP as an enabled Source", async () => {
     const source = await env.DB.prepare(
       "SELECT enabled FROM sources WHERE id = 'simap'",

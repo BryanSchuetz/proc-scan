@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import taxonomyRaw from "../tech-area-classification.yaml?raw";
 import classificationRaw from "../config/technical-classification.yaml?raw";
 import dgMarketRaw from "../config/dg-market.yaml?raw";
-import euFundingTendersRaw from "../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../config/grants-gov.yaml?raw";
 import mccDgMarketRaw from "../config/mcc-dg-market.yaml?raw";
 import samGovRaw from "../config/sam-gov.yaml?raw";
@@ -16,7 +15,6 @@ import {
   validateTechnicalClassification,
 } from "../src/classification/taxonomy";
 import { parseDgMarketConfig } from "../src/sources/dg-market";
-import { parseEuFundingTendersConfig } from "../src/sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../src/sources/grants-gov";
 import { parseMccDgMarketConfig } from "../src/sources/mcc-dg-market";
 import { parseSamGovConfig } from "../src/sources/sam-gov";
@@ -129,32 +127,6 @@ only_latest_versions: false
 pursuable_form_types: [competition, competition]
 page_size: 250
 `)).toThrow("Duplicate TED pursuable form type");
-  });
-});
-
-describe("EU Funding & Tenders configuration", () => {
-  it("loads open tender calls without a client filter", () => {
-    const portal = parseEuFundingTendersConfig(euFundingTendersRaw);
-
-    expect(portal).toEqual({
-      schema_version: 1,
-      opportunity_type: "calls-for-tenders",
-      pursuable_statuses: ["forthcoming", "open"],
-      language: "en",
-      sort: "startDate DESC",
-      page_size: 100,
-    });
-  });
-
-  it("rejects duplicate pursuable statuses", () => {
-    expect(() => parseEuFundingTendersConfig(`
-schema_version: 1
-opportunity_type: calls-for-tenders
-pursuable_statuses: [open, open]
-language: en
-sort: startDate DESC
-page_size: 100
-`)).toThrow("Duplicate EU Funding & Tenders pursuable status");
   });
 });
 

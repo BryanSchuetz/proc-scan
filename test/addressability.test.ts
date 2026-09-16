@@ -84,17 +84,6 @@ function tedEvent(amount?: number, currency = "EUR") {
   });
 }
 
-function euFundingTendersEvent(amount?: number, currency = "EUR") {
-  return biddingEvent({
-    sourceId: "eu-funding-tenders",
-    clientName: "European Commission, INTPA - International Partnerships",
-    opportunityName: "Technical assistance opportunity",
-    description: "Capacity building and advisory services",
-    value: amount === undefined ? undefined : { amount, currency },
-    sourceData: {},
-  });
-}
-
 function dgMarketEvent(
   clientCohort: "mcc" | "mca" | "eu-member-state-government",
   amount?: number,
@@ -334,30 +323,6 @@ describe("Addressability Assessment", () => {
       value: { amount: 2_000_000, currency: "EUR" },
       sourceData: {},
     }), configuredRules)).toMatchObject({ status: "addressable", score: 2 });
-  });
-
-  it("applies the EU Funding & Tenders floor before shared fit scoring", () => {
-    expect(assessAddressability(euFundingTendersEvent(1_000_000), configuredRules))
-      .toMatchObject({ status: "addressable", score: 4 });
-    expect(assessAddressability(euFundingTendersEvent(999_999), configuredRules)).toMatchObject({
-      status: "excluded",
-      exclusionRuleId: "eu-funding-tenders-below-minimum-eur-value",
-    });
-    for (const event of [
-      euFundingTendersEvent(0),
-      euFundingTendersEvent(),
-      euFundingTendersEvent(999_999, "GBP"),
-    ]) {
-      expect(assessAddressability(event, configuredRules))
-        .toMatchObject({ status: "addressable", score: 4 });
-    }
-    expect(assessAddressability(biddingEvent({
-      sourceId: "eu-funding-tenders",
-      opportunityName: "Supply of computers and equipment",
-      description: "General procurement requirement",
-      value: { amount: 2_000_000, currency: "EUR" },
-      sourceData: {},
-    }), configuredRules)).toMatchObject({ status: "uncertain", score: 0 });
   });
 
   it("restricts dgMarket to MCC and MCA with a $500,000 USD floor", () => {

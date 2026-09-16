@@ -5,7 +5,6 @@ import taxonomyRaw from "../../tech-area-classification.yaml?raw";
 import classificationRaw from "../../config/technical-classification.yaml?raw";
 import addressabilityRaw from "../../config/addressability.yaml?raw";
 import dgMarketRaw from "../../config/dg-market.yaml?raw";
-import euFundingTendersRaw from "../../config/eu-funding-tenders.yaml?raw";
 import grantsGovRaw from "../../config/grants-gov.yaml?raw";
 import mccDgMarketRaw from "../../config/mcc-dg-market.yaml?raw";
 import samGovRaw from "../../config/sam-gov.yaml?raw";
@@ -41,7 +40,6 @@ import { runSourceAdapter } from "../pipeline/run-source";
 import { SourceScanError } from "../sources/adapter";
 import { createRegisteredSourceAdapter } from "../sources";
 import { parseDgMarketConfig } from "../sources/dg-market";
-import { parseEuFundingTendersConfig } from "../sources/eu-funding-tenders";
 import { parseGrantsGovConfig, validateGrantsGovScope } from "../sources/grants-gov";
 import { parseMccDgMarketConfig } from "../sources/mcc-dg-market";
 import { parseSamGovConfig } from "../sources/sam-gov";
@@ -60,7 +58,6 @@ const grantsGov = parseGrantsGovConfig(grantsGovRaw);
 const mccDgMarket = parseMccDgMarketConfig(mccDgMarketRaw);
 const ted = parseTedConfig(tedRaw);
 const simap = parseSimapConfig(simapRaw);
-const euFundingTenders = parseEuFundingTendersConfig(euFundingTendersRaw);
 validateGrantsGovScope(grantsGov, samGov.organizations);
 
 export interface ScanWorkflowParams {
@@ -197,7 +194,6 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       try {
         const adapter = createRegisteredSourceAdapter(source.id, this.env, {
           dgMarket,
-          euFundingTenders,
           grantsGov,
           mccDgMarket,
           samGov,
