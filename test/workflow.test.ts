@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { localScanCycleForInstant, scanTimingForEvent } from "../src/worker/workflow";
+import {
+  localScanCycleForInstant,
+  scanCycleForEvent,
+  scanTimingForEvent,
+} from "../src/worker/workflow";
 
 describe("UK scan schedule gate", () => {
   it("accepts the GMT UTC equivalent and rejects the BST equivalent in winter", () => {
@@ -29,5 +33,22 @@ describe("UK scan schedule gate", () => {
 
     expect(timing.cycleInstant.toISOString()).toBe("2026-09-15T17:00:00.000Z");
     expect(timing.scanInstant.toISOString()).toBe("2026-09-15T23:13:52.923Z");
+  });
+
+  it("keeps a manual run requested for a scheduled time in a separate cycle", () => {
+    const timing = scanTimingForEvent(
+      { requestedAt: "2026-09-15T17:00:00.000Z" },
+      undefined,
+      new Date("2026-09-15T23:13:52.923Z"),
+    );
+
+    expect(scanCycleForEvent(timing, undefined)).toEqual({
+      cycleKey: "manual:2026-09-15T23:13:52.923Z",
+      scheduledFor: "2026-09-15T17:00:00.000Z",
+    });
+    expect(scanCycleForEvent(timing, timing.cycleInstant.getTime())).toEqual({
+      cycleKey: "2026-09-15:PM",
+      scheduledFor: "2026-09-15T17:00:00.000Z",
+    });
   });
 });

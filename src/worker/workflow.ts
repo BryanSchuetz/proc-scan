@@ -76,6 +76,17 @@ export interface ScanTiming {
   scanInstant: Date;
 }
 
+export function scanCycleForEvent(
+  timing: ScanTiming,
+  scheduledTime: number | string | undefined,
+): LocalScanCycle | undefined {
+  if (scheduledTime !== undefined) return localScanCycleForInstant(timing.cycleInstant);
+  return {
+    cycleKey: `manual:${timing.scanInstant.toISOString()}`,
+    scheduledFor: timing.cycleInstant.toISOString(),
+  };
+}
+
 export function scanTimingForEvent(
   params: ScanWorkflowParams,
   scheduledTime: number | string | undefined,
@@ -184,8 +195,8 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
     );
     const inclusionWindow = digestInclusionWindow(event.payload ?? {});
 
-    const cycle = await step.do("resolve UK scan cycle", async () =>
-      localScanCycleForInstant(cycleInstant),
+    const cycle = await step.do("resolve scan cycle", async () =>
+      scanCycleForEvent({ cycleInstant, scanInstant }, event.schedule?.scheduledTime),
     );
     if (!cycle) return { status: "skipped", reason: "not_a_local_scan_time" };
 

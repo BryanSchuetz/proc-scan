@@ -170,9 +170,10 @@ export async function prepareDigest(
   const now = new Date().toISOString();
   const status: DigestStatus = rows.results.length === 0 ? "skipped_empty" : "pending";
   await db.batch([
-    db.prepare(`INSERT OR IGNORE INTO digests (
+    db.prepare(`INSERT INTO digests (
       id, scan_run_id, content_fingerprint, provider, status, created_at, updated_at
-    ) VALUES (?, ?, ?, 'campaign-monitor', ?, ?, ?)`)
+    ) VALUES (?, ?, ?, 'campaign-monitor', ?, ?, ?)
+    ON CONFLICT(scan_run_id) DO NOTHING`)
       .bind(digestId, scanRunId, fingerprint, status, now, now),
     ...rows.results.map((row) =>
       db.prepare(`INSERT OR IGNORE INTO digest_items (digest_id, bidding_event_id)

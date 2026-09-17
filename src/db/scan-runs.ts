@@ -52,9 +52,10 @@ export async function startSourceRun(
   cursorBefore?: unknown,
 ): Promise<string> {
   const id = `source_run_${scanRunId}_${sourceId}`;
-  await db.prepare(`INSERT OR IGNORE INTO source_runs (
+  await db.prepare(`INSERT INTO source_runs (
     id, scan_run_id, source_id, started_at, status, cursor_before_json
-  ) VALUES (?, ?, ?, ?, 'running', ?)`)
+  ) VALUES (?, ?, ?, ?, 'running', ?)
+  ON CONFLICT(scan_run_id, source_id) DO NOTHING`)
     .bind(
       id,
       scanRunId,
