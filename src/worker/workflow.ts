@@ -93,14 +93,16 @@ export function scanTimingForEvent(
   triggeredAt: Date,
 ): ScanTiming {
   const requestedAt = params.requestedAt ? new Date(params.requestedAt) : undefined;
-  const cycleInstant = requestedAt ?? new Date(scheduledTime ?? triggeredAt.getTime());
-  if (Number.isNaN(cycleInstant.getTime()) || Number.isNaN(triggeredAt.getTime())) {
+  const scheduledAt = scheduledTime === undefined ? undefined : new Date(scheduledTime);
+  const cycleInstant = requestedAt ?? scheduledAt ?? triggeredAt;
+  const scanInstant = scheduledAt ?? triggeredAt;
+  if (Number.isNaN(cycleInstant.getTime()) || Number.isNaN(scanInstant.getTime())) {
     throw new NonRetryableError("Invalid scan timestamp");
   }
-  if (requestedAt && requestedAt.getTime() > triggeredAt.getTime()) {
+  if (requestedAt && requestedAt.getTime() > scanInstant.getTime()) {
     throw new NonRetryableError("requestedAt cannot be in the future");
   }
-  return { cycleInstant, scanInstant: triggeredAt };
+  return { cycleInstant, scanInstant };
 }
 
 export function localScanCycleForInstant(instant: Date): LocalScanCycle | undefined {

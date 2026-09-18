@@ -35,6 +35,17 @@ describe("UK scan schedule gate", () => {
     expect(timing.scanInstant.toISOString()).toBe("2026-09-15T23:13:52.923Z");
   });
 
+  it("uses the scheduled time instead of the workflow deployment time for a scheduled scan", () => {
+    const timing = scanTimingForEvent(
+      {},
+      "2026-09-18T05:00:10.887Z",
+      new Date("2026-09-17T11:41:40.302Z"),
+    );
+
+    expect(timing.cycleInstant.toISOString()).toBe("2026-09-18T05:00:10.887Z");
+    expect(timing.scanInstant.toISOString()).toBe("2026-09-18T05:00:10.887Z");
+  });
+
   it("keeps a manual run requested for a scheduled time in a separate cycle", () => {
     const timing = scanTimingForEvent(
       { requestedAt: "2026-09-15T17:00:00.000Z" },
