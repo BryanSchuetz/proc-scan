@@ -239,6 +239,8 @@ function candidateFromOpportunity(
   discoveredAt: string,
 ): SourceCandidate | undefined {
   if (!PURSUABLE_NOTICE_TYPES.has(opportunity.type.trim().toLocaleLowerCase())) return undefined;
+  const naicsCode = presentText(opportunity.naicsCode);
+  if (!naicsCode || (!naicsCode.startsWith("54") && !naicsCode.startsWith("61"))) return undefined;
 
   const names = hierarchyParts(opportunity.fullParentPathName);
   const clientName = presentText(opportunity.subTier) ?? names[1] ?? names[0];
@@ -281,7 +283,7 @@ function candidateFromOpportunity(
       archiveDate: normalizedSourceDate(opportunity.archiveDate),
       active: presentText(opportunity.active),
       responseDeadline: presentText(opportunity.responseDeadLine),
-      naicsCode: presentText(opportunity.naicsCode),
+      naicsCode,
       naicsCodes: opportunity.naicsCodes,
       classificationCode: presentText(opportunity.classificationCode),
       setAsideCode: presentText(opportunity.typeOfSetAside),

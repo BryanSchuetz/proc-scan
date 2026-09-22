@@ -116,6 +116,32 @@ describe("SAM.gov Source adapter", () => {
     expect(requests[0].searchParams.get("postedFrom")).toBe("08/27/2026");
   });
 
+  it("only returns opportunities with NAICS codes in sectors 54 or 61", async () => {
+    const opportunitiesData = [
+      { noticeId: "professional", title: "Professional services", type: "Solicitation", naicsCode: "541611" },
+      { noticeId: "education", title: "Education services", type: "Solicitation", naicsCode: "611430" },
+      { noticeId: "manufacturing", title: "Manufacturing", type: "Solicitation", naicsCode: "332999" },
+      { noticeId: "missing", title: "Missing NAICS", type: "Solicitation" },
+    ];
+    const adapter = createSamGovAdapter({
+      apiKey: "fixture-key",
+      organizations: [{ code: "524", name: "Millennium Challenge Corporation" }],
+      fetch: (async () => Response.json({
+        totalRecords: opportunitiesData.length,
+        limit: 1000,
+        offset: 0,
+        opportunitiesData,
+      })) as typeof fetch,
+    });
+
+    const result = await adapter.scan(scanContext());
+
+    expect(result.candidates.map((candidate) => candidate.sourceEventId)).toEqual([
+      "education",
+      "professional",
+    ]);
+  });
+
   it("classifies quota failures without exposing the API key", async () => {
     const apiKey = "private-fixture-key";
     const adapter = createSamGovAdapter({

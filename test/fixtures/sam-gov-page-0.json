@@ -43,6 +43,7 @@
       "type": "Special Notice",
       "baseType": "Special Notice",
       "responseDeadLine": null,
+      "naicsCode": "611430",
       "active": "Yes",
       "description": "null",
       "organizationType": "OFFICE",
