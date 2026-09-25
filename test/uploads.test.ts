@@ -39,7 +39,8 @@ describe("Excel upload validation", () => {
       opportunityName: "Climate, conseil", sourceOpportunityId: "00073", description: "First line\nSecond line: café",
       dueDate: "2099-04-03T00:00:00.000Z", value: { amount: 712345.67, currency: "EUR" },
     });
-    expect(() => parseSpreadsheet(new TextEncoder().encode(csv.replace("2099-04-03", "03/04/2099")), "ted", "table.csv")).toThrow("use an Excel date");
+    expect(parseSpreadsheet(new TextEncoder().encode(csv.replace("2099-04-03", "03/04/2099")), "ted", "table.csv")[0].dueDate)
+      .toBe("2099-03-04T00:00:00.000Z");
     const rows = Array.from({ length: 501 }, (_, i) => `Opportunity ${i},https://example.org/${i}`);
     expect(() => parseSpreadsheet(new TextEncoder().encode(`Title,URL\n${rows.join("\n")}`), "ted", "table.csv")).toThrow("at most 500");
   });
@@ -59,6 +60,35 @@ describe("Excel upload validation", () => {
     expect(result[0].discoveredAt).toBeUndefined();
   });
 
+  it("reads numeric Excel date serials using the workbook date system", () => {
+    const standard = parseSpreadsheet(workbook([
+      ["Title", "URL", "Published date"],
+      ["Standard date system", "https://example.org/standard-date", 45925],
+    ]), "ted");
+    expect(standard[0].publishedAt).toBe("2025-09-25T00:00:00.000Z");
+
+    const book1904 = utils.book_new();
+    const sheet = utils.aoa_to_sheet([
+      ["Title", "URL", "Published date"],
+      ["1904 date system", "https://example.org/1904-date", 1.5],
+    ]);
+    utils.book_append_sheet(book1904, sheet, "Opportunities");
+    book1904.Workbook = { WBProps: { date1904: true } };
+    const bytes1904 = new Uint8Array(write(book1904, { type: "array", bookType: "xlsx" }));
+    expect(parseSpreadsheet(bytes1904, "ted")[0].publishedAt).toBe("1904-01-02T12:00:00.000Z");
+  });
+
+  it("normalizes recognizable dates stored as spreadsheet text", () => {
+    const result = parseSpreadsheet(workbook([
+      ["Title", "URL", "Due date", "Published date"],
+      ["Text dates", "https://example.org/text-dates", "11/2/26", "September 14 2026"],
+    ]), "ted");
+    expect(result[0]).toMatchObject({
+      dueDate: "2026-11-02T00:00:00.000Z",
+      publishedAt: "2026-09-14T00:00:00.000Z",
+    });
+  });
+
   it("allows missing optional fields and skips empty rows without changing error row numbers", () => {
     expect(parseSpreadsheet(workbook([["Title", "URL"], ["Advisory", "https://example.org/1"], [], ["Other", "https://example.org/2"]]), "fmo"))
       .toMatchObject([{ eventType: "tender", sourceData: { uploadRow: 2 } }, { sourceData: { uploadRow: 4 } }]);
@@ -66,12 +96,30 @@ describe("Excel upload validation", () => {
       .toThrow("Row 3: Title and URL are required");
   });
 
+  it("uses Excel hyperlink targets instead of their display text", () => {
+    const urls = [
+      "https://fcdo.bravosolution.co.uk/esop/toolkit/negotiation/rfq/detailRfqResponse.do?_ncp=1790350402816.161411-1#fh",
+      "https://fcdo.bravosolution.co.uk/esop/ect/filesharing/flist/9939526/12464570/foldersFilesList.si#fh",
+    ];
+    const book = utils.book_new();
+    const sheet = utils.aoa_to_sheet([["Title", "URL"], ["Framework", "Open RFQ"], ["Files", "Open files"]]);
+    sheet.B2.l = { Target: urls[0] };
+    sheet.B3.l = { Target: urls[1] };
+    utils.book_append_sheet(book, sheet, "Opportunities");
+    const bytes = new Uint8Array(write(book, { type: "array", bookType: "xlsx" }));
+
+    expect(parseSpreadsheet(bytes, "fcdo-jaggaer-public").map((candidate) => candidate.canonicalUrl)).toEqual(urls);
+
+    sheet.B2.l = { Target: "https://user:password@example.org/notice" };
+    const unsafe = new Uint8Array(write(book, { type: "array", bookType: "xlsx" }));
+    expect(() => parseSpreadsheet(unsafe, "fcdo-jaggaer-public")).toThrow("without credentials");
+  });
+
   it.each([
     ["URL", "javascript:alert(1)", "URL: use a complete"],
     ["URL", "https://user:password@example.org/notice", "URL: use a complete"],
-    ["Due date", "03/04/2099", "use an Excel date"],
+    ["Due date", "not a date", "use a recognizable date"],
     ["Due date", "2099-02-30", "invalid date"],
-    ["Due date", "2099-04-03T10:00:00", "use an Excel date"],
     ["Amount", "1,000,000", "Amount: use a non-negative"],
     ["Amount", -1, "Amount: use a non-negative"],
     ["Amount", 500, "Currency: provide"],

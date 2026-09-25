@@ -1,5 +1,5 @@
 import { unzipSync } from "fflate";
-import { read, utils, write } from "xlsx";
+import { read, SSF, utils, write } from "xlsx";
 import { biddingEventTypes } from "../domain/types";
 import type { SourceCandidate } from "../sources/adapter";
 
@@ -24,20 +24,28 @@ export function spreadsheetTemplate(): Uint8Array<ArrayBuffer> {
   return new Uint8Array(write(workbook, { type: "array", bookType: "xlsx" }));
 }
 
-function dateValue(value: unknown, label: string): string | undefined {
+function dateValue(value: unknown, label: string, date1904: boolean): string | undefined {
   if (value === undefined || value === "") return undefined;
   if (value instanceof Date && Number.isFinite(value.getTime())) return value.toISOString();
+  if (typeof value === "number") {
+    const excel = SSF.parse_date_code(value, { date1904 });
+    if (!excel || excel.d < 1 || (excel.y === 1900 && excel.m === 2 && excel.d === 29)) fail(`${label}: invalid date.`);
+    return new Date(Date.UTC(excel.y, excel.m - 1, excel.d, excel.H, excel.M, excel.S, Math.round(excel.u * 1000))).toISOString();
+  }
   const text = String(value).trim();
-  // Do not guess whether 03/04 means March 4 or April 3, or infer a timezone.
-  if (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2}))?$/.test(text)) {
-    fail(`${label}: use an Excel date, YYYY-MM-DD, or an ISO timestamp with a timezone.`);
+  const iso = /^(\d{4}-\d{2}-\d{2})(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})?)?$/i.exec(text);
+  if (iso) {
+    const midnight = new Date(`${iso[1]}T00:00:00.000Z`);
+    const parsed = new Date(text.length === 10 ? `${text}T00:00:00.000Z` : iso[2] ? text : `${text}Z`);
+    if (!Number.isFinite(parsed.getTime()) || !Number.isFinite(midnight.getTime()) || midnight.toISOString().slice(0, 10) !== iso[1]) {
+      fail(`${label}: invalid date.`);
+    }
+    return parsed.toISOString();
   }
-  const day = text.slice(0, 10);
-  const midnight = new Date(`${day}T00:00:00.000Z`);
-  const parsed = new Date(text.length === 10 ? `${day}T00:00:00.000Z` : text);
-  if (!Number.isFinite(parsed.getTime()) || !Number.isFinite(midnight.getTime()) || midnight.toISOString().slice(0, 10) !== day) {
-    fail(`${label}: invalid date.`);
-  }
+  // Spreadsheet exports commonly store displayed dates as text. JavaScript's
+  // parser treats ambiguous numeric dates as month/day/year, matching this UI's locale.
+  const parsed = new Date(text);
+  if (!Number.isFinite(parsed.getTime())) fail(`${label}: use a recognizable date.`);
   return parsed.toISOString();
 }
 
@@ -76,6 +84,7 @@ export function parseSpreadsheet(bytes: Uint8Array, sourceId: string, filename =
   }
   if (workbook.SheetNames.length !== 1) fail("Use one worksheet per upload. Copy the opportunity table into the template.");
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const date1904 = Boolean(workbook.Workbook?.WBProps?.date1904);
   const range = utils.decode_range(sheet["!fullref"] ?? sheet["!ref"] ?? "A1");
   if (range.s.r !== 0 || range.s.c !== 0) fail("Start the table in cell A1, with column headers in the first row.");
   if (range.e.r > MAX_ROWS || range.e.c >= uploadColumns.length) {
@@ -98,7 +107,13 @@ export function parseSpreadsheet(bytes: Uint8Array, sourceId: string, filename =
       if (cell?.t === "e") fail(`${label}: correct Excel cell errors before uploading.`);
     }
     if (row.every((cell) => cell === "" || cell === null || cell === undefined)) continue;
-    const value = (name: string) => row[headers.indexOf(name.toLowerCase())];
+    const value = (name: string) => {
+      const column = headers.indexOf(name.toLowerCase());
+      const hyperlink = name === "URL"
+        ? sheet[utils.encode_cell({ r: index, c: column })]?.l?.Target
+        : undefined;
+      return typeof hyperlink === "string" ? hyperlink : row[column];
+    };
     const text = (name: string) => {
       const cell = value(name);
       if (cell === undefined || cell === "") return undefined;
@@ -136,8 +151,8 @@ export function parseSpreadsheet(bytes: Uint8Array, sourceId: string, filename =
       sourceEventId: text("Event ID"),
       clientName: text("Client"),
       description: text("Description"),
-      dueDate: dateValue(value("Due date"), `${label}, Due date`),
-      publishedAt: dateValue(value("Published date"), `${label}, Published date`),
+      dueDate: dateValue(value("Due date"), `${label}, Due date`, date1904),
+      publishedAt: dateValue(value("Published date"), `${label}, Published date`, date1904),
       value: amount !== undefined || currency ? { amount, currency } : undefined,
       placeOfPerformance: place || countryCode ? { description: place, countryCode } : undefined,
       eventType: eventType as typeof biddingEventTypes[number],
