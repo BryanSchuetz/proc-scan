@@ -1,6 +1,6 @@
 # Procurement Opportunity Registry
 
-A Cloudflare-hosted scanner and read-only registry for procurement Bidding Events.
+A Cloudflare-hosted scanner and registry for procurement Bidding Events, with queued spreadsheet uploads.
 
 - [Development plan](DEVELOPMENT_PLAN.md)
 - [Domain language](CONTEXT.md)
@@ -23,6 +23,18 @@ npm run dev
 `npm run dev` builds once in development mode and serves bundled assets, keeping remote orb previews responsive even when each request has significant latency. Use `npm run dev:modules` when local development requires Vite hot-module replacement.
 
 The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds. The deployed Worker is protected by a Worker-level Access application with the same 12-hour login policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN login methods.
+
+## Spreadsheet uploads
+
+Authenticated users can open `/upload`, choose a registered Source, drop or browse for an Excel or CSV file, and select Upload. Download the Excel template on that page. Files must be unencrypted `.xls` or `.xlsx` workbooks containing one worksheet, or UTF-8 comma-separated `.csv` files, with headers starting in A1, at most 500 opportunity rows, and a maximum file size of 2 MB (20 MB expanded for XLSX; 1 MB normalized opportunity data). Validation rejects the entire file on an invalid row. Formulas must be replaced with values. CSV dates must use YYYY-MM-DD or an ISO timestamp with a timezone; IDs retain leading zeros.
+
+`Title` and `URL` are required. Optional columns are `Opportunity ID`, `Event ID`, `Client`, `Description`, `Due date`, `Published date`, `Amount`, `Currency`, `Place`, `Country code`, and `Event type`. Headers are case-insensitive and may be reordered. Use original Source identifiers when available to match automated discoveries; format identifier cells as text to preserve leading zeros. Event type defaults to `tender` and also accepts `modification`, `award`, and `cancellation`. Dates accept Excel dates (interpreted as UTC), `YYYY-MM-DD` (midnight UTC), or ISO timestamps with an explicit timezone. Amounts must be non-negative numbers; amounts require a three-letter currency code. Blank optional values remain unknown.
+
+The next scan claims uploads submitted at or before its start time. Later submissions wait for the following scan. Uploads are processed before automated collection and use the same duplicate detection, modification handling, expiry checks, Addressability Assessment, Technical Area Classification, and digest selection as automated candidates. Users must ensure uploaded opportunities fall within the Source's approved scope: spreadsheet uploads do not run Source-specific discovery filters or fetch missing details. Accepted rows are not guaranteed to appear in the registry; excluded and duplicate counts appear in the upload history.
+
+Sources whose automated scans are disabled can still receive uploads. Their manually uploaded events remain visible without revealing old disabled automated records. Automated failures do not discard already processed uploads. Identical normalized files for the same Source return the original upload instead of creating another queue entry. Unprocessed files from completed/failed/partial scan runs are eligible for a later scan; active scan claims prevent overlapping consumption.
+
+Migration `0024_opportunity_uploads.sql` stores normalized rows, filename, submission time, uploader identity, processing counts, and the consuming scan ID in D1. Original workbook bytes are not retained. The page shows the latest 30 uploads across the team, without exposing uploader identities. Apply the migration before deploying the upload-enabled Worker; production migration and deployment require owner approval.
 
 ## Addressability Assessment
 

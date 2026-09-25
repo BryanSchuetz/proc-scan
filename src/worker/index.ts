@@ -7,6 +7,7 @@ import {
   isLoopbackRequest,
 } from "./access";
 import { ScanWorkflow } from "./workflow";
+import { handleUploads } from "./uploads";
 
 export interface AppEnv {
   DB: D1Database;
@@ -93,6 +94,15 @@ export default {
     }
 
     const url = new URL(request.url);
+    if (url.pathname === "/api/uploads" || url.pathname.startsWith("/api/uploads/")) {
+      try {
+        const response = withSecurityHeaders(await handleUploads(request, env.DB, access), request);
+        response.headers.set("Cache-Control", "no-store");
+        return response;
+      } catch {
+        return errorResponse(500, "uploads_unavailable", "Uploads could not be loaded or saved. Please try again.");
+      }
+    }
     if (url.pathname.startsWith("/api/")) return handleApi(request, env);
     if (request.method !== "GET" && request.method !== "HEAD") {
       return errorResponse(405, "method_not_allowed", "This application is read-only.");

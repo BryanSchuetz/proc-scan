@@ -58,3 +58,21 @@ export interface ApiError {
     message: string;
   };
 }
+
+export interface UploadSummary {
+  id: string;
+  filename: string;
+  sourceId: string;
+  sourceName: string;
+  createdAt: string;
+  rowCount: number;
+  status: "queued" | "processing" | "processed";
+  retainedCount: number;
+  excludedCount: number;
+  duplicateCount: number;
+}
+
+export interface UploadsResponse {
+  sources: Array<{ id: string; name: string; enabled: number }>;
+  uploads: UploadSummary[];
+}

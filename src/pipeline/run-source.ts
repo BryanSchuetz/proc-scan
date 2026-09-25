@@ -8,7 +8,7 @@ import {
 import { completeSourceRun } from "../db/scan-runs";
 import { buildEventIdentity } from "../domain/identity";
 import type { NormalizedBiddingEvent } from "../domain/types";
-import type { SourceAdapter, SourceCursor } from "../sources/adapter";
+import type { SourceAdapter, SourceCursor, SourceCandidate } from "../sources/adapter";
 import { assertValidSourceAdapter, SourceScanError } from "../sources/adapter";
 import { processCandidate } from "./process-candidate";
 
@@ -23,6 +23,7 @@ export interface SourceProcessingContext {
   taxonomy: TaxonomyFile;
   technicalClassification: TechnicalClassificationConfig;
   addressability: AddressabilityConfig;
+  initialCounts?: SourceProcessingResult;
 }
 
 export interface SourceProcessingResult {
@@ -61,15 +62,37 @@ export async function runSourceAdapter(
     signal: context.signal,
     now: context.now,
   });
+  const result = await processSourceCandidates({
+    ...context, sourceId: context.adapter.definition.id,
+  }, scan.candidates);
+  result.nextCursor = scan.nextCursor;
+  if (context.initialCounts) {
+    result.discoveredCount += context.initialCounts.discoveredCount;
+    result.retainedCount += context.initialCounts.retainedCount;
+    result.excludedCount += context.initialCounts.excludedCount;
+    result.duplicateCount += context.initialCounts.duplicateCount;
+  }
+  await completeSourceRun(context.db, context.sourceRunId, {
+    ...result,
+    cursorAfter: result.nextCursor,
+  });
+  return result;
+}
+
+export async function processSourceCandidates(
+  context: Omit<SourceProcessingContext, "adapter" | "cursor" | "signal" | "initialCounts"> & { sourceId: string },
+  candidates: SourceCandidate[],
+): Promise<SourceProcessingResult> {
+  const sourceId = context.sourceId;
   let retainedCount = 0;
   let excludedCount = 0;
   let duplicateCount = 0;
 
-  for (const candidate of scan.candidates) {
-    if (candidate.sourceId !== context.adapter.definition.id) {
+  for (const candidate of candidates) {
+    if (candidate.sourceId !== sourceId) {
       throw new SourceScanError(
         "invalid_candidate",
-        `Source ${context.adapter.definition.id} returned a candidate owned by ${candidate.sourceId}.`,
+        `Source ${sourceId} returned a candidate owned by ${candidate.sourceId}.`,
         false,
       );
     }
@@ -145,18 +168,10 @@ export async function runSourceAdapter(
     }
   }
 
-  const result = {
-    discoveredCount: scan.candidates.length,
+  return {
+    discoveredCount: candidates.length,
     retainedCount,
     excludedCount,
     duplicateCount,
-    nextCursor: scan.nextCursor,
   };
-  await completeSourceRun(context.db, context.sourceRunId, {
-    discoveredCount: result.discoveredCount,
-    retainedCount: result.retainedCount,
-    excludedCount: result.excludedCount,
-    cursorAfter: result.nextCursor,
-  });
-  return result;
 }

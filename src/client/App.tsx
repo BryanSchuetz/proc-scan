@@ -22,16 +22,17 @@ import type { ApiBiddingEvent, EventsResponse } from "../api/types";
 import daiLogoUrl from "./assets/dai-logo.svg";
 import { fetchBiddingEvents } from "./api";
 import HowItWorks from "./HowItWorks";
+import Upload from "./Upload";
 import { paginationItems } from "./pagination";
 import { sourceFilterFromUrl, urlWithSourceFilter } from "./url-filters";
 
 const columnHelper = createColumnHelper<ApiBiddingEvent>();
 const initialSorting: SortingState = [{ id: "discoveredAt", desc: true }];
-type RegistryPath = "/" | "/unmarked" | "/how-it-works";
+type RegistryPath = "/" | "/unmarked" | "/how-it-works" | "/upload";
 
 function getRegistryPath(): RegistryPath {
   const path = window.location.pathname.replace(/\/+$/, "");
-  if (path === "/unmarked" || path === "/how-it-works") return path;
+  if (path === "/unmarked" || path === "/how-it-works" || path === "/upload") return path;
   return "/";
 }
 
@@ -219,6 +220,7 @@ export default function App() {
   const [pathname, setPathname] = useState<RegistryPath>(getRegistryPath);
   const isUnmarkedPage = pathname === "/unmarked";
   const isHowPage = pathname === "/how-it-works";
+  const isUploadPage = pathname === "/upload";
   const status = isUnmarkedPage ? "uncertain" : "addressable";
   const [data, setData] = useState<EventsResponse>();
   const [loading, setLoading] = useState(true);
@@ -271,13 +273,13 @@ export default function App() {
   }, [applyRoute]);
 
   useEffect(() => {
-    const pageTitle = isHowPage ? "How It Works" : `${isUnmarkedPage ? "Unmarked" : "Marked"} Opportunities`;
+    const pageTitle = isUploadPage ? "Upload Opportunities" : isHowPage ? "How It Works" : `${isUnmarkedPage ? "Unmarked" : "Marked"} Opportunities`;
     document.title = `${pageTitle} | Procurement Opportunity Registry`;
-  }, [isHowPage, isUnmarkedPage]);
+  }, [isHowPage, isUnmarkedPage, isUploadPage]);
 
   const sort = sorting[0] ?? initialSorting[0];
   useEffect(() => {
-    if (isHowPage) return;
+    if (isHowPage || isUploadPage) return;
     const controller = new AbortController();
     setLoading(true);
     setError(undefined);
@@ -305,7 +307,7 @@ export default function App() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [client, debouncedSearch, eventType, isHowPage, page, reload, sort.desc, sort.id, source, status, technicalArea]);
+  }, [client, debouncedSearch, eventType, isHowPage, isUploadPage, page, reload, sort.desc, sort.id, source, status, technicalArea]);
 
   useEffect(() => setPage(1), [client, debouncedSearch, eventType, source, technicalArea]);
 
@@ -465,12 +467,11 @@ export default function App() {
           <h1>Registry</h1>
         </div>
         <div className="header-meta">
-          <span className="read-only-indicator">Read only</span>
           <span>Scans at 6:00 AM &amp; 6:00 PM UK time</span>
         </div>
       </header>
 
-      {isHowPage ? <HowItWorks onNavigate={navigate} /> : <main>
+      {isUploadPage ? <Upload onNavigate={navigate} /> : isHowPage ? <HowItWorks onNavigate={navigate} /> : <main>
         <section className="registry-heading" aria-labelledby="registry-title">
           <div>
             <p className="section-kicker">Bidding Events</p>

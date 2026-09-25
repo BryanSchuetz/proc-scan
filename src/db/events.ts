@@ -268,14 +268,15 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
     db.prepare(`SELECT DISTINCT e.client_name AS value
       FROM bidding_events e
       JOIN sources s ON s.id = e.source_id
-      WHERE s.enabled = 1 AND e.client_name IS NOT NULL
+      WHERE (s.enabled = 1 OR json_extract(e.source_data_json, '$.upload.id') IS NOT NULL)
+        AND e.client_name IS NOT NULL
         AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
       ORDER BY e.client_name`)
       .all<{ value: string }>(),
     db.prepare(`SELECT DISTINCT s.id, s.display_name AS name
       FROM sources s
       JOIN bidding_events e ON e.source_id = s.id
-      WHERE s.enabled = 1
+      WHERE (s.enabled = 1 OR json_extract(e.source_data_json, '$.upload.id') IS NOT NULL)
         AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
       ORDER BY s.display_name`)
       .all<{ id: string; name: string }>(),
@@ -284,7 +285,7 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
         FROM bidding_event_technical_areas assignment
         JOIN bidding_events e ON e.id = assignment.bidding_event_id
         JOIN sources source ON source.id = e.source_id
-        WHERE source.enabled = 1
+        WHERE (source.enabled = 1 OR json_extract(e.source_data_json, '$.upload.id') IS NOT NULL)
           AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
         UNION
         SELECT area.parent_id
@@ -304,7 +305,7 @@ async function loadFacets(db: D1Database): Promise<EventsFacets> {
     db.prepare(`SELECT EXISTS(
       SELECT 1 FROM bidding_events e
       JOIN sources source ON source.id = e.source_id
-      WHERE source.enabled = 1
+      WHERE (source.enabled = 1 OR json_extract(e.source_data_json, '$.upload.id') IS NOT NULL)
         AND (e.due_date IS NULL OR e.due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
         AND NOT EXISTS (
         SELECT 1 FROM bidding_event_technical_areas assignment
@@ -364,7 +365,8 @@ export async function listBiddingEvents(db: D1Database, query: EventsQuery): Pro
   const where = buildWhere(query);
   const from = `FROM bidding_events e
     JOIN sources s ON s.id = e.source_id
-    WHERE s.enabled = 1 AND ${where.sql}`;
+    WHERE (s.enabled = 1 OR json_extract(e.source_data_json, '$.upload.id') IS NOT NULL)
+      AND ${where.sql}`;
   const technicalAreas = `(SELECT COALESCE(json_group_array(json_object(
     'id', ta.id, 'name', ta.name, 'parentId', ta.parent_id
   )), '[]')

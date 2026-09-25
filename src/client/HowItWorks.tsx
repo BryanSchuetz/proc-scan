@@ -1,7 +1,7 @@
 import { InfoIcon } from "@phosphor-icons/react";
 
 interface HowItWorksProps {
-  onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, path: "/" | "/unmarked" | "/how-it-works") => void;
+  onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, path: "/" | "/unmarked" | "/how-it-works" | "/upload") => void;
 }
 
 const sources = [

@@ -19,6 +19,7 @@ import {
   claimScanRun,
   completeEmptyScanRun,
   completeScanRun,
+  completeSourceRun,
   failSourceRun,
   listEnabledSources,
   startSourceRun,
@@ -37,6 +38,8 @@ import {
 } from "../digest/campaign-monitor";
 import { renderDigest } from "../digest/render";
 import { runSourceAdapter } from "../pipeline/run-source";
+import { runQueuedUploads } from "../pipeline/run-uploads";
+import { claimUploadsForScan } from "../db/uploads";
 import { SourceScanError } from "../sources/adapter";
 import { createRegisteredSourceAdapter } from "../sources";
 import { parseDgMarketConfig } from "../sources/dg-market";
@@ -215,18 +218,36 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
     const enabledSources = await step.do("load enabled Sources", async () =>
       listEnabledSources(this.env.DB),
     );
-    if (enabledSources.length === 0) {
+    const uploadSourceIds = await step.do("claim queued uploads", async () =>
+      claimUploadsForScan(this.env.DB, id, scanInstant.toISOString()),
+    );
+    const sources = [...enabledSources, ...uploadSourceIds
+      .filter((sourceId) => !enabledSources.some((source) => source.id === sourceId))
+      .map((sourceId) => ({ id: sourceId, cursor: undefined }))];
+    if (sources.length === 0) {
       await step.do("complete empty scan", async () => completeEmptyScanRun(this.env.DB, id));
       return { status: "completed", scanRunId: id, sourceCount: 0 };
     }
 
-    for (const source of enabledSources) {
+    for (const source of sources) {
       const sourceRunId = await step.do(`start ${source.id} Source run`, async () =>
         startSourceRun(this.env.DB, id, source.id, source.cursor),
       );
       let failure: SourceFailure | undefined;
 
       try {
+        const uploadCounts = await step.do(`process ${source.id} uploads`, async () =>
+          runQueuedUploads({
+            db: this.env.DB, sourceId: source.id, sourceRunId, scanRunId: id,
+            now: scanInstant, taxonomy, technicalClassification, addressability,
+          }),
+        );
+        if (!enabledSources.some((enabled) => enabled.id === source.id)) {
+          await step.do(`complete ${source.id} uploads-only run`, async () =>
+            completeSourceRun(this.env.DB, sourceRunId, uploadCounts),
+          );
+          continue;
+        }
         const adapter = createRegisteredSourceAdapter(source.id, this.env, {
           dgMarket,
           grantsGov,
@@ -250,6 +271,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
                 taxonomy,
                 technicalClassification,
                 addressability,
+                initialCounts: uploadCounts,
               }),
             };
           } catch (error) {
@@ -284,7 +306,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       return {
         ...completion,
         scanRunId: id,
-        sourceCount: enabledSources.length,
+        sourceCount: sources.length,
         digestStatus: "not_configured",
       };
     }
@@ -296,7 +318,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       return {
         ...completion,
         scanRunId: id,
-        sourceCount: enabledSources.length,
+        sourceCount: sources.length,
         digestStatus: digest.status,
       };
     }
@@ -334,7 +356,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
       return {
         ...completion,
         scanRunId: id,
-        sourceCount: enabledSources.length,
+        sourceCount: sources.length,
         digestStatus: "failed",
       };
     }
@@ -345,7 +367,7 @@ export class ScanWorkflow extends WorkflowEntrypoint<AppEnv, ScanWorkflowParams>
     return {
       ...completion,
       scanRunId: id,
-      sourceCount: enabledSources.length,
+      sourceCount: sources.length,
       digestStatus: "sent",
     };
   }
