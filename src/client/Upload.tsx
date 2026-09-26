@@ -1,4 +1,4 @@
-import { FileXlsIcon, InfoIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, FileXlsIcon, InfoIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import type { ApiError, UploadsResponse } from "../api/types";
 
@@ -101,13 +101,16 @@ export default function Upload({ onNavigate }: UploadProps) {
       <div className="upload-layout">
         <form className="upload-form" onSubmit={submit} aria-busy={busy}>
           <label className="upload-source" htmlFor="upload-source">Source</label>
-          <select id="upload-source" value={sourceId} required disabled={busy || !data}
-            onChange={(event) => { setSourceId(event.target.value); setSuccess(""); }}>
-            <option value="">{loading && !data ? "Loading Sources…" : "Choose a Source"}</option>
-            {data?.sources.map((source) => <option key={source.id} value={source.id}>
-              {source.name}{source.enabled ? "" : " (manual uploads only)"}
-            </option>)}
-          </select>
+          <div className="upload-select">
+            <select id="upload-source" value={sourceId} required disabled={busy || !data}
+              onChange={(event) => { setSourceId(event.target.value); setSuccess(""); }}>
+              <option value="">{loading && !data ? "Loading Sources…" : "Choose a Source"}</option>
+              {data?.sources.map((source) => <option key={source.id} value={source.id}>
+                {source.name}{source.enabled ? "" : " (manual uploads only)"}
+              </option>)}
+            </select>
+            <CaretDownIcon aria-hidden="true" size={18} weight="bold" />
+          </div>
           <p className="upload-help">All rows in this file will belong to this Source.</p>
 
           <label className={`upload-dropzone${dragging ? " upload-dropzone--active" : ""}`} htmlFor="upload-file"
@@ -138,10 +141,9 @@ export default function Upload({ onNavigate }: UploadProps) {
           <a className="upload-template" href="/api/uploads/template" download>Download Excel template</a>
           <dl>
             <dt>Required Columns</dt><dd>Title and URL. Use the full link to the opportunity.</dd>
-            <dt>Recommended</dt><dd>Client, Description, Opportunity ID, Event ID, Due date, Published date, Amount, Currency, Place, Country code, and Event type.</dd>
-            <dt>Dates and amounts</dt><dd>Use Excel dates or YYYY-MM-DD (midnight UTC). For an exact time, use an ISO timestamp with a timezone. Amounts must be numbers; currencies use codes such as USD, GBP, or EUR.</dd>
+            <dt>Recommended</dt><dd>Client, Description, Opportunity ID, Amount, and Due date.</dd>
           </dl>
-          <p>Blank event types default to Tender. Include the Source’s original IDs when available to help match existing opportunities. Replace formulas with values.</p>
+          <p>Blank event types default to Tender. Include the Opportunity ID when available to link related notices. Replace formulas with values.</p>
           <p className="upload-guide__note">Only upload opportunities within the Source’s approved scope. The next scan applies the usual duplicate checks, value thresholds, and classification. Uploading does not guarantee inclusion in the registry or email digest.</p>
         </aside>
       </div>

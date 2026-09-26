@@ -772,7 +772,12 @@ td:nth-child(8) { width: 190px; }
 .upload-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: start; }
 .upload-form { padding: 28px; background: var(--paper); border: 1px solid var(--line-strong); }
 .upload-source { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; }
-.upload-form select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--paper); color: var(--ink); }
+.upload-select { position: relative; color: var(--ink); }
+.upload-select select { appearance: none; -webkit-appearance: none; width: 100%; min-height: 44px; padding: 10px 44px 10px 12px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--paper); color: var(--ink); cursor: pointer; }
+.upload-select select:hover:not(:disabled) { border-color: var(--gray-400); }
+.upload-select select:disabled { cursor: not-allowed; color: var(--muted); opacity: 0.65; }
+.upload-select svg { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); pointer-events: none; }
+.upload-select select:disabled + svg { color: var(--muted); opacity: 0.65; }
 .upload-help { margin: 8px 0 24px; color: var(--muted); font-size: 12px; }
 .upload-dropzone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 38px 16px; border: 2px dashed var(--gray-300); background: var(--cream); text-align: center; cursor: pointer; }
 .upload-dropzone--active, .upload-dropzone:hover { background: var(--light-blue); border-color: var(--pressed-link); }
