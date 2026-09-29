@@ -141,9 +141,9 @@ export default function Upload({ onNavigate }: UploadProps) {
           <a className="upload-template" href="/api/uploads/template" download>Download Excel template</a>
           <dl>
             <dt>Required Columns</dt><dd>Title and URL. Use the full link to the opportunity.</dd>
-            <dt>Recommended</dt><dd>Client, Description, Opportunity ID, Amount, and Due date.</dd>
+            <dt>Recommended</dt><dd>Framework, Client, Description, Opportunity ID, Amount, and Due date.</dd>
           </dl>
-          <p>Blank event types default to Tender. Include the Opportunity ID when available to link related notices. Replace formulas with values.</p>
+          <p>For framework call-downs, Framework is prepended to the Title. Blank event types default to Tender. Include the Opportunity ID when available to link related notices. Replace formulas with values.</p>
           <p className="upload-guide__note">Only upload opportunities within the Source’s approved scope. The next scan applies the usual duplicate checks, value thresholds, and classification. Uploading does not guarantee inclusion in the registry or email digest.</p>
         </aside>
       </div>

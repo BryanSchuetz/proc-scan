@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { SELF, introspectWorkflowInstance } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
-import { utils, write } from "xlsx";
+import { read, utils, write } from "xlsx";
 import { zipSync } from "fflate";
 import taxonomyRaw from "../tech-area-classification.yaml?raw";
 import classificationRaw from "../config/technical-classification.yaml?raw";
@@ -47,12 +47,12 @@ describe("Excel upload validation", () => {
 
   it("normalizes reordered columns, native Excel dates, IDs, currency, and event type", () => {
     const result = parseSpreadsheet(workbook([
-      ["URL", "Title", "Amount", "Currency", "Due date", "Published date", "Opportunity ID", "Event type", "Country code"],
-      ["https://example.org/notice/73", "Climate advisory", 712345.67, "eur", new Date("2099-04-03T14:30:00Z"), "2099-03-02T10:00:00+02:00", "00073", "Award", "ke"],
+      ["URL", "Title", "Amount", "Currency", "Due date", "Published date", "Opportunity ID", "Event type", "Country code", "Framework"],
+      ["https://example.org/notice/73", "Climate advisory", 712345.67, "eur", new Date("2099-04-03T14:30:00Z"), "2099-03-02T10:00:00+02:00", "00073", "Award", "ke", "Global Climate Framework"],
     ]), "ted");
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
-      sourceId: "ted", canonicalUrl: "https://example.org/notice/73", opportunityName: "Climate advisory",
+      sourceId: "ted", canonicalUrl: "https://example.org/notice/73", opportunityName: "Global Climate Framework — Climate advisory",
       value: { amount: 712345.67, currency: "EUR" }, dueDate: "2099-04-03T14:30:00.000Z",
       publishedAt: "2099-03-02T08:00:00.000Z", sourceOpportunityId: "00073", eventType: "award",
       placeOfPerformance: { countryCode: "KE" },
@@ -206,6 +206,11 @@ describe("authenticated upload API", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Disposition")).toContain("opportunities-template.xlsx");
     const bytes = new Uint8Array(await response.arrayBuffer());
+    const template = utils.sheet_to_json<unknown[]>(
+      read(bytes, { type: "array" }).Sheets.Opportunities,
+      { header: 1 },
+    );
+    expect(template[0]).toContain("Framework");
     expect(() => parseSpreadsheet(bytes, "ted")).toThrow("no opportunities");
   });
 });

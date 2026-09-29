@@ -6,7 +6,7 @@ import type { SourceCandidate } from "../sources/adapter";
 export const MAX_FILE_BYTES = 2 * 1024 * 1024;
 export const MAX_ROWS = 500;
 export const uploadColumns = [
-  "Title", "URL", "Opportunity ID", "Event ID", "Client", "Description",
+  "Title", "Framework", "URL", "Opportunity ID", "Event ID", "Client", "Description",
   "Due date", "Published date", "Amount", "Currency", "Place", "Country code", "Event type",
 ] as const;
 
@@ -122,9 +122,11 @@ export function parseSpreadsheet(bytes: Uint8Array, sourceId: string, filename =
       if (result.length > (name === "Description" ? 10000 : 2000)) fail(`${label}, ${name}: text is too long.`);
       return result || undefined;
     };
-    const opportunityName = text("Title");
+    const title = text("Title");
+    const framework = text("Framework");
     const canonicalUrl = text("URL");
-    if (!opportunityName || !canonicalUrl) fail(`${label}: Title and URL are required.`);
+    if (!title || !canonicalUrl) fail(`${label}: Title and URL are required.`);
+    const opportunityName = framework ? `${framework} — ${title}` : title;
     try {
       const url = new URL(canonicalUrl);
       if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw new Error();
