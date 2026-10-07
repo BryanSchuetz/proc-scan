@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EventsResponse } from "../src/api/types";
-import { fetchBiddingEvents } from "../src/client/api";
+import { fetchBiddingEvents, setMarkingStatus } from "../src/client/api";
 
 const response: EventsResponse = {
   items: [],
@@ -21,6 +21,22 @@ const response: EventsResponse = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("registry client API", () => {
+  it("saves the requested marking status to the admin endpoint", async () => {
+    const fetcher = vi.fn().mockResolvedValue(Response.json({ status: "uncertain" }));
+    vi.stubGlobal("fetch", fetcher);
+    await setMarkingStatus("event/with spaces", "uncertain");
+    expect(fetcher).toHaveBeenCalledWith("/api/admin/opportunities/event%2Fwith%20spaces/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ status: "uncertain" }),
+    });
+  });
+
+  it("surfaces a failed save instead of reporting success", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ error: { message: "Administrator access is required." } }, { status: 403 })));
+    await expect(setMarkingStatus("event-1", "addressable")).rejects.toThrow("Administrator access is required.");
+  });
+
   it("loads Uncertain opportunities from the privacy-filter-safe endpoint", async () => {
     const fetcher = vi.fn().mockResolvedValue(Response.json(response));
     vi.stubGlobal("fetch", fetcher);

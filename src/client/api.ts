@@ -1,4 +1,5 @@
 import type { ApiError, EventsResponse } from "../api/types";
+import type { RetainedAddressabilityStatus } from "../domain/types";
 
 export interface RegistryQuery {
   page: number;
@@ -36,4 +37,16 @@ export async function fetchBiddingEvents(
     throw new Error(error?.error.message ?? "The registry could not be loaded.");
   }
   return response.json() as Promise<EventsResponse>;
+}
+
+export async function setMarkingStatus(id: string, status: RetainedAddressabilityStatus): Promise<void> {
+  const response = await fetch(`/api/admin/opportunities/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => undefined) as ApiError | undefined;
+    throw new Error(error?.error?.message ?? "Marking status could not be saved. Please try again.");
+  }
 }

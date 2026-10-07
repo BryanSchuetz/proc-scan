@@ -1,7 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
-import { authorizeRequest, isAccessFailure } from "../src/worker/access";
+import { authorizeRequest, isAccessFailure, isAdminRequest } from "../src/worker/access";
 
 describe("Cloudflare Access guard", () => {
+  it("grants admin privileges only to exact allowlisted verified emails on shared hosts", () => {
+    const request = new Request("https://registry.example.com/admin");
+    const config = { ADMIN_EMAILS: " First@dai.com, admin@dai.com " };
+    expect(isAdminRequest(request, { email: "ADMIN@dai.com" }, config)).toBe(true);
+    expect(isAdminRequest(request, { email: "first@dai.com" }, config)).toBe(true);
+    expect(isAdminRequest(request, { email: "not-admin@dai.com" }, config)).toBe(false);
+    expect(isAdminRequest(request, { email: "admin@dai.com.attacker.test" }, config)).toBe(false);
+    expect(isAdminRequest(request, { subject: "admin@dai.com" }, config)).toBe(false);
+    expect(isAdminRequest(request, { email: "admin@dai.com" }, {})).toBe(false);
+    expect(isAdminRequest(new Request("http://localhost/admin"), {}, {})).toBe(true);
+  });
+
   it("allows loopback development without weakening shared hosts", async () => {
     expect(isAccessFailure(await authorizeRequest(new Request("http://localhost/api/events"), {}))).toBe(false);
     expect(

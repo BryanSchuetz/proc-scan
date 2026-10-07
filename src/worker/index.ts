@@ -3,6 +3,7 @@ import { EventsQueryError, listBiddingEvents, parseEventsQuery } from "../db/eve
 import {
   authorizeRequest,
   isAccessFailure,
+  isAdminRequest,
   isDevelopmentPreviewRequest,
   isLoopbackRequest,
 } from "./access";
@@ -16,6 +17,7 @@ export interface AppEnv {
   SCAN_WORKFLOW: Workflow;
   TEAM_DOMAIN?: string;
   POLICY_AUD?: string;
+  ADMIN_EMAILS?: string;
   SAM_API_KEY?: string;
   CAMP_MONTR_KEY?: string;
   CAMP_MONTR_CLIENT_ID?: string;
@@ -94,6 +96,41 @@ export default {
     }
 
     const url = new URL(request.url);
+    const isAdmin = isAdminRequest(request, access, env);
+    if (url.pathname === "/api/session" && request.method === "GET") {
+      return jsonResponse({ isAdmin });
+    }
+    if (url.pathname.replace(/\/+$/, "") === "/admin" || url.pathname.startsWith("/api/admin/")) {
+      if (!isAdmin) return errorResponse(403, "admin_required", "Administrator access is required.");
+    }
+    if (url.pathname.startsWith("/api/admin/")) {
+      const match = /^\/api\/admin\/opportunities\/([^/]+)\/status$/.exec(url.pathname);
+      if (!match) return errorResponse(404, "not_found", "Admin route not found.");
+      if (request.method !== "PATCH") return errorResponse(405, "method_not_allowed", "Use PATCH to change marking status.");
+      if (request.headers.get("Origin") !== url.origin || request.headers.get("Sec-Fetch-Site") === "cross-site") {
+        return errorResponse(403, "invalid_origin", "Change marking status from the registry page.");
+      }
+      if (request.headers.get("Content-Type")?.split(";")[0].trim() !== "application/json") {
+        return errorResponse(400, "invalid_status", "Send a JSON marking status.");
+      }
+      const body = await request.json().catch(() => null) as { status?: unknown } | null;
+      if (body?.status !== "addressable" && body?.status !== "uncertain") {
+        return errorResponse(400, "invalid_status", "Choose Marked or Unmarked.");
+      }
+      try {
+        const result = await env.DB.prepare(`UPDATE bidding_events
+          SET manual_addressability_status = ?, manually_marked_by = ?, manually_marked_at = ?
+          WHERE id = ? AND (due_date IS NULL OR due_date > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+            AND (EXISTS (SELECT 1 FROM sources WHERE id = bidding_events.source_id AND enabled = 1)
+              OR json_extract(source_data_json, '$.upload.id') IS NOT NULL)`)
+          .bind(body.status, access.email ?? access.subject ?? "local-preview", new Date().toISOString(), decodeURIComponent(match[1]))
+          .run();
+        if (!result.meta.changes) return errorResponse(404, "not_found", "This Bidding Event is no longer available in the registry.");
+        return jsonResponse({ status: body.status });
+      } catch {
+        return errorResponse(500, "status_unavailable", "Marking status could not be saved. Please try again.");
+      }
+    }
     if (url.pathname === "/api/uploads" || url.pathname.startsWith("/api/uploads/")) {
       try {
         const response = withSecurityHeaders(await handleUploads(request, env.DB, access), request);

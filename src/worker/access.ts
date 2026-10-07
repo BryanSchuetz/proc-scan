@@ -47,6 +47,19 @@ export interface AuthorizedUser {
   subject?: string;
 }
 
+export function isAdminRequest(
+  request: Request,
+  user: AuthorizedUser,
+  env: { ADMIN_EMAILS?: string },
+): boolean {
+  if (isLoopbackRequest(request) || isDevelopmentPreviewRequest(request)) return true;
+  if (!user.email) return false;
+  const userEmail = user.email.toLowerCase();
+  return (env.ADMIN_EMAILS ?? "").split(",").some(
+    (email) => email.trim().toLowerCase() === userEmail,
+  );
+}
+
 export interface AccessFailure {
   status: 403 | 503;
   code: "access_not_configured" | "access_token_missing" | "access_token_invalid";

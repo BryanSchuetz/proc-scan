@@ -12,7 +12,7 @@ const sortableColumns = {
   placeOfPerformance: "e.place_of_performance",
   valueAmount: "e.value_amount",
   dueDate: "e.due_date",
-  addressabilityStatus: "e.addressability_status",
+  addressabilityStatus: "COALESCE(e.manual_addressability_status, e.addressability_status)",
   sourceName: "s.display_name",
   technicalAreas: "e.technical_area_labels",
 } as const;
@@ -224,7 +224,7 @@ function buildWhere(query: EventsQuery): { sql: string; values: BindValue[] } {
   };
 
   if (query.search) add("e.rowid IN (SELECT rowid FROM bidding_events_fts WHERE bidding_events_fts MATCH ?)", ftsQuery(query.search));
-  if (query.status) add("e.addressability_status = ?", query.status);
+  if (query.status) add("COALESCE(e.manual_addressability_status, e.addressability_status) = ?", query.status);
   if (query.eventType) add("e.event_type = ?", query.eventType);
   if (query.client) add("e.client_name = ?", query.client);
   if (query.source) add("e.source_id = ?", query.source);
@@ -377,7 +377,8 @@ export async function listBiddingEvents(db: D1Database, query: EventsQuery): Pro
     e.id, e.source_id, s.display_name AS source_name, e.source_opportunity_id,
     e.source_url, e.source_event_type, e.event_type, e.opportunity_name, e.client_name,
     e.place_of_performance, e.country_code, e.value_amount, e.value_currency,
-    e.due_date, e.published_at, e.discovered_at, e.addressability_status,
+    e.due_date, e.published_at, e.discovered_at,
+    COALESCE(e.manual_addressability_status, e.addressability_status) AS addressability_status,
     ${technicalAreas}
   ${from}
   ORDER BY ${sortableColumns[query.sort]} ${query.direction.toUpperCase()}, e.id ASC

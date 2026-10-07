@@ -3,6 +3,10 @@
 TEAM_DOMAIN=https://your-team.cloudflareaccess.com
 POLICY_AUD=your-access-application-audience
 
+# Comma-separated exact Cloudflare Access user emails allowed to manage marking.
+# Empty means no administrators on shared or production hosts.
+ADMIN_EMAILS=
+
 # Source credentials (add only when the matching adapter is enabled).
 SAM_API_KEY=
 

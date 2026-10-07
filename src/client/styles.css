@@ -820,3 +820,22 @@ td:nth-child(8) { width: 190px; }
   .upload-guide { padding: 0 4px; }
   .view-tabs { flex-wrap: wrap; gap: 10px 16px; }
 }
+
+.admin-link { color: var(--paper); font-weight: 700; text-underline-offset: 4px; }
+.admin-status-filter > span { display: block; margin-bottom: 6px; color: var(--dai-gray); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.admin-status-filter select { min-height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--paper); color: var(--ink); }
+.marking-control { display: flex; flex-direction: column; align-items: start; gap: 2px; white-space: normal; }
+.marking-control strong { font-size: 12px; }
+.marking-control button { min-height: 44px; margin-left: -8px; padding: 8px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 0; background: transparent; color: var(--pressed-link); font-size: 12px; font-weight: 650; white-space: nowrap; }
+.marking-control button svg { flex: 0 0 auto; }
+.marking-control button:hover:not(:disabled), .marking-control button:focus-visible { background: var(--light-blue); }
+.marking-control button:hover:not(:disabled) span { text-decoration: underline; text-underline-offset: 3px; }
+.marking-control button:active:not(:disabled) { transform: translateY(1px); }
+.marking-error { max-width: 190px; color: var(--red); font-size: 12px; }
+.admin-page table { min-width: 1550px; }
+.admin-page td { white-space: normal; width: auto; }
+.admin-page td:first-child { min-width: 170px; }
+.admin-page td:nth-child(4) { width: 260px; }
+.admin-page td:nth-child(5) { width: 170px; }
+.admin-page td:nth-child(9) { width: 190px; }
+.admin-page td:nth-child(2), .admin-page td:nth-child(7), .admin-page td:nth-child(8), .admin-page td:nth-child(11) { white-space: nowrap; }

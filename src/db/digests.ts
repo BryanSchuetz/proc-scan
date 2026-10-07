@@ -133,7 +133,7 @@ export async function prepareDigest(
 
   const rows = await db.prepare(`SELECT DISTINCT e.id, e.content_fingerprint
     FROM bidding_events e
-    WHERE e.addressability_status = 'addressable'
+    WHERE COALESCE(e.manual_addressability_status, e.addressability_status) = 'addressable'
       AND (e.due_date IS NULL OR e.due_date > (
         SELECT scheduled_for FROM scan_runs WHERE id = ?
       ))

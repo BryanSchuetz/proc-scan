@@ -1,4 +1,5 @@
 import {
+  ArrowsLeftRightIcon,
   ArrowSquareOutIcon,
   CaretDownIcon,
   CaretLeftIcon,
@@ -20,7 +21,7 @@ import type { SortingState } from "@tanstack/react-table";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ApiBiddingEvent, EventsResponse } from "../api/types";
 import daiLogoUrl from "./assets/dai-logo.svg";
-import { fetchBiddingEvents } from "./api";
+import { fetchBiddingEvents, setMarkingStatus } from "./api";
 import HowItWorks from "./HowItWorks";
 import Upload from "./Upload";
 import { paginationItems } from "./pagination";
@@ -28,11 +29,11 @@ import { sourceFilterFromUrl, urlWithSourceFilter } from "./url-filters";
 
 const columnHelper = createColumnHelper<ApiBiddingEvent>();
 const initialSorting: SortingState = [{ id: "discoveredAt", desc: true }];
-type RegistryPath = "/" | "/unmarked" | "/how-it-works" | "/upload";
+type RegistryPath = "/" | "/unmarked" | "/how-it-works" | "/upload" | "/admin";
 
 function getRegistryPath(): RegistryPath {
   const path = window.location.pathname.replace(/\/+$/, "");
-  if (path === "/unmarked" || path === "/how-it-works" || path === "/upload") return path;
+  if (path === "/unmarked" || path === "/how-it-works" || path === "/upload" || path === "/admin") return path;
   return "/";
 }
 
@@ -216,12 +217,51 @@ function LoadingRows() {
   );
 }
 
+function MarkingControl({ event, onStart, onSaved }: { event: ApiBiddingEvent; onStart: () => void; onSaved: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const marked = event.addressabilityStatus === "addressable";
+  return (
+    <div className="marking-control">
+      <strong>{marked ? "Marked" : "Unmarked"}</strong>
+      <button
+        type="button"
+        disabled={busy}
+        aria-busy={busy}
+        aria-label={`${marked ? "Unmark" : "Mark"}: ${event.opportunityName}`}
+        onClick={async () => {
+          setBusy(true);
+          setError("");
+          onStart();
+          try {
+            await setMarkingStatus(event.id, marked ? "uncertain" : "addressable");
+            onSaved();
+          } catch (cause) {
+            setError(cause instanceof Error && !(cause instanceof TypeError) ? cause.message : "Marking status could not be saved. Please try again.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <ArrowsLeftRightIcon aria-hidden="true" size={16} />
+        <span>{busy ? "Saving..." : marked ? "Move to Unmarked" : "Move to Marked"}</span>
+      </button>
+      {error && <span className="marking-error" role="alert">{error}</span>}
+    </div>
+  );
+}
+
 export default function App() {
   const [pathname, setPathname] = useState<RegistryPath>(getRegistryPath);
   const isUnmarkedPage = pathname === "/unmarked";
   const isHowPage = pathname === "/how-it-works";
   const isUploadPage = pathname === "/upload";
-  const status = isUnmarkedPage ? "uncertain" : "addressable";
+  const isAdminPage = pathname === "/admin";
+  const [isAdmin, setIsAdmin] = useState<boolean>();
+  const [sessionError, setSessionError] = useState("");
+  const [adminStatus, setAdminStatus] = useState("");
+  const [savedMessage, setSavedMessage] = useState("");
+  const status = isAdminPage ? adminStatus : isUnmarkedPage ? "uncertain" : "addressable";
   const [data, setData] = useState<EventsResponse>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -253,6 +293,8 @@ export default function App() {
     setClient("");
     setSource(getSourceFilter());
     setTechnicalArea("");
+    setAdminStatus("");
+    setSavedMessage("");
   }, []);
 
   const navigate = (event: React.MouseEvent<HTMLAnchorElement>, nextPath: RegistryPath) => {
@@ -273,13 +315,27 @@ export default function App() {
   }, [applyRoute]);
 
   useEffect(() => {
-    const pageTitle = isUploadPage ? "Upload Opportunities" : isHowPage ? "How It Works" : `${isUnmarkedPage ? "Unmarked" : "Marked"} Opportunities`;
+    const controller = new AbortController();
+    fetch("/api/session", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Your permissions could not be loaded. Refresh the page to try again.");
+        const session = await response.json() as { isAdmin: boolean };
+        setIsAdmin(session.isAdmin);
+      })
+      .catch((cause: unknown) => {
+        if (!controller.signal.aborted) setSessionError(cause instanceof Error ? cause.message : "Your permissions could not be loaded.");
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const pageTitle = isAdminPage ? "Admin" : isUploadPage ? "Upload Opportunities" : isHowPage ? "How It Works" : `${isUnmarkedPage ? "Unmarked" : "Marked"} Opportunities`;
     document.title = `${pageTitle} | Procurement Opportunity Registry`;
-  }, [isHowPage, isUnmarkedPage, isUploadPage]);
+  }, [isAdminPage, isHowPage, isUnmarkedPage, isUploadPage]);
 
   const sort = sorting[0] ?? initialSorting[0];
   useEffect(() => {
-    if (isHowPage || isUploadPage) return;
+    if (isHowPage || isUploadPage || (isAdminPage && !isAdmin)) return;
     const controller = new AbortController();
     setLoading(true);
     setError(undefined);
@@ -298,7 +354,12 @@ export default function App() {
       },
       controller.signal,
     )
-      .then(setData)
+      .then((response) => {
+        setData(response);
+        if (isAdminPage && page > Math.max(1, response.pagination.pageCount)) {
+          setPage(Math.max(1, response.pagination.pageCount));
+        }
+      })
       .catch((cause: unknown) => {
         if (cause instanceof DOMException && cause.name === "AbortError") return;
         setError(cause instanceof Error ? cause.message : "The registry could not be loaded.");
@@ -307,12 +368,24 @@ export default function App() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [client, debouncedSearch, eventType, isHowPage, isUploadPage, page, reload, sort.desc, sort.id, source, status, technicalArea]);
+  }, [client, debouncedSearch, eventType, isAdmin, isAdminPage, isHowPage, isUploadPage, page, reload, sort.desc, sort.id, source, status, technicalArea]);
 
-  useEffect(() => setPage(1), [client, debouncedSearch, eventType, source, technicalArea]);
+  useEffect(() => setPage(1), [client, debouncedSearch, eventType, source, technicalArea, adminStatus]);
 
   const columns = useMemo(
     () => [
+      ...(isAdminPage ? [columnHelper.display({
+        id: "marking",
+        header: "Marking status",
+        cell: (info) => <MarkingControl event={info.row.original} onStart={() => setSavedMessage("")} onSaved={() => {
+          const event = info.row.original;
+          setSavedMessage(`${event.opportunityName} moved to ${event.addressabilityStatus === "addressable" ? "Unmarked" : "Marked"}.`);
+          setData((current) => current && ({ ...current, items: current.items.map((item) => item.id === event.id
+            ? { ...item, addressabilityStatus: event.addressabilityStatus === "addressable" ? "uncertain" : "addressable" }
+            : item) }));
+          setReload((value) => value + 1);
+        }} />,
+      })] : []),
       columnHelper.accessor("discoveredAt", {
         header: "Discovered",
         cell: (info) => <time dateTime={info.getValue()}>{formatDate(info.getValue())}</time>,
@@ -379,7 +452,7 @@ export default function App() {
         cell: (info) => <span className={info.getValue() ? undefined : "missing-value"}>{formatDate(info.getValue())}</span>,
       }),
     ],
-    [],
+    [isAdminPage],
   );
 
   const table = useReactTable({
@@ -397,13 +470,14 @@ export default function App() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const hasFilters = Boolean(search || eventType || client || source || technicalArea);
+  const hasFilters = Boolean(search || eventType || client || source || technicalArea || (isAdminPage && adminStatus));
   const clearFilters = () => {
     setSearch("");
     setEventType("");
     setClient("");
     applySourceFilter("");
     setTechnicalArea("");
+    setAdminStatus("");
   };
 
   const columnMenuFor = (columnId: string) => {
@@ -468,22 +542,31 @@ export default function App() {
         </div>
         <div className="header-meta">
           <span>Scans at 6:00 AM &amp; 6:00 PM UK time</span>
+          {isAdmin && <a className="admin-link" href="/admin" aria-current={isAdminPage ? "page" : undefined} onClick={(event) => navigate(event, "/admin")}>Admin</a>}
         </div>
       </header>
 
-      {isUploadPage ? <Upload onNavigate={navigate} /> : isHowPage ? <HowItWorks onNavigate={navigate} /> : <main>
+      {isUploadPage ? <Upload onNavigate={navigate} /> : isHowPage ? <HowItWorks onNavigate={navigate} /> : isAdminPage && !isAdmin ? (
+        <main><div className="state-message" role={isAdmin === false || sessionError ? "alert" : "status"}>
+          <strong>{isAdmin === false ? "Administrator access is required" : sessionError || "Checking administrator access..."}</strong>
+          <a href="/" onClick={(event) => navigate(event, "/")}>Back to Marked Opportunities</a>
+        </div></main>
+      ) : <main className={isAdminPage ? "admin-page" : undefined}>
         <section className="registry-heading" aria-labelledby="registry-title">
           <div>
             <p className="section-kicker">Bidding Events</p>
-            <h2 id="registry-title">{isUnmarkedPage ? "Unmarked Opportunities" : "Marked Opportunities"}</h2>
+            <h2 id="registry-title">{isAdminPage ? "Manage Opportunities" : isUnmarkedPage ? "Unmarked Opportunities" : "Marked Opportunities"}</h2>
             <p className="registry-description">
-              {isUnmarkedPage
+              {isAdminPage
+                ? "Move individual Bidding Events between Marked and Unmarked. Changes are saved immediately and preserved during later scans."
+                : isUnmarkedPage
                 ? "A table of all bidding events identified as failing to meet established thresholds—but not explicitly excluded."
                 : "A table of all bidding events identified as meeting established thresholds."}
             </p>
             <nav className="view-tabs" aria-label="Opportunity views">
-              <a href="/" aria-current={isUnmarkedPage ? undefined : "page"} onClick={(event) => navigate(event, "/")}>Marked</a>
+              <a href="/" aria-current={isUnmarkedPage || isAdminPage ? undefined : "page"} onClick={(event) => navigate(event, "/")}>Marked</a>
               <a href="/unmarked" aria-current={isUnmarkedPage ? "page" : undefined} onClick={(event) => navigate(event, "/unmarked")}>Unmarked</a>
+              {isAdminPage && <a href="/admin" aria-current="page" onClick={(event) => navigate(event, "/admin")}>Manage</a>}
               <a className="view-tabs__info" href="/how-it-works" onClick={(event) => navigate(event, "/how-it-works")}>
                 How it works
                 <InfoIcon aria-hidden="true" size={16} weight="bold" />
@@ -525,6 +608,7 @@ export default function App() {
         )}
 
         <section className="registry-panel" aria-label="Bidding Event registry">
+          {isAdminPage && savedMessage && <div className="upload-success" role="status">{savedMessage}</div>}
           <div className="toolbar">
             <label className="search-field">
               <span>Search records</span>
@@ -538,6 +622,14 @@ export default function App() {
                 />
               </div>
             </label>
+            {isAdminPage && <label className="admin-status-filter">
+              <span>Marking status</span>
+              <select value={adminStatus} onChange={(event) => setAdminStatus(event.target.value)}>
+                <option value="">All opportunities</option>
+                <option value="addressable">Marked</option>
+                <option value="uncertain">Unmarked</option>
+              </select>
+            </label>}
             {hasFilters && (
               <button className="clear-filters" type="button" onClick={clearFilters}>
                 <XIcon aria-hidden="true" size={15} /> Clear filters
@@ -592,7 +684,7 @@ export default function App() {
               {loading && !data ? <LoadingRows /> : (
                 <tbody>
                   {table.getRowModel().rows.map((row) => (
-                    <tr key={row.id}>
+                    <tr key={row.original.id}>
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                       ))}
