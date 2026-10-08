@@ -22,7 +22,18 @@ npm run dev
 
 `npm run dev` builds once in development mode and serves bundled assets, keeping remote orb previews responsive even when each request has significant latency. Use `npm run dev:modules` when local development requires Vite hot-module replacement.
 
-The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds. The deployed Worker is protected by a Worker-level Access application with the same 12-hour login policy as DAI CV Formatter: `@dai.com` users and the configured owner account can authenticate through the account's Cloudflare or email one-time PIN login methods.
+The local seed contains clearly marked fixture data. Cloudflare Access is bypassed only for loopback requests and authenticated Amp development portals; other shared and production hostnames fail closed without `TEAM_DOMAIN` and `POLICY_AUD`. The Amp portal exception is removed from production builds. The deployed Worker is protected by a Worker-level Cloudflare Access application with a 12-hour session duration. Its Allow policy admits only these specific email addresses:
+
+- `bryan_schuetz@dai.com`
+- `Hannah_Nightingale@dai.com`
+- `Zan_Northrip@dai.com`
+- `Sean_Caselli-Mechael@dai.com`
+- `Iva_Todorova@dai.com`
+- `tine_knott@dai.com`
+- `Natawnee_Fritz@dai.com`
+- `Cathy_Shaw@dai.com`
+
+Whole-app access is managed in the registry's Cloudflare Access policy, not through the Worker's `ADMIN_EMAILS` or `DIGEST_RECIPIENT` secrets. There is no domain-wide or personal-owner exception. Digest delivery is configured separately; adding a digest recipient does not automatically grant registry access. The Worker verifies the Access token and uses `ADMIN_EMAILS` for the additional admin-only restrictions described below. When removing an address from the Access policy, revoke the registry application's existing tokens to prevent old sessions retaining access until expiry.
 
 ## Admin marking
 
