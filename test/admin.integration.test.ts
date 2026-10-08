@@ -103,13 +103,18 @@ describe("admin marking", () => {
     }
   });
 
-  it("denies authenticated non-admins at both the page and mutation endpoint", async () => {
+  it.each(["admin@dai.com", ""])("denies non-admins at admin and upload routes with allowlist %j", async (adminEmails) => {
     vi.spyOn(access, "authorizeRequest").mockResolvedValue({ email: "reader@dai.com" });
-    const config = { ...env, BROWSER: env.ASSETS, ADMIN_EMAILS: "admin@dai.com" };
-    for (const path of ["/admin", "/admin/", "/api/admin/opportunities/evt_fixture_digital_tender/status"]) {
-      const response = await worker.fetch(new Request(`https://registry.example.com${path}`, {
-        method: path.startsWith("/api/") ? "PATCH" : "GET",
-      }), config);
+    const config = { ...env, BROWSER: env.ASSETS, ADMIN_EMAILS: adminEmails };
+    const uploadsBefore = await env.DB.prepare("SELECT COUNT(*) AS n FROM opportunity_uploads").first();
+    for (const [path, method] of [
+      ["/admin", "GET"], ["/admin/", "GET"],
+      ["/api/admin/opportunities/evt_fixture_digital_tender/status", "PATCH"],
+      ["/upload", "GET"], ["/upload/", "GET"], ["/upload", "HEAD"],
+      ["/api/uploads", "GET"], ["/api/uploads", "POST"],
+      ["/api/uploads/template", "GET"], ["/api/uploads/", "GET"],
+    ]) {
+      const response = await worker.fetch(new Request(`https://registry.example.com${path}`, { method }), config);
       expect(response.status).toBe(403);
       expect(await response.json()).toMatchObject({ error: { code: "admin_required" } });
     }
@@ -117,6 +122,29 @@ describe("admin marking", () => {
     expect(await session.json()).toEqual({ isAdmin: false });
     expect(await env.DB.prepare("SELECT manual_addressability_status FROM bidding_events WHERE id = 'evt_fixture_digital_tender'").first())
       .toEqual({ manual_addressability_status: null });
+    expect(await env.DB.prepare("SELECT COUNT(*) AS n FROM opportunity_uploads").first()).toEqual(uploadsBefore);
+  });
+
+  it("allows verified admins to list uploads, download the template, and submit files", async () => {
+    vi.spyOn(access, "authorizeRequest").mockResolvedValue({ email: "ADMIN@dai.com" });
+    const config = { ...env, BROWSER: env.ASSETS, ADMIN_EMAILS: "other@dai.com, admin@dai.com" };
+    const history = await worker.fetch(new Request("https://registry.example.com/api/uploads"), config);
+    expect(history.status).toBe(200);
+    expect(await history.json()).toMatchObject({ sources: expect.any(Array), uploads: expect.any(Array) });
+    const template = await worker.fetch(new Request("https://registry.example.com/api/uploads/template"), config);
+    expect(template.status).toBe(200);
+    expect(template.headers.get("Content-Disposition")).toContain("opportunities-template.xlsx");
+    const body = new FormData();
+    body.set("sourceId", "ted");
+    body.set("file", new File(["Title,URL\nAdmin upload,https://example.org/admin-upload"], "admin.csv"));
+    const response = await worker.fetch(new Request("https://registry.example.com/api/uploads", {
+      method: "POST", headers: { Origin: "https://registry.example.com" }, body,
+    }), config);
+    expect(response.status).toBe(201);
+    const upload = await response.json() as { id: string; rowCount: number };
+    expect(upload.rowCount).toBe(1);
+    expect(await env.DB.prepare("SELECT uploaded_by FROM opportunity_uploads WHERE id = ?").bind(upload.id).first())
+      .toEqual({ uploaded_by: "ADMIN@dai.com" });
   });
 
   it("accepts an allowlisted verified admin and records their identity", async () => {

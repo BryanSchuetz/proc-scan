@@ -1,9 +1,9 @@
-import { CaretDownIcon, FileXlsIcon, InfoIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, FileXlsIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import type { ApiError, UploadsResponse } from "../api/types";
 
 interface UploadProps {
-  onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, path: "/" | "/unmarked" | "/how-it-works" | "/upload") => void;
+  onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, path: "/admin" | "/upload") => void;
 }
 
 async function checkedJson<T>(response: Response): Promise<T> {
@@ -87,13 +87,9 @@ export default function Upload({ onNavigate }: UploadProps) {
           <p className="section-kicker">Bidding Events</p>
           <h2 id="upload-title">Upload Opportunities</h2>
           <p className="registry-description">Add a table of non-public opportunity records for a given source.</p>
-          <nav className="view-tabs" aria-label="Registry views">
-            <a href="/" onClick={(event) => onNavigate(event, "/")}>Marked</a>
-            <a href="/unmarked" onClick={(event) => onNavigate(event, "/unmarked")}>Unmarked</a>
-            <a className="view-tabs__info" href="/how-it-works" onClick={(event) => onNavigate(event, "/how-it-works")}>
-              How it works
-              <InfoIcon aria-hidden="true" size={16} weight="bold" />
-            </a>
+          <nav className="view-tabs" aria-label="Admin views">
+            <a href="/admin" onClick={(event) => onNavigate(event, "/admin")}>Manage</a>
+            <a href="/upload" aria-current="page" onClick={(event) => onNavigate(event, "/upload")}>Upload</a>
           </nav>
         </div>
       </section>

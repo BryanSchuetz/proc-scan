@@ -100,7 +100,9 @@ export default {
     if (url.pathname === "/api/session" && request.method === "GET") {
       return jsonResponse({ isAdmin });
     }
-    if (url.pathname.replace(/\/+$/, "") === "/admin" || url.pathname.startsWith("/api/admin/")) {
+    if (["/admin", "/upload"].includes(url.pathname.replace(/\/+$/, ""))
+      || url.pathname.startsWith("/api/admin/")
+      || url.pathname === "/api/uploads" || url.pathname.startsWith("/api/uploads/")) {
       if (!isAdmin) return errorResponse(403, "admin_required", "Administrator access is required.");
     }
     if (url.pathname.startsWith("/api/admin/")) {

@@ -533,25 +533,25 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="brand-logo">
+        <a className="brand-logo" href="/" aria-label="DAI — Registry home" onClick={(event) => navigate(event, "/")}>
           <img src={daiLogoUrl} alt="DAI" />
-        </div>
+        </a>
         <div>
           <p className="eyebrow">Procurement scrub</p>
           <h1>Registry</h1>
         </div>
         <div className="header-meta">
           <span>Scans at 6:00 AM &amp; 6:00 PM UK time</span>
-          {isAdmin && <a className="admin-link" href="/admin" aria-current={isAdminPage ? "page" : undefined} onClick={(event) => navigate(event, "/admin")}>Admin</a>}
+          {isAdmin && <a className="admin-link" href={isAdminPage ? "/" : "/admin"} onClick={(event) => navigate(event, isAdminPage ? "/" : "/admin")}>{isAdminPage ? "Marked" : "Admin"}</a>}
         </div>
       </header>
 
-      {isUploadPage ? <Upload onNavigate={navigate} /> : isHowPage ? <HowItWorks onNavigate={navigate} /> : isAdminPage && !isAdmin ? (
+      {(isAdminPage || isUploadPage) && !isAdmin ? (
         <main><div className="state-message" role={isAdmin === false || sessionError ? "alert" : "status"}>
           <strong>{isAdmin === false ? "Administrator access is required" : sessionError || "Checking administrator access..."}</strong>
           <a href="/" onClick={(event) => navigate(event, "/")}>Back to Marked Opportunities</a>
         </div></main>
-      ) : <main className={isAdminPage ? "admin-page" : undefined}>
+      ) : isUploadPage ? <Upload onNavigate={navigate} /> : isHowPage ? <HowItWorks onNavigate={navigate} /> : <main className={isAdminPage ? "admin-page" : undefined}>
         <section className="registry-heading" aria-labelledby="registry-title">
           <div>
             <p className="section-kicker">Bidding Events</p>
@@ -563,14 +563,18 @@ export default function App() {
                 ? "A table of all bidding events identified as failing to meet established thresholds—but not explicitly excluded."
                 : "A table of all bidding events identified as meeting established thresholds."}
             </p>
-            <nav className="view-tabs" aria-label="Opportunity views">
-              <a href="/" aria-current={isUnmarkedPage || isAdminPage ? undefined : "page"} onClick={(event) => navigate(event, "/")}>Marked</a>
-              <a href="/unmarked" aria-current={isUnmarkedPage ? "page" : undefined} onClick={(event) => navigate(event, "/unmarked")}>Unmarked</a>
-              {isAdminPage && <a href="/admin" aria-current="page" onClick={(event) => navigate(event, "/admin")}>Manage</a>}
-              <a className="view-tabs__info" href="/how-it-works" onClick={(event) => navigate(event, "/how-it-works")}>
-                How it works
-                <InfoIcon aria-hidden="true" size={16} weight="bold" />
-              </a>
+            <nav className="view-tabs" aria-label={isAdminPage ? "Admin views" : "Opportunity views"}>
+              {isAdminPage ? <>
+                <a href="/admin" aria-current="page" onClick={(event) => navigate(event, "/admin")}>Manage</a>
+                <a href="/upload" onClick={(event) => navigate(event, "/upload")}>Upload</a>
+              </> : <>
+                <a href="/" aria-current={isUnmarkedPage ? undefined : "page"} onClick={(event) => navigate(event, "/")}>Marked</a>
+                <a href="/unmarked" aria-current={isUnmarkedPage ? "page" : undefined} onClick={(event) => navigate(event, "/unmarked")}>Unmarked</a>
+                <a className="view-tabs__info" href="/how-it-works" onClick={(event) => navigate(event, "/how-it-works")}>
+                  How it works
+                  <InfoIcon aria-hidden="true" size={16} weight="bold" />
+                </a>
+              </>}
             </nav>
           </div>
           <div className="record-count" aria-live="polite">
