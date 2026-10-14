@@ -39,7 +39,7 @@ const sources = [
     name: "SAM.gov",
     clients: "DOS, MCC, DFC, and USTDA",
     value: "$500,000 for DOS, MCC, and DFC; $250,000 for USTDA",
-    scope: "All opportunity types. Restricted to “R”-related products and services, limiting the results to professional services. Only opportunities with NAICS codes beginning with 54 (Professional, Scientific, and Technical Services) or 61 (Educational Services) are included. Other or missing NAICS codes are excluded.",
+    scope: "All opportunity types. Restricted to “R”-related products and services, limiting the results to professional services. Known NAICS codes must begin with 54 (Professional, Scientific, and Technical Services) or 61 (Educational Services); other codes are excluded. Blank or missing NAICS codes remain eligible, subject to the other filters.",
   },
   {
     name: "Grants.gov",

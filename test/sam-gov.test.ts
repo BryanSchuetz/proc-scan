@@ -116,12 +116,17 @@ describe("SAM.gov Source adapter", () => {
     expect(requests[0].searchParams.get("postedFrom")).toBe("08/27/2026");
   });
 
-  it("only returns opportunities with NAICS codes in sectors 54 or 61", async () => {
+  it("allows missing NAICS codes but excludes known codes outside sectors 54 or 61", async () => {
     const opportunitiesData = [
       { noticeId: "professional", title: "Professional services", type: "Solicitation", naicsCode: "541611" },
       { noticeId: "education", title: "Education services", type: "Solicitation", naicsCode: "611430" },
       { noticeId: "manufacturing", title: "Manufacturing", type: "Solicitation", naicsCode: "332999" },
+      { noticeId: "conferences", title: "Reverse trade missions and conferences", type: "Solicitation", naicsCode: "561920" },
       { noticeId: "missing", title: "Missing NAICS", type: "Solicitation" },
+      { noticeId: "blank", title: "Blank NAICS", type: "Solicitation", naicsCode: "" },
+      { noticeId: "whitespace", title: "Whitespace NAICS", type: "Solicitation", naicsCode: "   " },
+      { noticeId: "null", title: "Null NAICS", type: "Solicitation", naicsCode: null },
+      { noticeId: "null-text", title: "Null text NAICS", type: "Solicitation", naicsCode: "null" },
     ];
     const adapter = createSamGovAdapter({
       apiKey: "fixture-key",
@@ -137,8 +142,22 @@ describe("SAM.gov Source adapter", () => {
     const result = await adapter.scan(scanContext());
 
     expect(result.candidates.map((candidate) => candidate.sourceEventId)).toEqual([
+      "blank",
       "education",
+      "missing",
+      "null",
+      "null-text",
       "professional",
+      "whitespace",
+    ]);
+    expect(result.candidates.map((candidate) => candidate.sourceData.naicsCode)).toEqual([
+      undefined,
+      "611430",
+      undefined,
+      undefined,
+      undefined,
+      "541611",
+      undefined,
     ]);
   });
 
