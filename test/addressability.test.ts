@@ -228,6 +228,18 @@ describe("Addressability Assessment", () => {
     }), configuredRules).status).toBe("addressable");
   });
 
+  it("applies eBuy's Client-specific floors only to known positive USD values", () => {
+    for (const [clientName, floor] of [["DOS", 500000], ["MCC", 500000], ["DFC", 500000], ["USTDA", 250000]] as const) {
+      const event = (amount?: number, currency = "USD") => biddingEvent({
+        sourceId: "gsa-ebuy", clientName, value: amount === undefined ? undefined : { amount, currency },
+      });
+      expect(assessAddressability(event(floor - 1), configuredRules).status).toBe("excluded");
+      for (const candidate of [event(floor), event(), event(0), event(floor - 1, "EUR")]) {
+        expect(assessAddressability(candidate, configuredRules).status).toBe("addressable");
+      }
+    }
+  });
+
   it("excludes MCA from SAM.gov without excluding MCC", () => {
     expect(assessAddressability(federalEvent({
       amount: 1_000_000,

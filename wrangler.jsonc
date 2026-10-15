@@ -24,6 +24,14 @@
   "browser": {
     "binding": "BROWSER"
   },
+  "durable_objects": {
+    "bindings": [
+      { "name": "GSA_EBUY_AUTH", "class_name": "GsaEbuySessionHolder" }
+    ]
+  },
+  "migrations": [
+    { "tag": "gsa-ebuy-session-v1", "new_sqlite_classes": ["GsaEbuySessionHolder"] }
+  ],
   "workflows": [
     {
       "name": "procurement-scan",

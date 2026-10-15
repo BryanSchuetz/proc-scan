@@ -15,6 +15,7 @@ import {
   fcdoJaggaerPublicSourceDefinition,
 } from "./fcdo-jaggaer-public";
 import { createFmoAdapter, fmoSourceDefinition } from "./fmo";
+import { createGsaEbuyAdapter, gsaEbuyReauthenticationRequired, gsaEbuySourceDefinition } from "./gsa-ebuy";
 import { createGrantsGovAdapter, grantsGovSourceDefinition } from "./grants-gov";
 import type { GrantsGovConfig } from "./grants-gov";
 import {
@@ -31,6 +32,7 @@ import type { TedConfig } from "./ted";
 export interface SourceSecrets {
   SAM_API_KEY?: string;
   BROWSER?: Fetcher;
+  GSA_EBUY_AUTH?: DurableObjectNamespace;
 }
 
 export interface SourceConfigurations {
@@ -71,6 +73,19 @@ export function createRegisteredSourceAdapter(
       return createFcdoJaggaerPublicAdapter();
     case fmoSourceDefinition.id:
       return createFmoAdapter();
+    case gsaEbuySourceDefinition.id:
+      return createGsaEbuyAdapter({
+        async session() {
+          if (!secrets.GSA_EBUY_AUTH) throw gsaEbuyReauthenticationRequired();
+          const holder = secrets.GSA_EBUY_AUTH.get(secrets.GSA_EBUY_AUTH.idFromName("gsa-ebuy"));
+          const response = await holder.fetch("https://session/session");
+          if (!response.ok) {
+            const failure = await response.json<{ code: string; message: string; retryable: boolean }>();
+            throw new SourceScanError(failure.code, failure.message, failure.retryable);
+          }
+          return response.json();
+        },
+      });
     case grantsGovSourceDefinition.id:
       return createGrantsGovAdapter({
         organizations: configurations.grantsGov.organizations,

@@ -158,24 +158,23 @@
   source_module: grants-gov
   access_method: api
 
-- site: eBuy
+- site: GSA eBuy
   clients:
     - MCC
-    - MCA
     - DFC
     - USTDA
     - DOS
   actual_link: https://www.ebuy.gsa.gov/ebuy/
   additional_links: null
-  filters_narrative: "For the listed clients: technical assistance (i.e., excludes goods); $500k minimum for DOS, MCC, and DFC; $250k minimum for USTDA and MCA"
-  requires_login: TBD
-  username: null
-  password: null
-  filters_automation_rules: null
-  result_set: login
-  authentication: "sean?"
-  source_module: null
-  access_method: null
+  filters_narrative: "MCC, DFC, USTDA, and DOS only; $500k minimum for DOS, MCC, and DFC; $250k minimum for USTDA; shared DAI-Fit/Miss-Fit scoring"
+  requires_login: true
+  username: secret:GSA_USER
+  password: secret:GSA_PW
+  filters_automation_rules: "Read the complete active-request snapshot across the account's contract categories; enrich in-scope details; verify buyer identity using structured agency and exact official contact domains; exclude MCA; apply floors only to known positive USD values, never quote totals or free-text budgets"
+  result_set: login 2factor
+  authentication: "FAS ID login with emailed MFA, completed manually. The private session holder renews a manually handed-off GSA_EBUY_SESSION through eBuy's normal renewal endpoint while valid, and requires reauthentication on expiry or rejection. GSA_USER/GSA_PW are used only for interactive sign-in. The owner approved storing eBuy notice content in this registry on October 15, 2026."
+  source_module: gsa-ebuy
+  access_method: api
 
 - site: SIMAP
   clients:

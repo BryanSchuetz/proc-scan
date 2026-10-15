@@ -12,6 +12,7 @@ import grantsPage0 from "./fixtures/grants-gov-page-0.json";
 import grantsPage1 from "./fixtures/grants-gov-page-1.json";
 import page0 from "./fixtures/sam-gov-page-0.json";
 import page1 from "./fixtures/sam-gov-page-1.json";
+import gsaEbuyFixture from "./fixtures/gsa-ebuy.json";
 import tedPage0 from "./fixtures/ted-page-0.json";
 import tedPage1 from "./fixtures/ted-page-1.json";
 import {
@@ -28,6 +29,7 @@ import { runSourceAdapter } from "../src/pipeline/run-source";
 import type { SourceAdapter, SourceCandidate } from "../src/sources/adapter";
 import { createGrantsGovAdapter, parseGrantsGovConfig } from "../src/sources/grants-gov";
 import { createSamGovAdapter, parseSamGovConfig } from "../src/sources/sam-gov";
+import { createGsaEbuyAdapter } from "../src/sources/gsa-ebuy";
 import { createTedAdapter, parseTedConfig } from "../src/sources/ted";
 
 const taxonomy = parseTaxonomyYaml(taxonomyRaw);
@@ -239,6 +241,42 @@ beforeAll(async () => {
 });
 
 describe("Source processing integration", () => {
+  it("deduplicates eBuy snapshots and links a later deadline amendment without retaining credentials", async () => {
+    const data = structuredClone(gsaEbuyFixture);
+    const adapter = createGsaEbuyAdapter({
+      session: async () => ({ token: `fixture.${btoa('{"exp":4102444800}')}.signature`, contractNumber: "GS-TEST" }),
+      fetch: (async (input) => {
+        const path = new URL(String(input)).pathname;
+        return Response.json(path.includes("/activerfqs/") ? data.snapshot
+          : data.details[path.split("/").at(-2)! as keyof typeof data.details]);
+      }) as typeof fetch,
+    });
+    for (const [index, retainedCount, duplicateCount] of [[0, 2, 0], [1, 0, 2], [2, 1, 1]]) {
+      if (index === 2) {
+        data.snapshot.response["GS-TEST"][0].lastRfqModVersion = 4;
+        data.details.RFQ1000001.response.rfqInfo.closeTime = Date.parse("2026-10-20T14:00:00Z");
+        data.details.RFQ1000001.response.rfqInfo.lastModTime = Date.parse("2026-10-15T16:00:00Z");
+      }
+      const id = `scan_ebuy_${index}`;
+      const now = new Date("2026-10-15T17:00:00Z");
+      await claimScanRun(env.DB, { id, cycleKey: id, scheduledFor: now.toISOString() });
+      const sourceRunId = await startSourceRun(env.DB, id, "gsa-ebuy");
+      expect(await runSourceAdapter({
+        db: env.DB, adapter, sourceRunId, scanRunId: id, now,
+        signal: new AbortController().signal, taxonomy, technicalClassification, addressability,
+      })).toMatchObject({ discoveredCount: 2, retainedCount, duplicateCount, excludedCount: 0 });
+      await completeScanRun(env.DB, id);
+    }
+    const rows = await env.DB.prepare(`SELECT source_event_id, event_type, due_date, source_data_json
+      FROM bidding_events WHERE source_id = 'gsa-ebuy' ORDER BY source_event_id`).all();
+    expect(rows.results).toHaveLength(3);
+    expect(rows.results).toContainEqual(expect.objectContaining({
+      source_event_id: "RFQ1000001:amendment:4", event_type: "modification", due_date: "2026-10-20T14:00:00.000Z",
+    }));
+    expect(JSON.stringify(rows.results)).not.toContain("must-not-persist");
+    expect(JSON.stringify(rows.results)).not.toContain("signature");
+  });
+
   it("creates a linked SAM.gov Modification for a revised deadline", async () => {
     const first = await processScan(
       "scan_sam_fixture_first",

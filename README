@@ -73,7 +73,7 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 | dgMarket + MCCDGMarket | Yes | Enabled; production scan completed | Public browser | Deduplicated MCC and MCA notices with a $500,000 floor for known USD values |
 | SAM.gov | Yes | Enabled; currently quota-constrained | API key | Pre-award notices from MCC, DFC, USTDA, and Department of State |
 | Grants.gov | Yes | Enabled; live scans completed | Public API | Forecasted and posted opportunities from the approved U.S. organizations |
-| GSA eBuy | No | Not implemented | To be confirmed | Approved U.S.-client technical-assistance opportunities |
+| GSA eBuy | Yes | Registered; authenticated scans require manual session handoff | FAS ID + emailed MFA; private API | Account-visible MCC, DFC, USTDA, and DOS requests; $500k/$250k known-USD floors |
 | SIMAP | Yes | Enabled; first live scan pending | Public API | Swiss SDC/SECO service tenders with a CHF 1 million floor for known CHF values |
 | EBRD ECEPP | Yes | Enabled; live scan completed | Public HTML | Future-dated EBRD consultancy and advisory opportunities with €/$250,000 floors |
 | EIB Procurement | Yes | Enabled; live scan completed | Public JSON + TED API | Open EIB TA Operations with a €500,000 floor and shared addressability scoring |
@@ -81,7 +81,6 @@ Every Source and Client uses the shared scoring contract documented in [CONTEXT.
 
 The complete desired Source scope, Client filters, value thresholds, access notes, and implementation IDs are maintained in the [Source catalog](source-catalog.yaml). The implementation sequence is maintained in the [Source Rollout](DEVELOPMENT_PLAN.md#source-rollout). The remaining backlog currently includes:
 
-- **Login or unattended-authentication sources:** GSA eBuy.
 - **Interactive two-factor sources:** FCDO framework opportunities.
 
 Backlog order is not committed. Each Source still needs API/feed discovery, access and automation review, field-coverage validation, approved Client scope, and a Source-specific Minimum Value Floor before implementation.
@@ -126,6 +125,26 @@ At the start of each scan, the adapter reads Grants.gov's current agency facet a
 The adapter scans the complete active/forecasted snapshot because `search2` does not document an update-time cursor that would safely detect changes to older opportunities. Repeated snapshots are deduplicated by the shared pipeline. A change between known deadline or amount values becomes a Modification, while newly available descriptions, eligibility, or values enrich the existing Tender in place. Search results provide title, agency, status, dates, and Assistance Listing numbers but not the full synopsis, so the adapter enriches each approved result through the public, unauthenticated `fetchOpportunity` endpoint in bounded batches. It normalizes synopsis or forecast text for Technical Area Classification and stores eligibility, estimated total funding, award ceiling, and award floor. The displayed normalized value uses estimated total funding when present and otherwise the award ceiling, always retaining the exact value basis in structured Source data.
 
 Grants.gov uses the shared scoring contract with Source- and Client-specific Minimum Value Floors: $2 million for DOS, $500,000 for MCC and DFC, and $250,000 for USTDA and country Millennium Challenge Accounts. Known positive values below the applicable floor are excluded; zero, null, and missing values remain eligible for fit scoring.
+
+## GSA eBuy Source
+
+The authenticated adapter reads `seller/activerfqs/{masterContract}` and enriches approved requests through `seller/rfq/{requestId}/{contractNumber}` under `https://www.ebuy.gsa.gov/ebuy/api/services/ebuyservices/`. The website consumes the entire contract-keyed active-request snapshot without pagination. Each scan repeats that snapshot, including its returned linked contracts; the cursor records successful scan time but never filters out older requests. Coverage is limited to the account's awarded contract categories, not all eBuy requests. The inspected account currently covers MAS SIN 541611. Published rate limits were not found; requests are sequential, time-bounded, and retry transient failures at most twice.
+
+Client scope is MCC, DFC, USTDA, and DOS, with MCA excluded. eBuy groups independent agencies under agency `95`; exact official buyer contact domains (`mcc.gov`, `dfc.gov`, `ustda.gov`) establish the Client, while Department of State uses its structured agency name and code `19`. Generic agency labels or title mentions alone are insufficient. Detail responses recheck scope and provide descriptions and exact dates; the list's nested detail-shaped objects are incomplete and are not treated as enriched records. RFIs remain explicitly labelled as information requests. Request IDs link related publications, and amendment versions identify explicit Modifications. Disappearance from the active snapshot is not evidence of cancellation. The shared pipeline owns persistence, duplicate detection, and tracked deadline/value changes.
+
+Framework names use the owner-confirmed contract mapping: `GS-00F-063DA` → `GSA PSS MAS` and `47QRCA25DU699` → `GSA OASIS+`. Known frameworks prefix the title as `Framework — Title`, matching manual uploads, and are retained as `sourceData.frameworkName` alongside the original contract number. Unknown contract numbers keep their original titles; a generic number prefix is not enough to identify a framework. These are requests under a framework, not notices establishing the framework itself. The inspected login returned only the PSS MAS contract; querying the supplied OASIS+ contract returned HTTP 401, so OASIS+ discovery has not been live-validated.
+
+Addressability version 20 applies $500,000 Minimum Value Floors to DOS, MCC, and DFC and $250,000 to USTDA, only for known positive USD values. The observed API does not publish an authoritative contract estimate. Missing values remain eligible for shared fit scoring; quote totals, line-item prices, and free-text program budgets are not substituted. Documents, quote data, internal attachment paths, passwords, and session material are not retained in Bidding Events. The owner approved storing eBuy notice content in this registry on October 15, 2026 after reviewing GSA's CUI warning.
+
+### Manual MFA and session handoff
+
+1. Use `GSA_USER` and `GSA_PW` only to sign in through the orb Desktop browser at the official eBuy contractor login. An operator completes emailed MFA; the scanner never intercepts or stores verification codes.
+2. Run `npx tsx scripts/gsa-ebuy-session.ts` to copy only the session token and master contract into the ignored local `.dev.vars`, without printing credentials. For production, `npx tsx scripts/gsa-ebuy-session.ts --remote` pipes the handoff directly to the `GSA_EBUY_SESSION` Worker secret. **The remote flag updates shared state and deploys a Worker version, so owner approval is required.** Amp project secrets do not automatically become deployed Worker secrets.
+3. Apply migration `0026_gsa_ebuy_source.sql` and deploy the Worker/Durable Object binding with owner approval. Run the first approved scan within 30 minutes of handoff to initialize the session holder. On later reauthentication, replace the secret and immediately run another approved scan; do not wait for the next scheduled cycle.
+
+The private `GSA_EBUY_AUTH` Durable Object encrypts renewed tokens with AES-GCM using key material derived from the Worker secret, and schedules renewal five minutes before expiry through eBuy's normal `renew` endpoint. No public route exposes the token. A transient failure schedules a bounded retry while the session remains valid. Expiry or rejected renewal clears usable stored session material, cancels renewal, and requires a new manual handoff; the old seed is never silently reused after rejection. GSA may impose an additional lifetime limit; successful bounded live renewal does not establish indefinite unattended access.
+
+Authentication failures are recorded as `reauthentication_required` Source failures without blocking other Sources. Session-renewal failures emit credential-safe Worker warnings, and nonempty digests identify failed Source coverage. The existing digest policy sends no empty-event email, so a separate immediate out-of-band reauthentication alert remains an operational follow-up.
 
 ## TED Source
 

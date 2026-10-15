@@ -339,12 +339,12 @@ The phase numbers below continue to describe authentication complexity, not curr
 | Source | Starting URL | Access | Plan |
 |---|---|---|---|
 | SAM.gov | [SAM.gov](https://sam.gov/) | API key | Deployed as the first Source; resolve the current quota constraint, validate scheduled live scans, and decide bulk versus selective description enrichment. |
-| GSA eBuy | [eBuy](https://www.ebuy.gsa.gov/ebuy/) | TBD | Confirm authentication and automation terms before assigning a final phase. |
 
 ### Phase 3 — Interactive two-factor authentication
 
 | Source | Starting URL | Access | Plan |
 |---|---|---|---|
+| GSA eBuy | [eBuy](https://www.ebuy.gsa.gov/ebuy/) | FAS ID + emailed MFA | API adapter, encrypted private session holder, manual handoff script, and Worker/Source registration implemented. GSA's normal renewal endpoint extends valid sessions; rejection/expiry requires manual reauthentication and does not block other Sources. Covers account-visible MCC, DFC, USTDA, and DOS with $500k/$250k known-USD floors; MCA excluded. Owner approved notice-content storage on October 15, 2026. First production scan and long-running session validation remain pending. |
 | FCDO Jaggaer Frameworks | [Login](https://fcdo.bravosolution.co.uk/web/login.html) | Login + Google Authenticator | Build a separate Source for invitation-only technical-assistance framework opportunities with no value floor. Reuse an approved manually established session while valid; stop and request reauthentication on expiry. |
 
 ## Delivery Plan
@@ -426,7 +426,7 @@ These do not need more interview time now, but they must be resolved before the 
 - SAM.gov full-description strategy—daily Active Opportunities extract versus selective API enrichment—before Milestone 1 acceptance.
 - Secure session handoff and operator alert channel for authenticated/2FA Sources — before Milestones 4 and 5.
 - Source-by-Source legal, terms, robots, rate-limit, API, and field-coverage findings — before enabling each additional adapter.
-- GSA eBuy authentication phase — after discovery.
+- GSA eBuy sustained session lifetime and out-of-band reauthentication alerts when no digest is sent — validate during production rollout.
 - Retention/archival policy — revisit when D1 growth is measured.
 
 ## Planning References

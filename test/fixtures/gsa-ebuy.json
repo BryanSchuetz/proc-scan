@@ -1,0 +1,70 @@
+{
+  "note": "Synthetic notice content and contacts; field names and response shapes observed in authenticated eBuy on 2026-10-15. No credentials or real notice bodies.",
+  "snapshot": {
+    "header": { "status": 0 },
+    "response": {
+      "GS-TEST": [
+        {
+          "rfqId": "RFQ1000001", "title": "Social policy advisory services",
+          "issueTime": 1787220000000, "closeTime": 1792418400000,
+          "lastRfqModVersion": 3, "lastRfqModDate": 1790222400000,
+          "rfqCancelled": false, "cancelTime": null,
+          "agencyCode": "95", "userAgency": "Independent U.S. Government Offices",
+          "userEmail": "fixture@mcc.gov",
+          "rfq": { "rfqProps": { "userAgencyCode": null, "userAgency": null }, "rfqCategories": [] }
+        },
+        {
+          "rfqId": "RFI1000002", "title": "Technical assistance market research",
+          "issueTime": 1791432000000, "closeTime": 1792659600000,
+          "lastRfqModVersion": 0, "lastRfqModDate": null,
+          "rfqCancelled": false, "cancelTime": null,
+          "agencyCode": "19", "userAgency": "Department of State",
+          "userEmail": "fixture@state.gov"
+        },
+        {
+          "rfqId": "RFQ1000003", "title": "Support to MCC and USTDA",
+          "issueTime": 1791432000000, "closeTime": 1792659600000,
+          "lastRfqModVersion": 0, "lastRfqModDate": null,
+          "rfqCancelled": false, "cancelTime": null,
+          "agencyCode": "47", "userAgency": "General Services Administration",
+          "userEmail": "fixture@gsa.gov"
+        }
+      ]
+    }
+  },
+  "details": {
+    "RFQ1000001": {
+      "header": { "status": 0 },
+      "response": {
+        "rfqInfo": {
+          "rfqId": "RFQ1000001", "referenceNum": "SYNTHETIC-001",
+          "description": "<p>Policy &amp; governance <strong>advisory</strong> services.</p><p>See attached scope; compact value $50 million is not this contract's estimate.</p>",
+          "rfqOpen": true, "lastModTime": 1790244000000,
+          "issueTime": 1787220000000, "closeTime": 1792418400000
+        },
+        "rfqProps": {
+          "userAgencyCode": "95", "userAgency": "Independent U.S. Government Offices",
+          "userBureau": "Millenium Challenger Cor", "userEmail": "fixture@mcc.gov"
+        },
+        "rfqCategories": [{ "schedule": "MAS", "sin": "541611" }],
+        "rfqPassword": "must-not-persist", "quotes": [{ "total": 9000000 }],
+        "rfqAttachments": [{ "docPath": "must-not-persist", "docSessionId": "must-not-persist" }]
+      }
+    },
+    "RFI1000002": {
+      "header": { "status": 0 },
+      "response": {
+        "rfqInfo": {
+          "rfqId": "RFI1000002", "referenceNum": null,
+          "description": "Market research for technical assistance.", "rfqOpen": true,
+          "lastModTime": null, "issueTime": 1791432000000, "closeTime": 1792659600000
+        },
+        "rfqProps": {
+          "userAgencyCode": "19", "userAgency": "Department of State",
+          "userBureau": "Synthetic program office", "userEmail": "fixture@state.gov"
+        },
+        "rfqCategories": [{ "schedule": "MAS", "sin": "541611" }]
+      }
+    }
+  }
+}

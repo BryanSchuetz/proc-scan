@@ -9,7 +9,13 @@ export default defineConfig(async () => {
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
         miniflare: {
-          bindings: { TEST_MIGRATIONS: migrations },
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            GSA_EBUY_SESSION: JSON.stringify({
+              token: `fixture.${Buffer.from(JSON.stringify({ exp: 4102444800 })).toString("base64url")}.signature`,
+              contractNumber: "GS-TEST",
+            }),
+          },
         },
       }),
     ],

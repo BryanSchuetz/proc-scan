@@ -9,6 +9,9 @@ ADMIN_EMAILS=
 
 # Source credentials (add only when the matching adapter is enabled).
 SAM_API_KEY=
+# Filled by scripts/gsa-ebuy-session.ts after manual FAS ID/MFA sign-in.
+# Do not put GSA_USER/GSA_PW or verification codes in the Worker runtime.
+GSA_EBUY_SESSION=
 
 # Campaign Monitor transactional digest delivery. Leave all three required
 # values empty to disable delivery locally. CAMP_MONTR_CLIENT_ID is only

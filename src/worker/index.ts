@@ -19,6 +19,8 @@ export interface AppEnv {
   POLICY_AUD?: string;
   ADMIN_EMAILS?: string;
   SAM_API_KEY?: string;
+  GSA_EBUY_AUTH: DurableObjectNamespace;
+  GSA_EBUY_SESSION?: string;
   CAMP_MONTR_KEY?: string;
   CAMP_MONTR_CLIENT_ID?: string;
   DIGEST_FROM?: string;
@@ -28,6 +30,7 @@ export interface AppEnv {
 }
 
 export { ScanWorkflow };
+export { GsaEbuySessionHolder } from "./gsa-ebuy-session";
 
 const securityHeaders = {
   "Referrer-Policy": "no-referrer",
