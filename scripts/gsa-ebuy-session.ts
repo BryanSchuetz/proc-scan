@@ -3,11 +3,17 @@
 // is required. Default: update only the ignored local .dev.vars file.
 import { readFile, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
+import { setTimeout as sleep } from "node:timers/promises";
 import { gsaEbuyTokenExpiry, requestGsaEbuy } from "../src/sources/gsa-ebuy";
 
 async function handoff() {
   const remote = process.argv.slice(2).includes("--remote");
   if (process.argv.slice(2).some((arg) => arg !== "--remote")) throw new Error("Use --remote or no arguments.");
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_WORKERS_TOKEN;
+  if (remote && (!accountId || !apiToken)) {
+    throw new Error("Remote handoff requires CLOUDFLARE_ACCOUNT_ID and a Cloudflare API token.");
+  }
   const tabs = await fetch("http://localhost:9222/json/list").then((r) => r.json()) as Array<{
     url: string; webSocketDebuggerUrl: string;
   }>;
@@ -61,6 +67,36 @@ async function handoff() {
       child.on("error", () => reject(new Error("Could not start Wrangler.")));
       child.on("exit", (code) => code === 0 ? resolve() : reject(new Error("Worker secret handoff failed.")));
     });
+
+    // Initialize only session renewal, never the procurement-scan workflow.
+    const instanceId = crypto.randomUUID();
+    const workflowUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workflows/gsa-ebuy-session/instances`;
+    const headers = { Authorization: `Bearer ${apiToken}`, "Content-Type": "application/json" };
+    const queued = await fetch(workflowUrl, {
+      method: "POST", headers, body: JSON.stringify({ instance_id: instanceId }), signal: AbortSignal.timeout(20_000),
+    });
+    const created = await queued.json() as { success?: boolean };
+    if (!queued.ok || !created.success) {
+      throw new Error("Secret updated, but session initialization could not be queued. Deploy the gsa-ebuy-session workflow and initialize it before the token expires; do not run a scan.");
+    }
+    const deadline = Date.now() + 120_000;
+    let status: string | undefined;
+    while (Date.now() < deadline) {
+      const response = await fetch(`${workflowUrl}/${instanceId}`, { headers, signal: AbortSignal.timeout(20_000) });
+      const state = await response.json() as { success?: boolean; result?: { status?: string } };
+      if (!response.ok || !state.success) {
+        throw new Error(`Secret updated, but initialization status is unknown. Check gsa-ebuy-session instance ${instanceId}; do not run a scan.`);
+      }
+      status = state.result?.status;
+      if (status === "complete") break;
+      if (status === "errored" || status === "terminated") {
+        throw new Error(`Session initialization failed. Check gsa-ebuy-session instance ${instanceId}; do not run a scan.`);
+      }
+      await sleep(2_000);
+    }
+    if (status !== "complete") {
+      throw new Error(`Session initialization is not confirmed. Check gsa-ebuy-session instance ${instanceId}; do not run a scan.`);
+    }
   } else {
     const current = await readFile(".dev.vars", "utf8").catch((error: NodeJS.ErrnoException) => {
       if (error.code === "ENOENT") return "";
@@ -70,7 +106,9 @@ async function handoff() {
     await writeFile(".dev.vars", `${other}\nGSA_EBUY_SESSION=${secret}\n`, { mode: 0o600 });
   }
   console.log(`GSA eBuy session handed off to ${remote ? "the Worker secret" : "local .dev.vars"}; no credentials printed.`);
-  console.log("Run the first approved scan before the token expires (within 30 minutes) to start automatic renewal.");
+  console.log(remote
+    ? "Automatic renewal initialized. No scan or digest was triggered; the next scheduled scan will use this session."
+    : "With the local Worker running, initialize renewal within 30 minutes: .agents/wrangler workflows trigger gsa-ebuy-session --local. Do not run a scan for token handoff.");
 }
 
 handoff().catch((error) => {

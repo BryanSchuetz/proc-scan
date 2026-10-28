@@ -1,4 +1,4 @@
-import { runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
+import { introspectWorkflowInstance, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -58,5 +58,50 @@ describe("private eBuy session handoff", () => {
       expect(await state.storage.getAlarm()).toBeLessThanOrEqual(Date.now() + 60_000);
     });
     expect(await (await holder.fetch("https://session/session")).json()).toEqual({ token: first, contractNumber: "GS-TEST" });
+  });
+
+  it.each([true, false])("initializes renewal without a scan or digest (GSA accepts session: %s)", async (accepted) => {
+    const holder = env.GSA_EBUY_AUTH.get(env.GSA_EBUY_AUTH.idFromName("gsa-ebuy"));
+    await runInDurableObject(holder, async (_instance, state) => {
+      await state.storage.deleteAll();
+      await state.storage.deleteAlarm();
+    });
+    const counts = () => env.DB.prepare(`SELECT
+      (SELECT COUNT(*) FROM scan_runs) AS scans,
+      (SELECT COUNT(*) FROM source_runs) AS source_runs,
+      (SELECT COUNT(*) FROM bidding_events) AS events,
+      (SELECT COUNT(*) FROM digests) AS digests`).first();
+    const before = await counts();
+    const first = token(30);
+    vi.stubGlobal("fetch", async (input: string | URL | Request) => {
+      const url = new URL(input instanceof Request ? input.url : input);
+      if (url.origin !== "https://www.ebuy.gsa.gov" || !url.pathname.endsWith("/renew")) {
+        throw new Error("Session initialization must not scan or send email.");
+      }
+      return accepted
+        ? Response.json({ header: { status: 0 }, response: { token: first } })
+        : new Response(null, { status: 403 });
+    });
+    const id = crypto.randomUUID();
+    await using instance = await introspectWorkflowInstance(env.GSA_EBUY_SESSION_WORKFLOW, id);
+    await env.GSA_EBUY_SESSION_WORKFLOW.create({ id });
+    await instance.waitForStatus(accepted ? "complete" : "errored");
+    if (accepted) {
+      // Only the readiness signal, never the token, is saved as workflow output.
+      expect(await instance.getOutput()).toEqual({ status: "ready" });
+      await runInDurableObject(holder, async (_instance, state) => {
+        expect(await state.storage.getAlarm()).toBeGreaterThan(Date.now() + 24 * 60_000);
+        expect(await state.storage.getAlarm()).toBeLessThanOrEqual(Date.now() + 25 * 60_000);
+      });
+      const next = token(40);
+      vi.stubGlobal("fetch", async () => Response.json({ header: { status: 0 }, response: { token: next } }));
+      await runDurableObjectAlarm(holder);
+      expect(await (await holder.fetch("https://session/session")).json()).toEqual({ token: next, contractNumber: "GS-TEST" });
+    } else {
+      await runInDurableObject(holder, async (_instance, state) => {
+        expect(await state.storage.getAlarm()).toBeNull();
+      });
+    }
+    expect(await counts()).toEqual(before);
   });
 });

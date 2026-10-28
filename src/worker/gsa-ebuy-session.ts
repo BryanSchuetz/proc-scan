@@ -1,4 +1,6 @@
-import { DurableObject } from "cloudflare:workers";
+import { DurableObject, WorkflowEntrypoint } from "cloudflare:workers";
+import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
+import { NonRetryableError } from "cloudflare:workflows";
 import { z } from "zod";
 import { SourceScanError } from "../sources/adapter";
 import {
@@ -102,6 +104,27 @@ export class GsaEbuySessionHolder extends DurableObject<{ GSA_EBUY_SESSION?: str
         // and existing nonempty digests report incomplete Source coverage.
         console.warn("GSA eBuy session:", error instanceof SourceScanError ? error.code : "session_unavailable");
       }
+    });
+  }
+}
+
+// Cloudflare's authenticated Workflows API is the only entry point. Session
+// initialization has no scan or digest steps, and never persists a token output.
+export class GsaEbuySessionWorkflow extends WorkflowEntrypoint<{ GSA_EBUY_AUTH: DurableObjectNamespace }> {
+  async run(_event: WorkflowEvent<unknown>, step: WorkflowStep) {
+    return step.do("initialize eBuy session renewal", {
+      retries: { limit: 2, delay: "10 seconds", backoff: "exponential" },
+      timeout: "1 minute",
+    }, async () => {
+      const holder = this.env.GSA_EBUY_AUTH.get(this.env.GSA_EBUY_AUTH.idFromName("gsa-ebuy"));
+      const response = await holder.fetch("https://session/session");
+      if (!response.ok) {
+        const failure = await response.json<{ code: string; retryable: boolean }>();
+        if (!failure.retryable) throw new NonRetryableError(failure.code);
+        throw new Error(failure.code);
+      }
+      await response.body?.cancel();
+      return { status: "ready" };
     });
   }
 }

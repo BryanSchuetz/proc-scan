@@ -34,6 +34,11 @@
   ],
   "workflows": [
     {
+      "name": "gsa-ebuy-session",
+      "binding": "GSA_EBUY_SESSION_WORKFLOW",
+      "class_name": "GsaEbuySessionWorkflow"
+    },
+    {
       "name": "procurement-scan",
       "binding": "SCAN_WORKFLOW",
       "class_name": "ScanWorkflow",

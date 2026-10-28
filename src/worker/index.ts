@@ -30,7 +30,7 @@ export interface AppEnv {
 }
 
 export { ScanWorkflow };
-export { GsaEbuySessionHolder } from "./gsa-ebuy-session";
+export { GsaEbuySessionHolder, GsaEbuySessionWorkflow } from "./gsa-ebuy-session";
 
 const securityHeaders = {
   "Referrer-Policy": "no-referrer",
