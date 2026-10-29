@@ -96,6 +96,7 @@ Configure production delivery with these Worker secrets or variables:
 - `CAMP_MONTR_KEY` (required secret)
 - `DIGEST_FROM` (required authenticated DAI sender, including an optional display name)
 - `DIGEST_RECIPIENT` (required address or comma-separated addresses)
+- `DIGEST_CC` (optional CC address or comma-separated addresses; configured as `Hannah_Nightingale@dai.com` in `wrangler.jsonc`)
 - `CAMP_MONTR_CLIENT_ID` (required only for an account-level API key)
 - `DIGEST_REPLY_TO` (optional)
 - `REGISTRY_URL` (optional link shown in the digest)

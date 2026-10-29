@@ -4,6 +4,7 @@ export interface CampaignMonitorConfig {
   from: string;
   replyTo?: string;
   recipient: string;
+  cc?: string;
 }
 
 export interface DigestMessage {
@@ -47,6 +48,7 @@ export async function sendCampaignMonitorDigest(
         From: config.from,
         ...(config.replyTo ? { ReplyTo: config.replyTo } : {}),
         To: config.recipient.split(",").map((recipient) => recipient.trim()).filter(Boolean),
+        ...(config.cc ? { CC: config.cc.split(",").map((recipient) => recipient.trim()).filter(Boolean) } : {}),
         Html: message.html,
         Text: message.text,
         TrackOpens: false,

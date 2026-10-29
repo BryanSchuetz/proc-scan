@@ -22,4 +22,6 @@ DIGEST_FROM=
 DIGEST_REPLY_TO=
 # One address or multiple comma-separated addresses.
 DIGEST_RECIPIENT=
+# Optional CC address or multiple comma-separated addresses.
+DIGEST_CC=
 REGISTRY_URL=

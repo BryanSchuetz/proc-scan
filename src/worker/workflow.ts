@@ -188,6 +188,7 @@ function campaignMonitorConfig(env: AppEnv): CampaignMonitorConfig | undefined {
     from: env.DIGEST_FROM!,
     replyTo: env.DIGEST_REPLY_TO?.trim() || undefined,
     recipient: env.DIGEST_RECIPIENT!,
+    cc: env.DIGEST_CC?.trim() || undefined,
   };
 }
 

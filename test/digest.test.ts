@@ -169,13 +169,19 @@ describe("Campaign Monitor delivery", () => {
   };
   const message = { subject: "Digest", html: "<p>Digest</p>", text: "Digest" };
 
-  it("sends a Classic Transactional email and returns its message ID", async () => {
+  it.each([
+    { cc: undefined, expectedCc: undefined },
+    { cc: " Hannah_Nightingale@dai.com ", expectedCc: ["Hannah_Nightingale@dai.com"] },
+    { cc: " Hannah_Nightingale@dai.com, , reviewer@dai.example ", expectedCc: ["Hannah_Nightingale@dai.com", "reviewer@dai.example"] },
+  ])("sends a Classic Transactional email with CC $cc and returns its message ID", async ({ cc, expectedCc }) => {
     const fetcher = vi.fn<typeof fetch>(async (input, init) => {
       expect(String(input)).toContain("clientID=fixture-client");
       expect(new Headers(init?.headers).get("Authorization")).toBe(
         `Basic ${btoa("fixture-api-key:x")}`,
       );
-      expect(JSON.parse(String(init?.body))).toMatchObject({
+      const body = JSON.parse(String(init?.body));
+      expect(body.CC).toEqual(expectedCc);
+      expect(body).toMatchObject({
         Subject: "Digest",
         To: ["opportunities@dai.example", "reviewer@dai.example"],
         TrackOpens: false,
@@ -188,7 +194,7 @@ describe("Campaign Monitor delivery", () => {
       );
     });
 
-    await expect(sendCampaignMonitorDigest(config, message, fetcher))
+    await expect(sendCampaignMonitorDigest({ ...config, cc }, message, fetcher))
       .resolves.toBe("provider-message-1");
   });
 
