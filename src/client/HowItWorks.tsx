@@ -1,4 +1,15 @@
 import { InfoIcon } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { fetchSourceScans } from "./api";
+
+function formatScanDate(value: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/London",
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  }).format(new Date(value));
+}
 
 interface HowItWorksProps {
   onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, path: "/" | "/unmarked" | "/how-it-works" | "/upload") => void;
@@ -6,66 +17,77 @@ interface HowItWorksProps {
 
 const sources = [
   {
+    id: "fcdo-jaggaer-public",
     name: "FCDO Jaggaer Public",
     clients: "FCDO",
     value: "£250,000",
     scope: "Services competitions and early market engagement. Framework opportunities will be cataloged in a separate process for the time being.",
   },
   {
+    id: "atamis-defra",
     name: "DEFRA Atamis",
     clients: "DEFRA group",
     value: "£250,000",
     scope: "Current opportunities with an active response deadline. Closed opportunities are excluded.",
   },
   {
+    id: "deznz-jaggaer",
     name: "DEZNZ Jaggaer",
     clients: "DEZNZ",
     value: "£250,000",
     scope: "Services only. Shared DEZNZ and DSIT listings need clear DEZNZ evidence; DSIT-only and former BEIS opportunities are excluded.",
   },
   {
+    id: "ted",
     name: "TED",
     clients: "All external-aid buyers",
     value: "€1 million",
     scope: "Active external-aid service notices for planning, competition, and results.",
   },
   {
+    id: "dg-market",
     name: "dgMarket",
     clients: "MCC and MCA",
     value: "$500,000",
     scope: "Consultancy-category notices from matched MCC and MCA buyers. Only the configured procurement planning and pre-award notice types are included.",
   },
   {
+    id: "sam-gov",
     name: "SAM.gov",
     clients: "DOS, MCC, DFC, and USTDA",
     value: "$500,000 for DOS, MCC, and DFC; $250,000 for USTDA",
     scope: "All opportunity types. Restricted to “R”-related products and services, limiting the results to professional services. Known NAICS codes must begin with 54 (Professional, Scientific, and Technical Services) or 61 (Educational Services); other codes are excluded. Blank or missing NAICS codes remain eligible, subject to the other filters.",
   },
   {
+    id: "grants-gov",
     name: "Grants.gov",
     clients: "DOS, MCC, DFC, and USTDA",
     value: "$2 million for DOS; $500,000 for MCC and DFC; $250,000 for USTDA",
     scope: "Forecasted and posted opportunities from the approved organizations. Closed and archived opportunities are excluded.",
   },
   {
+    id: "simap",
     name: "SIMAP",
     clients: "Swiss SDC and SECO",
     value: "CHF 1 million",
     scope: "Service tenders published through the public API. Unrelated keyword matches and opportunities with past deadlines are excluded.",
   },
   {
+    id: "ecepp",
     name: "EBRD ECEPP",
     clients: "EBRD",
     value: "€250,000 or $250,000",
     scope: "Consultancy or clearly advisory opportunities with a future closing date. Closed and post-award notices are excluded.",
   },
   {
+    id: "eib",
     name: "EIB Procurement",
     clients: "EIB",
     value: "€500,000",
     scope: "Ongoing technical-assistance operations with a current closing date. Stale and closed records are excluded.",
   },
   {
+    id: "fmo",
     name: "FMO Open Tenders",
     clients: "FMO",
     value: "€500,000",
@@ -74,6 +96,16 @@ const sources = [
 ];
 
 export default function HowItWorks({ onNavigate }: HowItWorksProps) {
+  const [lastScans, setLastScans] = useState<Map<string, string>>();
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchSourceScans(controller.signal)
+      .then((response) => setLastScans(new Map(response.sources.map((source) => [source.id, source.lastSuccessfulScanAt]))))
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
   return (
     <main className="how-page">
       <section className="how-hero" aria-labelledby="how-title">
@@ -181,23 +213,35 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
           Value floors apply only when a positive value is known in the listed currency. Opportunities with a known past due date are excluded; records without a due date remain eligible unless a source requires one.
         </div>
         <div className="source-list" role="list">
-          {sources.map((source) => (
-            <article className="source-row" role="listitem" key={source.name}>
-              <h4>{source.name}</h4>
-              <div>
-                <span>Included clients</span>
-                <p>{source.clients}</p>
-              </div>
-              <div>
-                <span>Minimum known value</span>
-                <p>{source.value}</p>
-              </div>
-              <div>
-                <span>Other hard boundaries</span>
-                <p>{source.scope}</p>
-              </div>
-            </article>
-          ))}
+          {sources.map((source) => {
+            const lastScan = lastScans?.get(source.id);
+            return (
+              <article className="source-row" role="listitem" key={source.id}>
+                <header className="source-row__name">
+                  <h4>{source.name}</h4>
+                  {lastScans && (
+                    <small>
+                      {lastScan
+                        ? <>Last Scan: <time dateTime={lastScan}>{formatScanDate(lastScan)}</time></>
+                        : "No successful scan yet"}
+                    </small>
+                  )}
+                </header>
+                <div>
+                  <span>Included clients</span>
+                  <p>{source.clients}</p>
+                </div>
+                <div>
+                  <span>Minimum known value</span>
+                  <p>{source.value}</p>
+                </div>
+                <div>
+                  <span>Other hard boundaries</span>
+                  <p>{source.scope}</p>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </main>

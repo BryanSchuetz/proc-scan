@@ -40,6 +40,10 @@ export interface ApiScanSummary {
   sourceCount: number;
 }
 
+export interface SourceScansResponse {
+  sources: Array<{ id: string; lastSuccessfulScanAt: string }>;
+}
+
 export interface EventsResponse {
   items: ApiBiddingEvent[];
   latestScan?: ApiScanSummary;

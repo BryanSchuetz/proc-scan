@@ -687,6 +687,7 @@ td:nth-child(8) { width: 190px; }
 }
 
 .source-row h4 { margin: 0; font-size: 15px; line-height: 1.4; }
+.source-row__name small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .source-row span {
   display: block;
   margin-bottom: 6px;
@@ -744,7 +745,8 @@ td:nth-child(8) { width: 190px; }
   .event-section { grid-template-columns: 1fr; gap: 0; }
   .event-definitions > div { grid-template-columns: 120px 1fr; }
   .source-row { grid-template-columns: 1fr 1fr; gap: 18px 24px; }
-  .source-row h4 { grid-column: 1 / -1; font-size: 17px; }
+  .source-row__name { grid-column: 1 / -1; }
+  .source-row h4 { font-size: 17px; }
   .source-row > div:last-child { grid-column: 1 / -1; }
 }
 

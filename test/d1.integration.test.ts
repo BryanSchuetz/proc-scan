@@ -3,7 +3,7 @@ import { SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import seedSql from "../fixtures/seed.sql?raw";
 import taxonomyRaw from "../tech-area-classification.yaml?raw";
-import type { EventsResponse } from "../src/api/types";
+import type { EventsResponse, SourceScansResponse } from "../src/api/types";
 import { parseTaxonomyYaml } from "../src/classification/taxonomy";
 import { syncTechnicalAreas } from "../src/db/taxonomy";
 
@@ -95,6 +95,33 @@ describe("D1 registry integration", () => {
     } finally {
       await env.DB.prepare("DELETE FROM source_runs WHERE scan_run_id = 'scan_summary_partial'").run();
       await env.DB.prepare("DELETE FROM scan_runs WHERE id = 'scan_summary_partial'").run();
+    }
+  });
+
+  it("reports each Source's last successful scan, ignoring later failures", async () => {
+    await env.DB.prepare(`INSERT INTO scan_runs (
+      id, cycle_key, scheduled_for, started_at, completed_at, status
+    ) VALUES ('scan_last_success', '2099-02-01:AM', '2099-02-01T10:00:00.000Z',
+      '2099-02-01T10:00:00.000Z', '2099-02-01T10:05:00.000Z', 'partial')`).run();
+    await env.DB.prepare(`INSERT INTO source_runs (
+      id, scan_run_id, source_id, started_at, completed_at, status
+    ) VALUES
+      ('source_last_success_grants', 'scan_last_success', 'grants-gov',
+        '2099-02-01T10:00:00.000Z', '2099-02-01T10:02:00.000Z', 'completed'),
+      ('source_last_success_ted', 'scan_last_success', 'ted',
+        '2099-02-01T10:00:00.000Z', '2099-02-01T10:05:00.000Z', 'failed')`).run();
+
+    try {
+      const response = await SELF.fetch("http://localhost/api/sources");
+      expect(response.status).toBe(200);
+      const body = await response.json<SourceScansResponse>();
+      expect(body.sources).toEqual([
+        { id: "grants-gov", lastSuccessfulScanAt: "2099-02-01T10:02:00.000Z" },
+        { id: "ted", lastSuccessfulScanAt: "2026-08-26T10:02:10.000Z" },
+      ]);
+    } finally {
+      await env.DB.prepare("DELETE FROM source_runs WHERE scan_run_id = 'scan_last_success'").run();
+      await env.DB.prepare("DELETE FROM scan_runs WHERE id = 'scan_last_success'").run();
     }
   });
 

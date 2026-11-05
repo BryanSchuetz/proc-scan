@@ -1,5 +1,6 @@
 import type { ApiError } from "../api/types";
 import { EventsQueryError, listBiddingEvents, parseEventsQuery } from "../db/events";
+import { listLastSuccessfulSourceScans } from "../db/scan-runs";
 import {
   authorizeRequest,
   isAccessFailure,
@@ -82,6 +83,15 @@ async function handleApi(request: Request, env: AppEnv): Promise<Response> {
       }
       console.error("Unable to list bidding events", error instanceof Error ? error.message : "unknown error");
       return errorResponse(500, "events_unavailable", "Bidding Events could not be loaded.");
+    }
+  }
+
+  if (url.pathname === "/api/sources") {
+    try {
+      return jsonResponse({ sources: await listLastSuccessfulSourceScans(env.DB) });
+    } catch (error) {
+      console.error("Unable to list Source scans", error instanceof Error ? error.message : "unknown error");
+      return errorResponse(500, "sources_unavailable", "Source scans could not be loaded.");
     }
   }
 

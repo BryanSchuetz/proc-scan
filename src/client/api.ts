@@ -1,4 +1,4 @@
-import type { ApiError, EventsResponse } from "../api/types";
+import type { ApiError, EventsResponse, SourceScansResponse } from "../api/types";
 import type { RetainedAddressabilityStatus } from "../domain/types";
 
 export interface RegistryQuery {
@@ -37,6 +37,12 @@ export async function fetchBiddingEvents(
     throw new Error(error?.error.message ?? "The registry could not be loaded.");
   }
   return response.json() as Promise<EventsResponse>;
+}
+
+export async function fetchSourceScans(signal?: AbortSignal): Promise<SourceScansResponse> {
+  const response = await fetch("/api/sources", { headers: { Accept: "application/json" }, signal });
+  if (!response.ok) throw new Error("Source scans could not be loaded.");
+  return response.json() as Promise<SourceScansResponse>;
 }
 
 export async function setMarkingStatus(id: string, status: RetainedAddressabilityStatus): Promise<void> {

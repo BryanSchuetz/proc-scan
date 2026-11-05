@@ -45,6 +45,22 @@ export async function listEnabledSources(db: D1Database): Promise<EnabledSource[
   }));
 }
 
+export async function listLastSuccessfulSourceScans(
+  db: D1Database,
+): Promise<Array<{ id: string; lastSuccessfulScanAt: string }>> {
+  const result = await db
+    .prepare(`SELECT source_id, MAX(completed_at) AS last_successful_scan_at
+      FROM source_runs
+      WHERE status = 'completed' AND completed_at IS NOT NULL
+      GROUP BY source_id
+      ORDER BY source_id`)
+    .all<{ source_id: string; last_successful_scan_at: string }>();
+  return result.results.map((row) => ({
+    id: row.source_id,
+    lastSuccessfulScanAt: row.last_successful_scan_at,
+  }));
+}
+
 export async function startSourceRun(
   db: D1Database,
   scanRunId: string,
