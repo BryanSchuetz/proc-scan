@@ -39,7 +39,7 @@ export async function handleUploads(request: Request, db: D1Database, user: Auth
   }
   if (url.pathname !== "/api/uploads") return Response.json({ error: { code: "not_found", message: "Upload route not found." } }, { status: 404 });
   if (request.method === "GET") {
-    const sources = await db.prepare("SELECT id, display_name AS name, enabled FROM sources ORDER BY display_name")
+    const sources = await db.prepare("SELECT id, display_name AS name, enabled FROM sources ORDER BY id = 'other', display_name")
       .all<UploadsResponse["sources"][number]>();
     return Response.json({ sources: sources.results, uploads: await listUploads(db) } satisfies UploadsResponse);
   }

@@ -107,7 +107,7 @@ export default function Upload({ onNavigate }: UploadProps) {
             </select>
             <CaretDownIcon aria-hidden="true" size={18} weight="bold" />
           </div>
-          <p className="upload-help">All rows in this file will belong to this Source.</p>
+          <p className="upload-help">All rows in this file will belong to this Source. Choose Other for a Source that isn’t listed.</p>
 
           <label className={`upload-dropzone${dragging ? " upload-dropzone--active" : ""}`} htmlFor="upload-file"
             onDragOver={(event) => { event.preventDefault(); if (!busy) setDragging(true); }}

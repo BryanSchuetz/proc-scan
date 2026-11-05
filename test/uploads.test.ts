@@ -197,6 +197,7 @@ describe("authenticated upload API", () => {
     const list = await (await SELF.fetch("http://localhost/api/uploads")).json<UploadsResponse>();
     expect(list.uploads.find((item) => item.id === first.id)).toMatchObject({ status: "queued", sourceId: "fmo", rowCount: 1 });
     expect(list.sources.some((source) => source.id === "eu-funding-tenders" && source.enabled === 0)).toBe(true);
+    expect(list.sources.at(-1)).toEqual({ id: "other", name: "Other", enabled: 0 });
     expect(JSON.stringify(list)).not.toContain("uploaded_by");
     await env.DB.prepare("DELETE FROM opportunity_uploads WHERE id = ?").bind(first.id).run();
   });
