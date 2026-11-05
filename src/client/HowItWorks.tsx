@@ -74,10 +74,10 @@ const sources = [
   },
   {
     id: "ecepp",
-    name: "EBRD ECEPP",
+    name: "EBRD GEP SMART",
     clients: "EBRD",
     value: "€250,000 or $250,000",
-    scope: "Consultancy or clearly advisory opportunities with a future closing date. Closed and post-award notices are excluded.",
+    scope: "Consultancy or clearly advisory opportunities with a future response deadline. Withdrawn, closed, and post-award events and corporate purchasing are excluded.",
   },
   {
     id: "eib",

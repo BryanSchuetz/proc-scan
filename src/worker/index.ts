@@ -22,6 +22,8 @@ export interface AppEnv {
   SAM_API_KEY?: string;
   GSA_EBUY_AUTH: DurableObjectNamespace;
   GSA_EBUY_SESSION?: string;
+  NEW_EBRD_USER?: string;
+  NEW_EBRD_PW?: string;
   CAMP_MONTR_KEY?: string;
   CAMP_MONTR_CLIENT_ID?: string;
   DIGEST_FROM?: string;

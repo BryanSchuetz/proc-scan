@@ -1,0 +1,128 @@
+{
+  "200001": {
+    "DocumentCode": 200001,
+    "EventName": "PR 030001 - Moldova - Energy Efficiency Expert",
+    "EventDescription": "Procurement of an expert to strengthen the national energy centre.\nEvent Cost Estimate: EUR 175,000.00 (exclusive of VAT)\nClarification questions can be submitted via the discussion forum.",
+    "EventValue": 0,
+    "EventCurrency": "EUR",
+    "EventTypeDetails": {
+      "code": "rfp",
+      "name": "Request for Proposal"
+    },
+    "CustomField": [
+      {
+        "customFieldName": "Procurement Method",
+        "customFieldValue": "Competitive (Single-stage)",
+        "sectionName": "Basic Details"
+      }
+    ],
+    "Doc": {
+      "DocumentPASList": [
+        {
+          "PasName": "Legal Reform & Policy"
+        }
+      ],
+      "DocumentRegionList": [
+        {
+          "RegionName": "Moldova"
+        }
+      ],
+      "DocumentBUList": [
+        {
+          "BusinessUnitName": "CE004-Competitiveness, Governance & Political Affairs"
+        }
+      ],
+      "DocumentLOBDetails": [
+        {
+          "EntityCode": "Org Entity",
+          "EntityDisplayName": "EBRD"
+        }
+      ]
+    }
+  },
+  "200002": {
+    "DocumentCode": 200002,
+    "EventName": "PUR2610/01 Laptop Refresh RFQ",
+    "EventDescription": "Supply of laptops and peripherals for headquarters staff.",
+    "EventValue": 0,
+    "EventCurrency": "EUR",
+    "EventTypeDetails": {
+      "code": "rfp",
+      "name": "Request for Proposal"
+    },
+    "CustomField": [
+      {
+        "customFieldName": "Procurement Method",
+        "customFieldValue": "Competitive (Single-stage)",
+        "sectionName": "Basic Details"
+      }
+    ],
+    "Doc": {
+      "DocumentPASList": [
+        {
+          "PasName": "IT Hardware"
+        }
+      ],
+      "DocumentRegionList": [
+        {
+          "RegionName": "United Kingdom"
+        }
+      ],
+      "DocumentBUList": [
+        {
+          "BusinessUnitName": "CE004-Competitiveness, Governance & Political Affairs"
+        }
+      ],
+      "DocumentLOBDetails": [
+        {
+          "EntityCode": "Org Entity",
+          "EntityDisplayName": "EBRD"
+        }
+      ]
+    }
+  },
+  "200003": {
+    "DocumentCode": 200003,
+    "EventName": "Regional: Capacity building for municipal utilities",
+    "EventDescription": "Support utilities to improve governance.\n Event Cost Estimate: To be determined at contract negotiations.",
+    "EventValue": 0,
+    "EventCurrency": "EUR",
+    "EventTypeDetails": {
+      "code": "rfp",
+      "name": "Request for Proposal"
+    },
+    "CustomField": [
+      {
+        "customFieldName": "Procurement Method",
+        "customFieldValue": "Competitive (Single-stage)",
+        "sectionName": "Basic Details"
+      }
+    ],
+    "Doc": {
+      "DocumentPASList": [
+        {
+          "PasName": "Governance Advice Consultancy - No SAP Code"
+        }
+      ],
+      "DocumentRegionList": [
+        {
+          "RegionName": "Armenia"
+        },
+        {
+          "RegionName": "Georgia"
+        }
+      ],
+      "DocumentBUList": [
+        {
+          "BusinessUnitName": "CE004-Competitiveness, Governance & Political Affairs"
+        }
+      ],
+      "DocumentLOBDetails": [
+        {
+          "EntityCode": "Org Entity",
+          "EntityDisplayName": "EBRD"
+        }
+      ]
+    }
+  }
+}

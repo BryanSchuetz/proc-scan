@@ -1,0 +1,204 @@
+{
+  "DataSearchResult": {
+    "GroupTotal": {
+      "rfx": 6,
+      "TotalCount": 6
+    },
+    "TotalRecords": 6,
+    "Status": 1,
+    "Value": [
+      {
+        "DocumentCode": "200001",
+        "Name": "PR 030001 - Moldova - Energy Efficiency Expert",
+        "Number": "009001-Oct2026",
+        "Scope": "RFP",
+        "DocumentDetails": {
+          "DocumentStatusInfo": "ResponseInProgress",
+          "DocumentNumber": "009001-Oct2026"
+        },
+        "DocumentSearchOutput": {
+          "QueryString": "ZGM9MjAwMDAxJmJwYz03MDAyMTg2OQ2",
+          "DocumentName": "PR 030001 - Moldova - Energy Efficiency Expert",
+          "DocumentAdditionalFieldList": [
+            {
+              "FieldName": "RfxEventType",
+              "FieldValue": "Request for Proposal"
+            },
+            {
+              "FieldName": "FormatedResponseStart",
+              "FieldValue": "2026-11-02T15:00:00Z"
+            },
+            {
+              "FieldName": "FormatedResponseEnd",
+              "FieldValue": "2026-11-24T10:59:00Z"
+            },
+            {
+              "FieldName": "InvitedOn",
+              "FieldValue": null
+            }
+          ]
+        }
+      },
+      {
+        "DocumentCode": "200002",
+        "Name": "PUR2610/01 Laptop Refresh RFQ",
+        "Number": "009002-Oct2026",
+        "Scope": "RFP",
+        "DocumentDetails": {
+          "DocumentStatusInfo": "ResponseInProgress",
+          "DocumentNumber": "009002-Oct2026"
+        },
+        "DocumentSearchOutput": {
+          "QueryString": "ZGM9MjAwMDAyJmJwYz03MDAyMTg2OQ2",
+          "DocumentName": "PUR2610/01 Laptop Refresh RFQ",
+          "DocumentAdditionalFieldList": [
+            {
+              "FieldName": "RfxEventType",
+              "FieldValue": "Request for Quotation"
+            },
+            {
+              "FieldName": "FormatedResponseStart",
+              "FieldValue": "2026-10-20T09:00:00Z"
+            },
+            {
+              "FieldName": "FormatedResponseEnd",
+              "FieldValue": "2026-11-20T12:00:00Z"
+            },
+            {
+              "FieldName": "InvitedOn",
+              "FieldValue": null
+            }
+          ]
+        }
+      },
+      {
+        "DocumentCode": "200003",
+        "Name": "Regional: Capacity building for municipal utilities",
+        "Number": "009003-Oct2026",
+        "Scope": "RFP",
+        "DocumentDetails": {
+          "DocumentStatusInfo": "ResponseInProgress",
+          "DocumentNumber": "009003-Oct2026"
+        },
+        "DocumentSearchOutput": {
+          "QueryString": "ZGM9MjAwMDAzJmJwYz03MDAyMTg2OQ2",
+          "DocumentName": "Regional: Capacity building for municipal utilities",
+          "DocumentAdditionalFieldList": [
+            {
+              "FieldName": "RfxEventType",
+              "FieldValue": "Request for Proposal"
+            },
+            {
+              "FieldName": "FormatedResponseStart",
+              "FieldValue": "2026-10-21T09:00:00Z"
+            },
+            {
+              "FieldName": "FormatedResponseEnd",
+              "FieldValue": "2026-11-21T12:00:00Z"
+            },
+            {
+              "FieldName": "InvitedOn",
+              "FieldValue": null
+            }
+          ]
+        }
+      },
+      {
+        "DocumentCode": "200004",
+        "Name": "PR 030004 - Serbia - Lender's Monitoring Advisor",
+        "Number": "009004-Oct2026",
+        "Scope": "RFP",
+        "DocumentDetails": {
+          "DocumentStatusInfo": "EventWithdrawn",
+          "DocumentNumber": "009004-Oct2026"
+        },
+        "DocumentSearchOutput": {
+          "QueryString": "ZGM9MjAwMDA0JmJwYz03MDAyMTg2OQ2",
+          "DocumentName": "PR 030004 - Serbia - Lender's Monitoring Advisor",
+          "DocumentAdditionalFieldList": [
+            {
+              "FieldName": "RfxEventType",
+              "FieldValue": "Request for Proposal"
+            },
+            {
+              "FieldName": "FormatedResponseStart",
+              "FieldValue": "2026-10-22T09:00:00Z"
+            },
+            {
+              "FieldName": "FormatedResponseEnd",
+              "FieldValue": "2026-11-22T12:00:00Z"
+            },
+            {
+              "FieldName": "InvitedOn",
+              "FieldValue": null
+            }
+          ]
+        }
+      },
+      {
+        "DocumentCode": "200005",
+        "Name": "PR 030005 - Georgia - Feasibility study",
+        "Number": "009005-Sep2026",
+        "Scope": "RFP",
+        "DocumentDetails": {
+          "DocumentStatusInfo": "ResponseInProgress",
+          "DocumentNumber": "009005-Sep2026"
+        },
+        "DocumentSearchOutput": {
+          "QueryString": "ZGM9MjAwMDA1JmJwYz03MDAyMTg2OQ2",
+          "DocumentName": "PR 030005 - Georgia - Feasibility study",
+          "DocumentAdditionalFieldList": [
+            {
+              "FieldName": "RfxEventType",
+              "FieldValue": "Request for Proposal"
+            },
+            {
+              "FieldName": "FormatedResponseStart",
+              "FieldValue": "2026-09-01T09:00:00Z"
+            },
+            {
+              "FieldName": "FormatedResponseEnd",
+              "FieldValue": "2026-11-01T12:00:00Z"
+            },
+            {
+              "FieldName": "InvitedOn",
+              "FieldValue": null
+            }
+          ]
+        }
+      },
+      {
+        "DocumentCode": "200006",
+        "Name": "PR 030006 - Kazakhstan - Port feasibility",
+        "Number": "009006-Aug2026",
+        "Scope": "RFP",
+        "DocumentDetails": {
+          "DocumentStatusInfo": "Awarded",
+          "DocumentNumber": "009006-Aug2026"
+        },
+        "DocumentSearchOutput": {
+          "QueryString": "ZGM9MjAwMDA2JmJwYz03MDAyMTg2OQ2",
+          "DocumentName": "PR 030006 - Kazakhstan - Port feasibility",
+          "DocumentAdditionalFieldList": [
+            {
+              "FieldName": "RfxEventType",
+              "FieldValue": "Request for Proposal"
+            },
+            {
+              "FieldName": "FormatedResponseStart",
+              "FieldValue": "2026-08-01T09:00:00Z"
+            },
+            {
+              "FieldName": "FormatedResponseEnd",
+              "FieldValue": "2026-09-01T12:00:00Z"
+            },
+            {
+              "FieldName": "InvitedOn",
+              "FieldValue": null
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

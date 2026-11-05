@@ -33,6 +33,8 @@ export interface SourceSecrets {
   SAM_API_KEY?: string;
   BROWSER?: Fetcher;
   GSA_EBUY_AUTH?: DurableObjectNamespace;
+  NEW_EBRD_USER?: string;
+  NEW_EBRD_PW?: string;
 }
 
 export interface SourceConfigurations {
@@ -66,7 +68,7 @@ export function createRegisteredSourceAdapter(
         }),
       });
     case eceppSourceDefinition.id:
-      return createEceppAdapter();
+      return createEceppAdapter({ username: secrets.NEW_EBRD_USER, password: secrets.NEW_EBRD_PW });
     case eibSourceDefinition.id:
       return createEibAdapter();
     case fcdoJaggaerPublicSourceDefinition.id:

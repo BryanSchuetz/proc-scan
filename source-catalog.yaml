@@ -192,20 +192,21 @@
   source_module: simap
   access_method: api
 
-- site: ECEPP
+- site: EBRD GEP SMART
   clients:
     - EBRD
-  actual_link: "https://ecepp.ebrd.com/delta/noticeSearchResults.html"
-  additional_links: null
+  actual_link: "https://eu.smart.gep.com/Smart?oloc=200&c=NzAwMjE4Njk1&dd=YnBjPTcwMDIxODY5JmNjPTU0NzEwMzA0MDAwMDA00#/landingmax?pagefor=manage&scope=rfx"
+  additional_links:
+    - "https://ecepp.ebrd.com/delta/noticeSearchResults.html (former portal)"
   filters_narrative: '€/$250k minimum; "consultancy" or "advisory"-related'
-  requires_login: false
-  username: null
-  password: null
-  filters_automation_rules: "Read the complete public notice catalogue; require a known closing date after the scan time; retain procurement notices whose structured procurement type is Consultancy or whose title/description is advisory-related; map Client to EBRD and preserve the named borrower as procuring entity; apply the €/$250k floors only to known positive EUR or USD values"
-  result_set: public
-  authentication: "Public notice discovery and details require no login; procurement documents and responses require login plus emailed MFA and are outside the unattended scan"
+  requires_login: true
+  username: secret:NEW_EBRD_USER
+  password: secret:NEW_EBRD_PW
+  filters_automation_rules: "Read the complete Manage RFx catalogue; require a known response deadline after the scan time and a status that is not withdrawn, closed, awarded, or completed; retain events with an EBRD PR consultant-selection reference, a Consultancy category, or advisory-related title/description; map Client and procuring entity to EBRD; apply the €/$250k floors only to a known positive GEP event value or stated Event Cost Estimate in EUR or USD"
+  result_set: login
+  authentication: "Supplier username and password over GEP's HTTP sign-in flow; no verification code is currently required. A verification-code prompt fails the scan without retrying."
   source_module: ecepp
-  access_method: html
+  access_method: api
 
 - site: EIB procurement page
   clients:
