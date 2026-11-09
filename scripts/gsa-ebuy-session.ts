@@ -7,17 +7,21 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { gsaEbuyTokenExpiry, requestGsaEbuy } from "../src/sources/gsa-ebuy";
 
 async function handoff() {
-  const remote = process.argv.slice(2).includes("--remote");
-  if (process.argv.slice(2).some((arg) => arg !== "--remote")) throw new Error("Use --remote or no arguments.");
+  const args = process.argv.slice(2);
+  const remote = args.includes("--remote");
+  const tabId = args.find((arg) => arg.startsWith("--tab-id="))?.slice("--tab-id=".length);
+  if (args.some((arg) => arg !== "--remote" && !/^--tab-id=[A-Za-z0-9]+$/.test(arg))) {
+    throw new Error("Use --remote and/or --tab-id=<browser target ID>, or no arguments.");
+  }
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_WORKERS_TOKEN;
   if (remote && (!accountId || !apiToken)) {
     throw new Error("Remote handoff requires CLOUDFLARE_ACCOUNT_ID and a Cloudflare API token.");
   }
   const tabs = await fetch("http://localhost:9222/json/list").then((r) => r.json()) as Array<{
-    url: string; webSocketDebuggerUrl: string;
+    id: string; url: string; webSocketDebuggerUrl: string;
   }>;
-  const tab = tabs.find((tab) => tab.url.startsWith("https://www.ebuy.gsa.gov/ebuy/seller"));
+  const tab = tabs.find((tab) => (!tabId || tab.id === tabId) && tab.url.startsWith("https://www.ebuy.gsa.gov/ebuy/seller"));
   if (!tab) throw new Error("Open eBuy and complete contractor sign-in in the Desktop browser first.");
   const socket = new WebSocket(tab.webSocketDebuggerUrl);
   const timeout = setTimeout(() => socket.close(), 10_000);

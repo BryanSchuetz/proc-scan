@@ -148,6 +148,36 @@ The private `GSA_EBUY_AUTH` Durable Object encrypts renewed tokens with AES-GCM 
 
 Authentication failures are recorded as `reauthentication_required` Source failures without blocking other Sources. Session-renewal failures emit credential-safe Worker warnings, and nonempty digests identify failed Source coverage. The existing digest policy sends no empty-event email, so a separate immediate out-of-band reauthentication alert remains an operational follow-up.
 
+### Experimental Zapier code inbox (Amp orb only)
+
+The project-local plugin `.amp/plugins/gsa-ebuy-inbox.ts` registers an Amp webhook with stable key `gsa-ebuy-code`. Loading the plugin does **not** start a browser login, request MFA, update production, or schedule recovery. Keep the webhook's owning thread unarchived; archiving it disables delivery. The URL is a bearer credential and must not be pasted into thread messages, ordinary logs, or version control.
+
+After loading the plugin, copy the webhook URL and headers from the owner-only, gitignored `.amp/gsa-ebuy-private/zapier-setup.json` into a **Webhooks by Zapier → POST** action. Use JSON payload type (not form encoding), send the `Authorization` header exactly as saved, and map these fields from the email trigger:
+
+| JSON field | Zapier mapping |
+| --- | --- |
+| `sender` | Original sender email address only: `MFA-No-Reply+noreply@gsa.gov` (not its display name or the forwarding mailbox) |
+| `subject` | Original subject: `GSA FAS ID one-time verification code` |
+| `body` | Original plain-text email body, preserving the instruction and code |
+| `message_id` | Original email message ID, stable across retries |
+| `sent_at` | Email Parser trigger's top-level `Date`, in UTC; **not** `mailbox.mailbox_date` or the Zap execution time |
+
+Filter the Zap to the exact sender and subject. These fields are assertions by the trusted Zap, not independent proof of GSA email authentication. Validate the real forwarding/trigger format before enabling unattended recovery; do not substitute constant sender/subject values to bypass mismatched emails. Reduce Zapier task-data retention where supported. Amp durably queues webhook requests, so the original payload also passes through Amp's delivery infrastructure; the plugin's five-minute storage policy does not establish Amp or Zapier retention guarantees. Avoid sending the whole raw MIME message or attachments.
+
+`GsaCodeInbox.begin()` opens one five-minute attempt. The handler accepts only authorized, fresh matching deliveries during that window, extracts the code immediately after GSA's verification instruction, and encrypts it with AES-256-GCM in local SQLite. `take(attemptId)` consumes it once directly inside the browser runner; no agent tool returns codes. Separate deliveries with the same message ID are deduplicated, while distinct candidate messages invalidate the attempt rather than guessing. Do not manually request another FAS ID code while automation is waiting. Expired attempts are inaccessible immediately and cleaned on access or a 30-second timer while the plugin runs. Orb-local files survive normal pause/reload, not orb replacement; a replacement needs private setup again.
+
+The `gsa_code_inbox_status` tool exposes only readiness, expiry, and the latest safe delivery outcome. Amp's HTTP success acknowledges transport delivery, not acceptance of a valid code. In particular, replaying an old Zapier sample outside a pending attempt should report `no_matching_attempt`, not store its code.
+
+The explicit browser runner is `bun .amp/plugins/gsa-ebuy-inbox/login.ts`. Start the orb Desktop first with `amp orb desktop ensure`, keep the webhook plugin loaded in this orb, and supply `GSA_USER` and `GSA_PW` privately. The runner uses a fresh isolated browser context, checks official page origins before secret entry, requests one code, and waits up to five minutes for delivery. It never resends or guesses codes; unexpected login steps fail closed. No screenshots, recordings, traces, or raw browser errors are emitted by the runner because they can reveal credentials. Pending inbox state and its isolated context are cleaned when the run ends. The existing handoff script receives the exact browser target ID so another open eBuy tab cannot supply a stale session.
+
+By default the runner validates/renews the resulting token and writes only ignored local `.dev.vars`. Passing `--remote` updates the production Worker secret and initializes renewal, and requires explicit owner approval. Neither mode triggers a scan or digest. The full real-mail recovery path must be validated before enabling unattended scheduling; manual handoff remains available as a fallback.
+
+On November 9, 2026, the owner requested pre-scan integration and the complete production handoff succeeded: GSA login, fresh forwarded email, code submission, Worker-secret update, and confirmed private renewal initialization. The Amp schedule **Refresh GSA eBuy before each scan** is enabled on the webhook-owning thread `T-01a1bfcc-6677-776f-81a0-c95a3980743b`, at **05:00 and 17:00 Europe/London daily**, one hour before the existing 06:00 and 18:00 scans. Its RRULE is `FREQ=DAILY;BYHOUR=5,17;BYMINUTE=0` with a Europe/London DTSTART; it follows UK daylight saving rather than fixed UTC or New York hours. The schedule is stored in Amp, not in Wrangler or the repository.
+
+Each firing ensures Desktop Chrome is running and executes `bun .amp/plugins/gsa-ebuy-inbox/login.ts --remote` in this same orb, checking exit status and the renewal-ready confirmation. Cloudflare's existing renewal alarms keep the session refreshed between preparation and scanning. A late firing outside 05:00–05:44 or 17:00–17:44 London time stops without starting a login. Pending attempts are not duplicated. A failed preparation reports here and requests an Amp push notification; it does not trigger or postpone scans, send a digest, or prevent other sources from running. Successful preparation is not a guarantee against later GSA revocation. Keep the thread unarchived and the Zap published; if the orb is replaced, repair private setup before resuming. Pause the schedule through Amp to stop automatic logins/production session handoffs.
+
+Run inbox tests with `bun test ./.amp/plugins/gsa-ebuy-inbox/inbox.test.ts`. With Desktop Chrome running, also run `bun test ./.amp/plugins/gsa-ebuy-inbox/login.browser.test.ts`; these browser tests intercept every request and use only fixture credentials, checking code consumption and origin rejection without contacting GSA. These Bun-runtime tests are separate from the scanner's Cloudflare/Vitest suite.
+
 ## TED Source
 
 The TED adapter uses the official unauthenticated `POST https://api.ted.europa.eu/v3/notices/search` Search API. Migration `0004_ted_source.sql` enables it. Its versioned configuration in `config/ted.yaml` selects externally funded service contracts without filtering buyers. The search uses the `ACTIVE` scope, `onlyLatestVersions: false`, and publication-number descending order.
