@@ -29,7 +29,6 @@ export interface AppEnv {
   DIGEST_FROM?: string;
   DIGEST_REPLY_TO?: string;
   DIGEST_RECIPIENT?: string;
-  DIGEST_CC?: string;
   REGISTRY_URL?: string;
 }
 
